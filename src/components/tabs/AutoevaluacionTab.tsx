@@ -63,13 +63,16 @@ export function AutoevaluacionTab({ completado, onMarcarCompletado }: Autoevalua
             : `Sacaste ${porcentaje}%. Necesitás ${PORCENTAJE_APROBACION}% para aprobar.`}
         </p>
         <p className="text-sm text-slate-400">Tu mejor puntaje guardado: {mejorPuntaje} / {TOTAL_PREGUNTAS}</p>
-        <button
-          type="button"
-          onClick={reintentar}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white"
-        >
-          Reintentar
-        </button>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={reintentar}
+            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white"
+          >
+            Reintentar
+          </button>
+          <CompletarButton completado={completado} onClick={onMarcarCompletado} />
+        </div>
       </div>
     )
   }

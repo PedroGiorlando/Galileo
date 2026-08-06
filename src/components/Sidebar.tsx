@@ -1,13 +1,17 @@
 import { CheckCircle2, Circle, Lock } from 'lucide-react'
-import { temarioSidebar, tema } from '../data/topicData'
+import { temarioSidebar, tema, TOTAL_TEMAS_GRADO } from '../data/topicData'
 
-export function Sidebar() {
+interface SidebarProps {
+  temaActualCompletado: boolean
+}
+
+export function Sidebar({ temaActualCompletado }: SidebarProps) {
   return (
     <aside className="w-72 shrink-0 rounded-lg border border-slate-200 bg-white p-4">
       <p className="text-xs font-semibold uppercase text-slate-400">{tema.categoria}</p>
       <h2 className="mb-1 text-lg font-bold text-slate-800">Temario del curso</h2>
       <p className="mb-4 text-sm text-slate-500">
-        Tema {tema.id} de {temarioSidebar.length}
+        Tema {tema.id} de {TOTAL_TEMAS_GRADO}
       </p>
 
       <ul className="space-y-1">
@@ -18,7 +22,7 @@ export function Sidebar() {
               item.actual ? 'bg-green-50 font-medium text-green-700' : 'text-slate-600'
             }`}
           >
-            {item.completado ? (
+            {item.completado || (item.actual && temaActualCompletado) ? (
               <CheckCircle2 size={16} className="shrink-0 text-green-600" />
             ) : item.actual ? (
               <Circle size={16} className="shrink-0 text-green-600" />

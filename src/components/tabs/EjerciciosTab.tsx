@@ -38,8 +38,10 @@ function esCorrecta(ejercicio: Ejercicio, respuesta: Respuesta): boolean {
 
 export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabProps) {
   const [subtab, setSubtab] = useState<Subtab>('Ejercicios')
-  const [respuestasBorrador, setRespuestasBorrador] = useState<Record<number, Respuesta>>({})
   const [resultados, setResultados] = useLocalStorage<Resultados>('galileo:ejercicios-tema-7', {})
+  const [respuestasBorrador, setRespuestasBorrador] = useState<Record<number, Respuesta>>(() =>
+    Object.fromEntries(Object.entries(resultados).map(([id, r]) => [id, r.respuesta])),
+  )
 
   function verificar(ejercicio: Ejercicio) {
     const respuesta = respuestasBorrador[ejercicio.id] ?? (ejercicio.tipo === 'multiple' ? [] : '')

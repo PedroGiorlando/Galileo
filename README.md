@@ -19,8 +19,11 @@ Abrí la URL que imprime Vite (por defecto `http://localhost:5173`).
   baja por props a las 5 tabs. Con un solo nivel de anidamiento, Context
   agrega indirección sin necesidad real.
 - **Datos separados de la UI:** todo el contenido hardcodeado está en
-  `src/data/topicData.ts`. El día que haya una API real, se cambia ese
-  archivo por un fetch y los componentes no se tocan.
+  `src/data/topicData.ts`. El día que haya una API real, el archivo se
+  reemplaza por un fetch, pero hoy varios componentes hacen
+  `import { tema } from '../data/topicData'` como valor fijo (no como prop)
+  — pasar a datos que llegan async va a requerir además pasar `tema` como
+  prop (o Context) a esos componentes, no solo cambiar este archivo.
 - **localStorage por feature, no global:** el hook `useLocalStorage` se usa
   de forma independiente en `EjerciciosTab`, `AutoevaluacionTab` y `App.tsx`
   — cada uno persiste solo lo que le importa a él, nadie comparte ese

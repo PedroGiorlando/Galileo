@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide-react'
-import { tema, TOTAL_TEMAS_GRADO } from './data/topicData'
+import { tema, TOTAL_TEMAS_GRADO, temarioSidebar } from './data/topicData'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { Header } from './components/Header'
 import { Sidebar } from './components/Sidebar'
@@ -21,15 +21,11 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-// Temas 1-6 ya están "completados" como base fija (matching el mockup);
-// el tema 7 es el único real, así que su check depende del estado de abajo.
-const TEMAS_COMPLETADOS_BASE = 6
-
 function App() {
   const [tabActivo, setTabActivo] = useState<TabId>('leccion')
   const [completado, setCompletado] = useLocalStorage('galileo:tema-7-completado', false)
 
-  const completedCount = TEMAS_COMPLETADOS_BASE + (completado ? 1 : 0)
+  const completedCount = temarioSidebar.filter(t => t.completado).length + (completado ? 1 : 0)
   const courseProgressPercent = (completedCount / TOTAL_TEMAS_GRADO) * 100
 
   const tabProps = {
@@ -42,7 +38,7 @@ function App() {
       <Header breadcrumbs={['Inicio', 'Primaria', tema.grado, tema.categoria, tema.titulo]} />
 
       <main className="mx-auto flex max-w-7xl gap-6 p-6">
-        <Sidebar />
+        <Sidebar temaActualCompletado={completado} />
 
         <div className="min-w-0 flex-1 space-y-4">
           <div className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1">
@@ -62,11 +58,11 @@ function App() {
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-6">
-            {tabActivo === 'leccion' && <LeccionTab {...tabProps} />}
-            {tabActivo === 'explicacion' && <ExplicacionTab {...tabProps} />}
-            {tabActivo === 'ejemplos' && <EjemplosTab {...tabProps} />}
-            {tabActivo === 'ejercicios' && <EjerciciosTab {...tabProps} />}
-            {tabActivo === 'autoevaluacion' && <AutoevaluacionTab {...tabProps} />}
+            <div className={tabActivo === 'leccion' ? '' : 'hidden'}><LeccionTab {...tabProps} /></div>
+            <div className={tabActivo === 'explicacion' ? '' : 'hidden'}><ExplicacionTab {...tabProps} /></div>
+            <div className={tabActivo === 'ejemplos' ? '' : 'hidden'}><EjemplosTab {...tabProps} /></div>
+            <div className={tabActivo === 'ejercicios' ? '' : 'hidden'}><EjerciciosTab {...tabProps} /></div>
+            <div className={tabActivo === 'autoevaluacion' ? '' : 'hidden'}><AutoevaluacionTab {...tabProps} /></div>
           </div>
         </div>
 
