@@ -33,6 +33,7 @@ src/
     Sidebar.tsx
     RightPanel.tsx
     ProgressRing.tsx
+    CompletarButton.tsx
     tabs/
       LeccionTab.tsx
       ExplicacionTab.tsx
@@ -652,15 +653,17 @@ git commit -m "feat: add useLocalStorage hook"
 
 ---
 
-### Task 5: ProgressRing
+### Task 5: ProgressRing y CompletarButton
 
 **Files:**
 - Create: `src/components/ProgressRing.tsx`
+- Create: `src/components/CompletarButton.tsx`
 
 **Interfaces:**
 - Produces: `<ProgressRing percent={number} size?={number} />` — SVG circular, verde, con el % como texto centrado.
+- Produces: `<CompletarButton completado={boolean} onClick={() => void} />` — el botón "Marcar como completado" que las 5 tabs (Tasks 9-13) usan idéntico; se extrae una sola vez acá para no repetir el mismo JSX cinco veces.
 
-- [ ] **Step 1: Escribir el componente**
+- [ ] **Step 1: Escribir ProgressRing**
 
 ```tsx
 interface ProgressRingProps {
@@ -710,7 +713,35 @@ export function ProgressRing({ percent, size = 96 }: ProgressRingProps) {
 }
 ```
 
-- [ ] **Step 2: Verificar build**
+- [ ] **Step 2: Escribir CompletarButton**
+
+```tsx
+import { CheckCircle2 } from 'lucide-react'
+
+interface CompletarButtonProps {
+  completado: boolean
+  onClick: () => void
+}
+
+export function CompletarButton({ completado, onClick }: CompletarButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
+        completado
+          ? 'border-green-600 bg-green-50 text-green-700'
+          : 'border-slate-300 text-slate-600'
+      }`}
+    >
+      <CheckCircle2 size={16} />
+      {completado ? 'Completado' : 'Marcar como completado'}
+    </button>
+  )
+}
+```
+
+- [ ] **Step 3: Verificar build**
 
 ```bash
 npm run build
@@ -718,11 +749,11 @@ npm run build
 
 Expected: sin errores.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add -A
-git commit -m "feat: add ProgressRing component"
+git commit -m "feat: add ProgressRing and CompletarButton components"
 ```
 
 ---
@@ -1002,7 +1033,7 @@ git commit -m "feat: add RightPanel component"
 - Create: `src/components/tabs/LeccionTab.tsx`
 
 **Interfaces:**
-- Consumes: `tema` de `topicData.ts`; props `completado: boolean`, `onMarcarCompletado: () => void` (vienen de `App.tsx`, compartidas por las 5 tabs).
+- Consumes: `tema` de `topicData.ts`; props `completado: boolean`, `onMarcarCompletado: () => void` (vienen de `App.tsx`, compartidas por las 5 tabs); `CompletarButton` de Task 5.
 - Produces: `<LeccionTab completado={boolean} onMarcarCompletado={() => void} />`
 
 - [ ] **Step 1: Escribir el componente**
@@ -1011,6 +1042,7 @@ git commit -m "feat: add RightPanel component"
 import { useState } from 'react'
 import { Play, Pause, CheckCircle2 } from 'lucide-react'
 import { tema } from '../../data/topicData'
+import { CompletarButton } from '../CompletarButton'
 
 interface LeccionTabProps {
   completado: boolean
@@ -1030,18 +1062,7 @@ export function LeccionTab({ completado, onMarcarCompletado }: LeccionTabProps) 
           <p className="text-sm font-semibold text-orange-500">TEMA {tema.id}</p>
           <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
         </div>
-        <button
-          type="button"
-          onClick={onMarcarCompletado}
-          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
-            completado
-              ? 'border-green-600 bg-green-50 text-green-700'
-              : 'border-slate-300 text-slate-600'
-          }`}
-        >
-          <CheckCircle2 size={16} />
-          {completado ? 'Completado' : 'Marcar como completado'}
-        </button>
+        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-slate-900 p-8 text-center text-white">
@@ -1097,14 +1118,15 @@ git commit -m "feat: add LeccionTab"
 - Create: `src/components/tabs/ExplicacionTab.tsx`
 
 **Interfaces:**
-- Consumes: `tema.explicacion` de `topicData.ts`; mismas props `completado`/`onMarcarCompletado` que Task 9.
+- Consumes: `tema.explicacion` de `topicData.ts`; mismas props `completado`/`onMarcarCompletado` que Task 9; `CompletarButton` de Task 5.
 - Produces: `<ExplicacionTab completado={boolean} onMarcarCompletado={() => void} />`
 
 - [ ] **Step 1: Escribir el componente**
 
 ```tsx
-import { CheckCircle2, Lightbulb } from 'lucide-react'
+import { Lightbulb } from 'lucide-react'
 import { tema } from '../../data/topicData'
+import { CompletarButton } from '../CompletarButton'
 
 interface ExplicacionTabProps {
   completado: boolean
@@ -1116,18 +1138,7 @@ export function ExplicacionTab({ completado, onMarcarCompletado }: ExplicacionTa
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
-        <button
-          type="button"
-          onClick={onMarcarCompletado}
-          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
-            completado
-              ? 'border-green-600 bg-green-50 text-green-700'
-              : 'border-slate-300 text-slate-600'
-          }`}
-        >
-          <CheckCircle2 size={16} />
-          {completado ? 'Completado' : 'Marcar como completado'}
-        </button>
+        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       {tema.explicacion.map(seccion => (
@@ -1176,7 +1187,7 @@ git commit -m "feat: add ExplicacionTab"
 - Create: `src/components/tabs/EjemplosTab.tsx`
 
 **Interfaces:**
-- Consumes: `tema.ejemplos` de `topicData.ts`; props `completado`/`onMarcarCompletado`.
+- Consumes: `tema.ejemplos` de `topicData.ts`; props `completado`/`onMarcarCompletado`; `CompletarButton` de Task 5.
 - Produces: `<EjemplosTab completado={boolean} onMarcarCompletado={() => void} />`
 - Estado interno: índice del ejemplo actual (`useState`, no se persiste — no hace falta recordar en qué ejemplo se quedó entre sesiones).
 
@@ -1184,8 +1195,9 @@ git commit -m "feat: add ExplicacionTab"
 
 ```tsx
 import { useState } from 'react'
-import { CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { tema } from '../../data/topicData'
+import { CompletarButton } from '../CompletarButton'
 
 interface EjemplosTabProps {
   completado: boolean
@@ -1202,18 +1214,7 @@ export function EjemplosTab({ completado, onMarcarCompletado }: EjemplosTabProps
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
-        <button
-          type="button"
-          onClick={onMarcarCompletado}
-          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
-            completado
-              ? 'border-green-600 bg-green-50 text-green-700'
-              : 'border-slate-300 text-slate-600'
-          }`}
-        >
-          <CheckCircle2 size={16} />
-          {completado ? 'Completado' : 'Marcar como completado'}
-        </button>
+        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-5">
@@ -1278,7 +1279,7 @@ git commit -m "feat: add EjemplosTab"
 - Create: `src/components/tabs/EjerciciosTab.tsx`
 
 **Interfaces:**
-- Consumes: `tema.ejercicios` de `topicData.ts`, `useLocalStorage` de Task 4; props `completado`/`onMarcarCompletado`.
+- Consumes: `tema.ejercicios` de `topicData.ts`, `useLocalStorage` de Task 4; props `completado`/`onMarcarCompletado`; `CompletarButton` de Task 5.
 - Produces: `<EjerciciosTab completado={boolean} onMarcarCompletado={() => void} />`
 - Estado persistido (local a este componente, localStorage key `galileo:ejercicios-tema-7`): `Record<number, { respuesta: string | string[]; correcto: boolean }>`.
 
@@ -1289,6 +1290,7 @@ import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { tema, type Ejercicio } from '../../data/topicData'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
+import { CompletarButton } from '../CompletarButton'
 
 interface EjerciciosTabProps {
   completado: boolean
@@ -1339,18 +1341,7 @@ export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabP
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
-        <button
-          type="button"
-          onClick={onMarcarCompletado}
-          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
-            completado
-              ? 'border-green-600 bg-green-50 text-green-700'
-              : 'border-slate-300 text-slate-600'
-          }`}
-        >
-          <CheckCircle2 size={16} />
-          {completado ? 'Completado' : 'Marcar como completado'}
-        </button>
+        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       <div className="flex gap-2 border-b border-slate-200">
@@ -1540,7 +1531,7 @@ git commit -m "feat: add EjerciciosTab with verify/review sub-tabs"
 - Create: `src/components/tabs/AutoevaluacionTab.tsx`
 
 **Interfaces:**
-- Consumes: `tema.quiz` de `topicData.ts`, `useLocalStorage` de Task 4; props `completado`/`onMarcarCompletado`.
+- Consumes: `tema.quiz` de `topicData.ts`, `useLocalStorage` de Task 4; props `completado`/`onMarcarCompletado`; `CompletarButton` de Task 5.
 - Produces: `<AutoevaluacionTab completado={boolean} onMarcarCompletado={() => void} />`
 - Estado persistido (localStorage key `galileo:quiz-mejor-puntaje-tema-7`): `number` (mejor puntaje sobre 10).
 - Estado local del intento actual (`useState`, no persiste): índice de pregunta, respuestas seleccionadas, si terminó.
@@ -1552,6 +1543,7 @@ import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { tema } from '../../data/topicData'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
+import { CompletarButton } from '../CompletarButton'
 
 interface AutoevaluacionTabProps {
   completado: boolean
@@ -1627,18 +1619,7 @@ export function AutoevaluacionTab({ completado, onMarcarCompletado }: Autoevalua
     <div className="space-y-4">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
-        <button
-          type="button"
-          onClick={onMarcarCompletado}
-          className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
-            completado
-              ? 'border-green-600 bg-green-50 text-green-700'
-              : 'border-slate-300 text-slate-600'
-          }`}
-        >
-          <CheckCircle2 size={16} />
-          {completado ? 'Completado' : 'Marcar como completado'}
-        </button>
+        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500">
@@ -1899,3 +1880,4 @@ git commit -m "docs: add README with run instructions and manual verification ch
 - **Cobertura del spec:** las 5 tabs (Tasks 9-13), sidebar (Task 7), header/breadcrumbs (Task 6), panel de progreso + decorativo (Task 8), persistencia (Task 4 + usos en Tasks 12-14), sin login (Task 6 hardcodea el estado deslogueado) — todo cubierto.
 - **Placeholders:** ninguno — cada tarea tiene código completo y real, sin "TODO" ni "similar a la tarea anterior".
 - **Consistencia de tipos:** `Ejercicio`/`Ejemplo`/`PreguntaQuiz`/`TemaSidebarItem` se definen una sola vez en Task 3 y se importan igual en el resto de las tareas; `completado`/`onMarcarCompletado` tienen la misma forma en las 5 tabs (Tasks 9-13) y en `App.tsx` (Task 14).
+- **Sin duplicación:** el botón "Marcar como completado" se extrajo a `CompletarButton` (Task 5) en vez de repetirse igual en las 5 tabs — evita que el review lo marque como duplicación cinco veces.
