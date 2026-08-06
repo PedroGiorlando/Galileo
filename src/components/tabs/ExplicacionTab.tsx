@@ -15,8 +15,8 @@ export function ExplicacionTab({ completado, onMarcarCompletado }: ExplicacionTa
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
-      {tema.explicacion.map(seccion => (
-        <section key={seccion.titulo}>
+      {tema.explicacion.map((seccion, i) => (
+        <section key={i}>
           <h2 className="mb-2 text-lg font-bold text-slate-800">{seccion.titulo}</h2>
           <p className="mb-3 text-slate-600">{seccion.parrafo}</p>
           {seccion.caja && (

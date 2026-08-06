@@ -42,6 +42,10 @@ export function AutoevaluacionTab({ completado, onMarcarCompletado }: Autoevalua
     }
   }
 
+  function anterior() {
+    setIndice(i => Math.max(0, i - 1))
+  }
+
   function reintentar() {
     setIndice(0)
     setRespuestas({})
@@ -101,7 +105,7 @@ export function AutoevaluacionTab({ completado, onMarcarCompletado }: Autoevalua
 
             return (
               <button
-                key={opcion}
+                key={i}
                 type="button"
                 onClick={() => elegirOpcion(i)}
                 disabled={yaRespondida}
@@ -120,14 +124,24 @@ export function AutoevaluacionTab({ completado, onMarcarCompletado }: Autoevalua
         )}
       </div>
 
-      <button
-        type="button"
-        disabled={!yaRespondida}
-        onClick={siguiente}
-        className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {esUltima ? 'Finalizar autoevaluación' : 'Siguiente pregunta'}
-      </button>
+      <div className="flex justify-between">
+        <button
+          type="button"
+          disabled={indice === 0}
+          onClick={anterior}
+          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Pregunta anterior
+        </button>
+        <button
+          type="button"
+          disabled={!yaRespondida}
+          onClick={siguiente}
+          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {esUltima ? 'Finalizar autoevaluación' : 'Siguiente pregunta'}
+        </button>
+      </div>
     </div>
   )
 }

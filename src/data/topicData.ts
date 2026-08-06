@@ -1,6 +1,5 @@
 export interface Ejemplo {
   id: number
-  titulo: string
   enunciado: string
   pasos: string[]
 }
@@ -105,7 +104,6 @@ export const tema: Tema = {
   ejemplos: [
     {
       id: 1,
-      titulo: 'Escribir los 10 primeros múltiplos de 8',
       enunciado: 'Escribir los 10 primeros múltiplos de 8.',
       pasos: [
         'Multiplicamos 8 por los números naturales desde 0 hasta 9.',
@@ -115,7 +113,6 @@ export const tema: Tema = {
     },
     {
       id: 2,
-      titulo: 'Encontrar los divisores de 24',
       enunciado: 'Encontrar los divisores de 24.',
       pasos: [
         'Buscamos los números que dividen a 24 en forma exacta (resto 0).',
@@ -125,7 +122,6 @@ export const tema: Tema = {
     },
     {
       id: 3,
-      titulo: '¿Es 15 múltiplo de 3? ¿Y 3 divisor de 15?',
       enunciado: '¿Es 15 múltiplo de 3? ¿Y 3 divisor de 15?',
       pasos: [
         'Para saber si 15 es múltiplo de 3: 15÷3=5, resto 0 → como el resto es 0, 15 es múltiplo de 3.',

@@ -50,6 +50,11 @@ export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabP
   }
 
   const totalCorrectas = Object.values(resultados).filter(r => r.correcto).length
+  const puntosTotales = tema.ejercicios.reduce((sum, ej) => sum + ej.puntos, 0)
+  const puntosGanados = tema.ejercicios.reduce(
+    (sum, ej) => sum + (resultados[ej.id]?.correcto ? ej.puntos : 0),
+    0,
+  )
 
   return (
     <div className="space-y-4">
@@ -58,11 +63,13 @@ export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabP
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
-      <div className="flex gap-2 border-b border-slate-200">
+      <div role="tablist" className="flex gap-2 border-b border-slate-200">
         {SUBTABS.map(s => (
           <button
             key={s}
             type="button"
+            role="tab"
+            aria-selected={subtab === s}
             onClick={() => setSubtab(s)}
             className={`px-3 py-2 text-sm font-medium ${
               subtab === s ? 'border-b-2 border-green-600 text-green-700' : 'text-slate-500'
@@ -166,7 +173,8 @@ export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabP
       {subtab === 'Mis respuestas' && (
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Llevás {totalCorrectas} ejercicios correctos de {tema.ejercicios.length}.
+            Llevás {totalCorrectas} ejercicios correctos de {tema.ejercicios.length} ({puntosGanados} de{' '}
+            {puntosTotales} puntos).
           </p>
           {tema.ejercicios.map(ej => {
             const resultado = resultados[ej.id]

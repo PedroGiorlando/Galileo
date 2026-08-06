@@ -41,11 +41,13 @@ function App() {
         <Sidebar temaActualCompletado={completado} />
 
         <div className="min-w-0 flex-1 space-y-4">
-          <div className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1">
+          <div role="tablist" className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1">
             {TABS.map(tab => (
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
+                aria-selected={tabActivo === tab.id}
                 onClick={() => setTabActivo(tab.id)}
                 className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap ${
                   tabActivo === tab.id ? 'bg-green-600 text-white' : 'text-slate-600 hover:bg-slate-100'
