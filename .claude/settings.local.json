@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit *)",
+      "Bash(ls \"C:\\\\Users\\\\pggv2\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\superpowers\\\\6.2.0\\\\skills\\\\subagent-driven-development\\\\scripts\" 2>&1)",
+      "Read(//c/Users/pggv2/.claude/plugins/cache/claude-plugins-official/superpowers/6.2.0/skills/subagent-driven-development/scripts/**)",
+      "Bash(bash \"C:\\\\Users\\\\pggv2\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\superpowers\\\\6.2.0\\\\skills\\\\subagent-driven-development\\\\scripts\\\\sdd-workspace\" \"docs/superpowers/plans/2026-08-06-multiplos-divisores-prototype.md\")",
+      "Bash(bash \"C:\\\\Users\\\\pggv2\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\superpowers\\\\6.2.0\\\\skills\\\\subagent-driven-development\\\\scripts\\\\task-brief\" \"docs/superpowers/plans/2026-08-06-multiplos-divisores-prototype.md\" 1)",
+      "Read(//c/Users/pggv2/.claude/plugins/cache/claude-plugins-official/superpowers/6.2.0/skills/subagent-driven-development/**)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(npm run *)"
+    ]
+  }
+}
