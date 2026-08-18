@@ -8,9 +8,9 @@ interface RightPanelProps {
 }
 
 const RECURSOS = [
-  { icon: FileText, label: 'Resumen del tema', accion: 'Descargar (PDF)' },
-  { icon: FileSpreadsheet, label: 'Ficha de ejemplos', accion: 'Descargar (PDF)' },
-  { icon: Printer, label: 'Ejercicios imprimibles', accion: 'Descargar (PDF)' },
+  { icon: FileText, label: 'Resumen del tema', accion: 'Descargar (PDF)', color: 'bg-blue-100 text-blue-600' },
+  { icon: FileSpreadsheet, label: 'Ficha de ejemplos', accion: 'Descargar (PDF)', color: 'bg-purple-100 text-purple-600' },
+  { icon: Printer, label: 'Ejercicios imprimibles', accion: 'Descargar (PDF)', color: 'bg-orange-100 text-orange-600' },
 ]
 
 // Los recursos y el soporte son decorativos: no hay archivos ni backend
@@ -21,8 +21,8 @@ function avisoDecorativo(label: string) {
 
 export function RightPanel({ courseProgressPercent, completedCount, totalCount }: RightPanelProps) {
   return (
-    <aside className="w-72 shrink-0 space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <aside className="w-72 shrink-0 space-y-3">
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
         <h3 className="mb-3 text-sm font-semibold text-slate-700">Tu progreso en el curso</h3>
         <div className="flex items-center gap-4">
           <ProgressRing percent={courseProgressPercent} size={80} />
@@ -32,12 +32,14 @@ export function RightPanel({ courseProgressPercent, completedCount, totalCount }
         </div>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
         <h3 className="mb-3 text-sm font-semibold text-slate-700">Recursos del tema</h3>
         <ul className="space-y-3">
           {RECURSOS.map(r => (
             <li key={r.label} className="flex items-center gap-3 text-sm">
-              <r.icon size={18} className="text-green-600" />
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${r.color}`}>
+                <r.icon size={18} />
+              </span>
               <div>
                 <p className="text-slate-700">{r.label}</p>
                 <button
@@ -53,25 +55,25 @@ export function RightPanel({ courseProgressPercent, completedCount, totalCount }
         </ul>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-          <MessageCircleQuestion size={16} /> ¿Dudas sobre este tema?
+      <div className="rounded-lg border border-pink-100 bg-pink-50 p-3">
+        <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-pink-800">
+          <MessageCircleQuestion size={16} className="text-pink-600" /> ¿Dudas sobre este tema?
         </h3>
-        <p className="mb-3 text-sm text-slate-500">Dejanos tu consulta y te respondemos.</p>
+        <p className="mb-3 text-sm text-pink-700">Dejanos tu consulta y te respondemos.</p>
         <button
           type="button"
           onClick={() => avisoDecorativo('Hacer una pregunta')}
-          className="w-full rounded-md border border-slate-200 py-2 text-sm text-slate-700 hover:bg-slate-50"
+          className="w-full rounded-md bg-pink-600 py-2 text-sm font-medium text-white hover:bg-pink-700"
         >
           Hacer una pregunta
         </button>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
         <h3 className="mb-2 text-sm font-semibold text-slate-700">Notas personales</h3>
         <textarea
           className="w-full rounded-md border border-slate-200 p-2 text-sm"
-          rows={3}
+          rows={2}
           placeholder="Escribí aquí tus apuntes..."
         />
         <p className="mt-1 text-xs text-slate-400">Estas notas son privadas y solo visibles para vos.</p>

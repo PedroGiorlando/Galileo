@@ -37,7 +37,7 @@ function App() {
     <div className="min-h-screen bg-slate-50">
       <Header breadcrumbs={['Inicio', 'Primaria', tema.grado, tema.categoria, tema.titulo]} />
 
-      <main className="mx-auto flex max-w-7xl gap-6 p-6">
+      <main className="mx-auto flex max-w-7xl items-start gap-6 p-6">
         <Sidebar temaActualCompletado={completado} />
 
         <div className="min-w-0 flex-1 space-y-4">
