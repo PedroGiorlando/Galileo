@@ -1,7 +1,17 @@
 -- Academia Galileo — esquema inicial
 --
--- Cómo aplicarlo: Supabase → SQL Editor → New query → pegar todo → Run.
--- Es idempotente (usa IF NOT EXISTS), así que se puede correr de nuevo sin romper nada.
+-- Cómo aplicarlo: abrir este archivo en el editor, copiar todo (Ctrl+A, Ctrl+C)
+-- y pegarlo en Supabase → SQL Editor → New query → Run.
+--
+-- NO copiarlo con "Get-Content archivo | Set-Clipboard" a secas: Windows
+-- PowerShell lo lee en la codificación ANSI del sistema y las tildes llegan
+-- corruptas a la base ('Matemática' termina como 'MatemÃ¡tica'). Si hace falta
+-- desde la terminal, va con encoding explícito:
+--     Get-Content archivo -Raw -Encoding UTF8 | Set-Clipboard
+--
+-- Es idempotente y además autocorrectivo: los INSERT de la semilla hacen
+-- "on conflict do update", así que volver a correrlo repara datos mal cargados
+-- en vez de ignorarlos.
 
 -- ---------------------------------------------------------------------------
 -- Catálogo
@@ -137,11 +147,14 @@ create policy progreso_propio on progreso for all
 -- ---------------------------------------------------------------------------
 
 insert into materias (slug, nombre) values ('matematica', 'Matemática')
-  on conflict (slug) do nothing;
+  on conflict (slug) do update set nombre = excluded.nombre;
 
 insert into cursos (materia_id, nivel, grado_slug, grado_nombre, titulo, descripcion, precio_centavos, publicado)
 select m.id, 'primaria', '4-grado', '4° Grado', 'Matemática 4° Grado',
        'Todo el programa de Matemática de 4° grado, con explicaciones, ejemplos resueltos y ejercicios que se corrigen solos.',
        0, true
 from materias m where m.slug = 'matematica'
-  on conflict (nivel, grado_slug, materia_id) do nothing;
+  on conflict (nivel, grado_slug, materia_id) do update set
+       titulo = excluded.titulo,
+       grado_nombre = excluded.grado_nombre,
+       descripcion = excluded.descripcion;
