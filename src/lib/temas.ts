@@ -160,3 +160,14 @@ export async function getTemaParaAdmin(cursoId: number, temaSlug: string) {
   if (error) throw new Error(`No se pudo leer el tema: ${error.message}`)
   return data
 }
+
+/** Rutas de todos los cursos publicados, para prerenderizarlas en el build. */
+export async function getRutasDeCursos(): Promise<{ grado: string; materia: string }[]> {
+  const { data, error } = await supabasePublico()
+    .from('cursos')
+    .select('grado_slug, materias!inner(slug)')
+    .overrideTypes<{ grado_slug: string; materias: { slug: string } }[]>()
+
+  if (error) throw new Error(`No se pudieron leer los cursos: ${error.message}`)
+  return (data ?? []).map(c => ({ grado: c.grado_slug, materia: c.materias.slug }))
+}

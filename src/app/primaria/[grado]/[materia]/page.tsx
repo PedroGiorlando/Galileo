@@ -2,10 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { BookOpen, Lock } from 'lucide-react'
-import { getCurso, getTemario } from '@/lib/temas'
+import { getCurso, getRutasDeCursos, getTemario } from '@/lib/temas'
 import { Header } from '@/components/Header'
 
 type Params = { grado: string; materia: string }
+
+export async function generateStaticParams() {
+  return getRutasDeCursos()
+}
 
 export async function generateMetadata({
   params,
