@@ -1,51 +1,30 @@
-export interface Ejemplo {
-  id: number
-  enunciado: string
-  pasos: string[]
-}
+import type {
+  Ejemplo,
+  Ejercicio,
+  PreguntaQuiz,
+  SeccionExplicacion,
+} from '@/lib/schemas'
 
-export interface EjercicioBase {
-  id: number
-  enunciado: string
-  explicacion: string
-  puntos: number
-}
+// Los tipos del contenido viven en lib/schemas.ts, derivados del schema Zod que
+// los valida en runtime. Se re-exportan desde acá para que los componentes que
+// ya los importaban de este archivo no tengan que cambiar.
+export type {
+  Ejemplo,
+  Ejercicio,
+  EjercicioLibre,
+  EjercicioMultiple,
+  EjercicioSiNo,
+  PreguntaQuiz,
+  SeccionExplicacion,
+  TemaContenido,
+} from '@/lib/schemas'
 
-export interface EjercicioLibre extends EjercicioBase {
-  tipo: 'libre'
-  respuestaCorrecta: string
-}
-
-export interface EjercicioMultiple extends EjercicioBase {
-  tipo: 'multiple'
-  opciones: string[]
-  respuestaCorrecta: string[]
-}
-
-export interface EjercicioSiNo extends EjercicioBase {
-  tipo: 'si-no'
-  respuestaCorrecta: 'Sí' | 'No'
-}
-
-export type Ejercicio = EjercicioLibre | EjercicioMultiple | EjercicioSiNo
-
-export interface PreguntaQuiz {
-  id: number
-  pregunta: string
-  opciones: string[]
-  respuestaCorrectaIndex: number
-  explicacion: string
-}
-
-export interface SeccionExplicacion {
-  titulo: string
-  parrafo: string
-  caja?: {
-    tipo: 'ejemplo' | 'tip' | 'nota'
-    contenido: string
-  }
-}
-
+/**
+ * Forma plana del tema: metadatos y contenido al mismo nivel, que es como lo
+ * consumen los componentes. En la base el contenido va en una columna jsonb; la
+ * capa de datos lo aplana al leer ({ ...fila, ...fila.contenido }) para que los
+ * componentes no se enteren de la diferencia.
+ */
 export interface Tema {
   id: number
   slug: string

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import { tema, type Ejercicio } from '../../data/topicData'
+import { tema } from '../../data/topicData'
+import { esCorrecta, type Respuesta } from '@/lib/correccion'
+import type { Ejercicio } from '@/lib/schemas'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CompletarButton } from '../CompletarButton'
 
@@ -9,32 +11,11 @@ interface EjerciciosTabProps {
   onMarcarCompletado: () => void
 }
 
-type Respuesta = string | string[]
 type Resultado = { respuesta: Respuesta; correcto: boolean }
 type Resultados = Record<number, Resultado>
 
 const SUBTABS = ['Ejercicios', 'Mis respuestas', 'Resueltos'] as const
 type Subtab = (typeof SUBTABS)[number]
-
-function normalizarLista(valor: string): string[] {
-  return valor
-    .split(',')
-    .map(v => v.trim())
-    .filter(Boolean)
-    .sort()
-}
-
-function esCorrecta(ejercicio: Ejercicio, respuesta: Respuesta): boolean {
-  if (ejercicio.tipo === 'libre') {
-    return normalizarLista(respuesta as string).join(',') === normalizarLista(ejercicio.respuestaCorrecta).join(',')
-  }
-  if (ejercicio.tipo === 'multiple') {
-    const dadas = [...(respuesta as string[])].sort()
-    const correctas = [...ejercicio.respuestaCorrecta].sort()
-    return dadas.length === correctas.length && dadas.every((v, i) => v === correctas[i])
-  }
-  return respuesta === ejercicio.respuestaCorrecta
-}
 
 export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabProps) {
   const [subtab, setSubtab] = useState<Subtab>('Ejercicios')

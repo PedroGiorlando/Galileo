@@ -68,6 +68,29 @@ src/
   existe; leer ahí produce un hydration mismatch. Costo: un parpadeo al volver
   a entrar, que desaparece cuando el progreso venga del servidor.
 
+## Panel de contenido
+
+`/admin` tiene el formulario de carga de temas. Valida contra el mismo schema
+Zod que protege la base (`src/lib/schemas.ts`), así que lo que el formulario
+rechaza tampoco se habría podido guardar.
+
+Todavía no está conectado a la base: al guardar muestra el JSON validado para
+copiar. Cuando Supabase esté configurado, lo único que cambia es la función
+`onGuardar` que `EditorTema` le pasa al formulario — `TemaForm` no se toca.
+
+Para conectarlo: copiar `.env.example` a `.env.local`, completar las claves, y
+correr `supabase/schema.sql` en el SQL Editor de Supabase.
+
+## Tests
+
+```bash
+npm test
+```
+
+Cubren lo que se puede romper en silencio: la corrección de ejercicios (orden y
+espacios indistintos, conjunto exacto), la validación de contenido, y que cargar
+un tema en el panel y guardarlo sin tocarlo devuelva exactamente lo mismo.
+
 ## Qué probar
 
 - Navegar las 5 tabs.
