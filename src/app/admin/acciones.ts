@@ -13,7 +13,7 @@ import { TemaContenidoSchema, TemaMetaSchema } from '@/lib/schemas'
  * como cualquier otra, no "lo que el formulario mandó". Que el formulario haya
  * validado antes es comodidad para quien carga, no una garantía.
  */
-export async function guardarTema(cursoId: number, meta: unknown, contenido: unknown) {
+export async function guardarSubtema(cursoId: number, meta: unknown, contenido: unknown) {
   const rMeta = TemaMetaSchema.safeParse(meta)
   const rContenido = TemaContenidoSchema.safeParse(contenido)
 
@@ -26,30 +26,37 @@ export async function guardarTema(cursoId: number, meta: unknown, contenido: unk
   }
 
   const m = rMeta.data
-  const { error } = await supabaseAdmin()
-    .from('temas')
-    .upsert(
-      {
-        curso_id: cursoId,
-        slug: m.slug,
-        titulo: m.titulo,
-        categoria: m.categoria,
-        orden: m.orden,
-        duracion_label: m.duracionLabel,
-        video_url: m.videoUrl || null,
-        gratis: m.gratis,
-        publicado: m.publicado,
-        contenido: rContenido.data,
-      },
-      { onConflict: 'curso_id,slug' },
-    )
+
+  // Update y no upsert: la fila ya existe (la creó el seed del currículum). El
+  // panel edita subtemas, no los inventa — así el orden y el área a la que
+  // pertenece no se pueden romper desde el formulario.
+  const { data, error } = await supabaseAdmin()
+    .from('subtemas')
+    .update({
+      titulo: m.titulo,
+      duracion_label: m.duracionLabel,
+      video_url: m.videoUrl || null,
+      gratis: m.gratis,
+      publicado: m.publicado,
+      contenido: rContenido.data,
+    })
+    .eq('curso_id', cursoId)
+    .eq('slug', m.slug)
+    .select('id')
 
   if (error) return { ok: false as const, error: error.message }
+  if (!data || data.length === 0) {
+    return {
+      ok: false as const,
+      error: `No existe el subtema "${m.slug}" en este curso. El slug no se puede cambiar desde acá.`,
+    }
+  }
 
-  // Las páginas del tema son estáticas: sin esto seguirían mostrando la versión
-  // vieja hasta el próximo build.
-  revalidatePath('/primaria/[grado]/[materia]/[tema]', 'page')
-  revalidatePath('/primaria/[grado]/[materia]', 'page')
+  // Las páginas son estáticas: sin esto seguirían mostrando la versión vieja
+  // hasta el próximo build.
+  revalidatePath('/primaria/[grado]/[subtema]', 'page')
+  revalidatePath('/primaria/[grado]', 'page')
+  revalidatePath('/primaria')
 
   return { ok: true as const }
 }

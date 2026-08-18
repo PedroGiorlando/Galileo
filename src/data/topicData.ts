@@ -25,7 +25,7 @@ export type {
  * capa de datos lo aplana al leer ({ ...fila, ...fila.contenido }) para que los
  * componentes no se enteren de la diferencia.
  */
-export interface Tema {
+export interface SubtemaCompleto {
   id: number
   slug: string
   titulo: string
@@ -42,7 +42,7 @@ export interface Tema {
   quiz: PreguntaQuiz[]
 }
 
-export const tema: Tema = {
+export const tema: SubtemaCompleto = {
   id: 7,
   slug: 'multiplos-y-divisores',
   titulo: 'Múltiplos y divisores',

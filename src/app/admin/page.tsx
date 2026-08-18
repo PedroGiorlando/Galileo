@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { EditorTema } from '@/components/admin/EditorTema'
-import { getCurso, getTemaParaAdmin } from '@/lib/temas'
-import { contenidoDesdeTema, metaDesdeTema, type ContenidoBorrador } from '@/lib/borrador'
+import { EditorSubtema } from '@/components/admin/EditorSubtema'
+import { getCurso, getSubtemaParaAdmin } from '@/lib/contenido'
+import { contenidoDesdeTema, type ContenidoBorrador } from '@/lib/borrador'
 import { TemaContenidoSchema, type TemaMeta } from '@/lib/schemas'
-import { tema as temaHardcodeado } from '@/data/topicData'
+import { tema as contenidoDeArranque } from '@/data/topicData'
 
 // El panel nunca se indexa: no es contenido, y además va a estar detrás de login.
 export const metadata: Metadata = {
-  title: 'Editar tema',
+  title: 'Editar subtema',
   robots: { index: false, follow: false },
 }
 
@@ -16,42 +16,39 @@ export const metadata: Metadata = {
 // donde se edita el contenido.
 export const dynamic = 'force-dynamic'
 
-// ponytail: un solo curso y un solo tema, así que están fijos. Cuando haya
-// varios, esto pasa a ser /admin (lista) y /admin/temas/[slug] (edición).
+// ponytail: un solo subtema editable por ahora. Cuando haya varios, esto pasa a
+// ser /admin (lista de subtemas del grado) y /admin/[grado]/[subtema].
 const GRADO = '4-grado'
-const MATERIA = 'matematica'
 const SLUG = 'multiplos-y-divisores'
 
 export default async function AdminPage() {
-  const curso = await getCurso(GRADO, MATERIA)
+  const curso = await getCurso(GRADO)
   if (!curso) notFound()
 
-  const fila = await getTemaParaAdmin(curso.id, SLUG)
+  const fila = await getSubtemaParaAdmin(curso.id, SLUG)
+  if (!fila) notFound()
 
-  // Si el tema ya está en la base se edita eso; si no, se precarga el contenido
-  // hardcodeado — guardarlo una vez ES la migración.
-  let meta: TemaMeta
-  let contenido: ContenidoBorrador
+  // Si el subtema ya tiene contenido se edita eso; si está vacío se precarga el
+  // contenido de arranque — guardarlo una vez ES la carga inicial.
+  const tieneContenido = fila.contenido != null
 
-  if (fila) {
-    meta = {
-      slug: fila.slug,
-      titulo: fila.titulo,
-      categoria: fila.categoria ?? '',
-      orden: fila.orden,
-      duracionLabel: fila.duracion_label ?? '',
-      videoUrl: fila.video_url ?? '',
-      gratis: fila.gratis,
-      publicado: fila.publicado,
-    }
-    contenido = contenidoDesdeTema({
-      ...temaHardcodeado,
-      ...TemaContenidoSchema.parse(fila.contenido),
-    })
-  } else {
-    meta = metaDesdeTema(temaHardcodeado)
-    contenido = contenidoDesdeTema(temaHardcodeado)
+  const meta: TemaMeta = {
+    slug: fila.slug,
+    titulo: fila.titulo,
+    categoria: (fila.temas as unknown as { nombre: string }).nombre,
+    orden: fila.orden,
+    duracionLabel: fila.duracion_label ?? contenidoDeArranque.duracionLabel,
+    videoUrl: fila.video_url ?? '',
+    gratis: fila.gratis,
+    publicado: fila.publicado,
   }
+
+  const contenido: ContenidoBorrador = tieneContenido
+    ? contenidoDesdeTema({
+        ...contenidoDeArranque,
+        ...TemaContenidoSchema.parse(fila.contenido),
+      })
+    : contenidoDesdeTema(contenidoDeArranque)
 
   return (
     <div className="mx-auto max-w-4xl p-6">
@@ -59,12 +56,12 @@ export default async function AdminPage() {
         <h1 className="text-2xl font-bold text-slate-900">Panel de contenido</h1>
         <p className="text-sm text-slate-500">{curso.titulo}</p>
       </header>
-      <EditorTema
+      <EditorSubtema
         cursoId={curso.id}
-        rutaCurso={`/primaria/${GRADO}/${MATERIA}`}
+        rutaCurso={`/primaria/${GRADO}`}
         metaInicial={meta}
         contenidoInicial={contenido}
-        desdeLaBase={Boolean(fila)}
+        desdeLaBase={tieneContenido}
       />
     </div>
   )

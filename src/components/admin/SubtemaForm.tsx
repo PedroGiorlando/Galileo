@@ -69,7 +69,7 @@ function rutaLegible(path: PropertyKey[]): string {
   return path.map(p => (typeof p === 'number' ? '#' + (p + 1) : String(p))).join(' → ')
 }
 
-export function TemaForm({
+export function SubtemaForm({
   metaInicial,
   contenidoInicial,
   onGuardar,
@@ -198,7 +198,7 @@ export function TemaForm({
         </div>
         <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-3">
           <Casilla
-            label="Tema gratis (visible sin comprar)"
+            label="Subtema gratis (visible sin comprar)"
             checked={meta.gratis}
             onChange={v => campoMeta('gratis', v)}
           />

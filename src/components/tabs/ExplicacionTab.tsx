@@ -1,22 +1,22 @@
 import { Lightbulb } from 'lucide-react'
-import type { Tema } from '../../data/topicData'
+import type { SubtemaCompleto } from '../../data/topicData'
 import { CompletarButton } from '../CompletarButton'
 
 interface ExplicacionTabProps {
-  tema: Tema
+  subtema: SubtemaCompleto
   completado: boolean
   onMarcarCompletado: () => void
 }
 
-export function ExplicacionTab({ tema, completado, onMarcarCompletado }: ExplicacionTabProps) {
+export function ExplicacionTab({ subtema, completado, onMarcarCompletado }: ExplicacionTabProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
-      {tema.explicacion.map((seccion, i) => (
+      {subtema.explicacion.map((seccion, i) => (
         <section key={i}>
           <h2 className="mb-2 text-lg font-bold text-slate-800">{seccion.titulo}</h2>
           <p className="mb-3 text-slate-600">{seccion.parrafo}</p>

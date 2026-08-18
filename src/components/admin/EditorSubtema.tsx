@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { AlertCircle, Check, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
-import { TemaForm } from './TemaForm'
-import { guardarTema } from '@/app/admin/acciones'
+import { SubtemaForm } from './SubtemaForm'
+import { guardarSubtema } from '@/app/admin/acciones'
 import type { ContenidoBorrador } from '@/lib/borrador'
 import type { TemaMeta } from '@/lib/schemas'
 
-export function EditorTema({
+export function EditorSubtema({
   cursoId,
   rutaCurso,
   metaInicial,
@@ -60,14 +60,14 @@ export function EditorTema({
         </div>
       )}
 
-      <TemaForm
+      <SubtemaForm
         metaInicial={metaInicial}
         contenidoInicial={contenidoInicial}
         onGuardar={async (meta, contenido) => {
-          const r = await guardarTema(cursoId, meta, contenido)
+          const r = await guardarSubtema(cursoId, meta, contenido)
           setEstado(
             r.ok
-              ? { ok: true, mensaje: 'Tema guardado en la base.', slug: meta.slug }
+              ? { ok: true, mensaje: 'Subtema guardado en la base.', slug: meta.slug }
               : { ok: false, mensaje: r.error },
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })

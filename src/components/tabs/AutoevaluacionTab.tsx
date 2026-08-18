@@ -1,32 +1,32 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import type { Tema } from '../../data/topicData'
+import type { SubtemaCompleto } from '../../data/topicData'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CompletarButton } from '../CompletarButton'
 
 interface AutoevaluacionTabProps {
-  tema: Tema
+  subtema: SubtemaCompleto
   completado: boolean
   onMarcarCompletado: () => void
 }
 
 const PORCENTAJE_APROBACION = 70
 
-export function AutoevaluacionTab({ tema, completado, onMarcarCompletado }: AutoevaluacionTabProps) {
+export function AutoevaluacionTab({ subtema, completado, onMarcarCompletado }: AutoevaluacionTabProps) {
   // Depende del tema, que ahora llega por props: no puede ser constante de módulo.
-  const TOTAL_PREGUNTAS = tema.quiz.length
+  const TOTAL_PREGUNTAS = subtema.quiz.length
   const [indice, setIndice] = useState(0)
   const [respuestas, setRespuestas] = useState<Record<number, number>>({})
   const [terminado, setTerminado] = useState(false)
-  const [mejorPuntaje, setMejorPuntaje] = useLocalStorage(`galileo:quiz:${tema.slug}`, 0)
+  const [mejorPuntaje, setMejorPuntaje] = useLocalStorage(`galileo:quiz:${subtema.slug}`, 0)
 
-  const pregunta = tema.quiz[indice]
+  const pregunta = subtema.quiz[indice]
   const seleccionActual = respuestas[pregunta.id]
   const yaRespondida = seleccionActual !== undefined
   const esUltima = indice === TOTAL_PREGUNTAS - 1
 
   const puntaje = Object.entries(respuestas).reduce((total, [id, opcionElegida]) => {
-    const p = tema.quiz.find(q => q.id === Number(id))
+    const p = subtema.quiz.find(q => q.id === Number(id))
     return p && p.respuestaCorrectaIndex === opcionElegida ? total + 1 : total
   }, 0)
 
@@ -86,7 +86,7 @@ export function AutoevaluacionTab({ tema, completado, onMarcarCompletado }: Auto
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 

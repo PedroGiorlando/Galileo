@@ -1,65 +1,102 @@
-import { Check, Lock, LifeBuoy } from 'lucide-react'
-import type { ItemTemario } from '@/lib/temas'
+import Link from 'next/link'
+import { ArrowLeft, Check, LifeBuoy, Lock } from 'lucide-react'
+import type { TemaConSubtemas } from '@/lib/contenido'
 
 interface SidebarProps {
-  temario: ItemTemario[]
+  gradoSlug: string
+  gradoNombre: string
+  temaNombre: string
+  temario: TemaConSubtemas[]
   slugActual: string
-  categoria: string
   completados: string[]
 }
 
-export function Sidebar({ temario, slugActual, categoria, completados }: SidebarProps) {
-  const ordenActual = temario.find(t => t.slug === slugActual)?.orden
+/**
+ * Temario lateral. Muestra solo los subtemas del área actual — el temario
+ * completo del grado son 30 y no entran en una barra lateral. "Ver los N temas"
+ * lleva a la página del grado, que sí los tiene todos.
+ */
+export function Sidebar({
+  gradoSlug,
+  gradoNombre,
+  temaNombre,
+  temario,
+  slugActual,
+  completados,
+}: SidebarProps) {
+  const temaActual = temario.find(t => t.subtemas.some(s => s.slug === slugActual))
+  const hermanos = temaActual?.subtemas ?? []
+  const posicion = hermanos.findIndex(s => s.slug === slugActual)
+  const totalDelGrado = temario.reduce((n, t) => n + t.subtemas.length, 0)
 
   return (
-    <aside className="w-72 shrink-0 rounded-lg border border-slate-200 bg-white p-4">
-      <span className="mb-2 inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold uppercase text-green-700">
-        {categoria}
-      </span>
-      <h2 className="mb-1 text-lg font-bold text-slate-800">Temario del curso</h2>
-      <p className="mb-4 text-sm text-slate-500">
-        Tema {ordenActual ?? '—'} de {temario.length}
-      </p>
+    <aside className="w-72 shrink-0 space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <Link
+          href={`/primaria/${gradoSlug}`}
+          className="mb-3 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
+        >
+          <ArrowLeft size={14} /> Volver a {gradoNombre}
+        </Link>
 
-      <ul className="space-y-1">
-        {temario.map(item => {
-          const actual = item.slug === slugActual
-          const completo = completados.includes(item.slug)
-          return (
-            <li
-              key={item.id}
-              className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm ${
-                actual ? 'bg-green-50 font-medium text-green-700' : 'text-slate-600'
-              }`}
-            >
-              <span
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                  completo
-                    ? 'bg-green-500 text-white'
-                    : actual
-                      ? 'border-2 border-green-500 text-green-600'
-                      : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {completo ? <Check size={14} /> : actual ? item.orden : <Lock size={12} />}
-              </span>
-              <span>
-                {item.orden}. {item.titulo}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
+        <h2 className="text-sm font-bold text-slate-800">{temaNombre}</h2>
+        {posicion >= 0 && (
+          <>
+            <p className="mt-0.5 mb-2 text-xs text-slate-500">
+              Tema {posicion + 1} de {hermanos.length}
+            </p>
+            <div className="mb-4 h-1 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-green-500"
+                style={{ width: `${((posicion + 1) / hermanos.length) * 100}%` }}
+              />
+            </div>
+          </>
+        )}
 
-      <button
-        type="button"
-        onClick={() => alert('El temario completo llega cuando estén cargados todos los temas.')}
-        className="mt-4 w-full rounded-md border border-slate-200 py-2 text-sm text-slate-600 hover:bg-slate-50"
-      >
-        Ver todos los temas
-      </button>
+        <h3 className="mb-2 text-sm font-bold text-slate-800">Temario del curso</h3>
+        <ul className="space-y-1">
+          {hermanos.map(s => {
+            const actual = s.slug === slugActual
+            const completo = completados.includes(s.slug)
+            return (
+              <li key={s.id}>
+                <Link
+                  href={`/primaria/${gradoSlug}/${s.slug}`}
+                  className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm ${
+                    actual
+                      ? 'bg-orange-50 font-medium text-orange-800'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      completo
+                        ? 'bg-green-500 text-white'
+                        : actual
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-slate-100 text-slate-400'
+                    }`}
+                  >
+                    {completo ? <Check size={14} /> : s.orden}
+                  </span>
+                  <span className="min-w-0 flex-1">{s.titulo}</span>
+                  {!s.tieneContenido && <Lock size={12} className="shrink-0 text-slate-300" />}
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
 
-      <div className="mt-4 rounded-lg bg-slate-50 p-3">
+        <Link
+          href={`/primaria/${gradoSlug}`}
+          className="mt-4 block rounded-md border border-slate-200 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
+        >
+          Ver los {totalDelGrado} temas
+        </Link>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-white p-4">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <LifeBuoy size={16} className="text-slate-500" /> ¿Necesitás ayuda?
         </h3>

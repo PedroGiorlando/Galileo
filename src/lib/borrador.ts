@@ -1,4 +1,4 @@
-import type { Tema } from '@/data/topicData'
+import type { SubtemaCompleto } from '@/data/topicData'
 import type { TemaMeta } from './schemas'
 
 /**
@@ -97,9 +97,9 @@ export const contenidoVacio = (): ContenidoBorrador => ({
   quiz: [preguntaVacia()],
 })
 
-// --- Tema guardado → borrador ------------------------------------------------
+// --- Subtema guardado → borrador ------------------------------------------------
 
-export function metaDesdeTema(tema: Tema): TemaMeta {
+export function metaDesdeTema(tema: SubtemaCompleto): TemaMeta {
   return {
     slug: tema.slug,
     titulo: tema.titulo,
@@ -112,7 +112,7 @@ export function metaDesdeTema(tema: Tema): TemaMeta {
   }
 }
 
-export function contenidoDesdeTema(tema: Tema): ContenidoBorrador {
+export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
   return {
     objetivos: [...tema.objetivos],
     explicacion: tema.explicacion.map(s => ({

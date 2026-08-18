@@ -5,7 +5,7 @@ import { Plus, Trash2 } from 'lucide-react'
 /**
  * Piezas chicas del formulario del panel. No son un "sistema de formularios":
  * son los cuatro patrones que se repiten en la carga de un tema. Sin librería
- * de formularios — el estado lo maneja TemaForm con useState y el schema Zod
+ * de formularios — el estado lo maneja SubtemaForm con useState y el schema Zod
  * valida al guardar.
  */
 

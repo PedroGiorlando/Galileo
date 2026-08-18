@@ -1,30 +1,30 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Tema } from '../../data/topicData'
+import type { SubtemaCompleto } from '../../data/topicData'
 import { CompletarButton } from '../CompletarButton'
 
 interface EjemplosTabProps {
-  tema: Tema
+  subtema: SubtemaCompleto
   completado: boolean
   onMarcarCompletado: () => void
 }
 
-export function EjemplosTab({ tema, completado, onMarcarCompletado }: EjemplosTabProps) {
+export function EjemplosTab({ subtema, completado, onMarcarCompletado }: EjemplosTabProps) {
   const [indice, setIndice] = useState(0)
-  const ejemplo = tema.ejemplos[indice]
+  const ejemplo = subtema.ejemplos[indice]
   const esPrimero = indice === 0
-  const esUltimo = indice === tema.ejemplos.length - 1
+  const esUltimo = indice === subtema.ejemplos.length - 1
 
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-5">
         <p className="mb-1 text-xs font-semibold text-green-600">
-          EJEMPLO {indice + 1} DE {tema.ejemplos.length}
+          EJEMPLO {indice + 1} DE {subtema.ejemplos.length}
         </p>
         <h2 className="mb-4 text-lg font-bold text-slate-800">{ejemplo.enunciado}</h2>
 

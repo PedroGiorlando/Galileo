@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import type { Tema } from '../../data/topicData'
+import type { SubtemaCompleto } from '../../data/topicData'
 import { esCorrecta, type Respuesta } from '@/lib/correccion'
 import type { Ejercicio } from '@/lib/schemas'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CompletarButton } from '../CompletarButton'
 
 interface EjerciciosTabProps {
-  tema: Tema
+  subtema: SubtemaCompleto
   completado: boolean
   onMarcarCompletado: () => void
 }
@@ -18,9 +18,9 @@ type Resultados = Record<number, Resultado>
 const SUBTABS = ['Ejercicios', 'Mis respuestas', 'Resueltos'] as const
 type Subtab = (typeof SUBTABS)[number]
 
-export function EjerciciosTab({ tema, completado, onMarcarCompletado }: EjerciciosTabProps) {
+export function EjerciciosTab({ subtema, completado, onMarcarCompletado }: EjerciciosTabProps) {
   const [subtab, setSubtab] = useState<Subtab>('Ejercicios')
-  const [resultados, setResultados] = useLocalStorage<Resultados>(`galileo:ejercicios:${tema.slug}`, {})
+  const [resultados, setResultados] = useLocalStorage<Resultados>(`galileo:ejercicios:${subtema.slug}`, {})
   const [respuestasBorrador, setRespuestasBorrador] = useState<Record<number, Respuesta>>(() =>
     Object.fromEntries(Object.entries(resultados).map(([id, r]) => [id, r.respuesta])),
   )
@@ -32,8 +32,8 @@ export function EjerciciosTab({ tema, completado, onMarcarCompletado }: Ejercici
   }
 
   const totalCorrectas = Object.values(resultados).filter(r => r.correcto).length
-  const puntosTotales = tema.ejercicios.reduce((sum, ej) => sum + ej.puntos, 0)
-  const puntosGanados = tema.ejercicios.reduce(
+  const puntosTotales = subtema.ejercicios.reduce((sum, ej) => sum + ej.puntos, 0)
+  const puntosGanados = subtema.ejercicios.reduce(
     (sum, ej) => sum + (resultados[ej.id]?.correcto ? ej.puntos : 0),
     0,
   )
@@ -41,7 +41,7 @@ export function EjerciciosTab({ tema, completado, onMarcarCompletado }: Ejercici
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{tema.titulo}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
         <CompletarButton completado={completado} onClick={onMarcarCompletado} />
       </div>
 
@@ -64,7 +64,7 @@ export function EjerciciosTab({ tema, completado, onMarcarCompletado }: Ejercici
 
       {subtab === 'Ejercicios' && (
         <div className="space-y-4">
-          {tema.ejercicios.map(ej => (
+          {subtema.ejercicios.map(ej => (
             <div key={ej.id} className="rounded-lg border border-slate-200 bg-white p-4">
               <div className="mb-2 flex items-start justify-between">
                 <p className="font-medium text-slate-800">
@@ -155,10 +155,10 @@ export function EjerciciosTab({ tema, completado, onMarcarCompletado }: Ejercici
       {subtab === 'Mis respuestas' && (
         <div className="space-y-3">
           <p className="text-sm text-slate-500">
-            Llevás {totalCorrectas} ejercicios correctos de {tema.ejercicios.length} ({puntosGanados} de{' '}
+            Llevás {totalCorrectas} ejercicios correctos de {subtema.ejercicios.length} ({puntosGanados} de{' '}
             {puntosTotales} puntos).
           </p>
-          {tema.ejercicios.map(ej => {
+          {subtema.ejercicios.map(ej => {
             const resultado = resultados[ej.id]
             return (
               <div key={ej.id} className="rounded-lg border border-slate-200 bg-white p-4">
@@ -195,7 +195,7 @@ export function EjerciciosTab({ tema, completado, onMarcarCompletado }: Ejercici
 
       {subtab === 'Resueltos' && (
         <div className="space-y-3">
-          {tema.ejercicios.map(ej => (
+          {subtema.ejercicios.map(ej => (
             <div key={ej.id} className="rounded-lg border border-slate-200 bg-white p-4">
               <p className="mb-1 font-medium text-slate-800">{ej.enunciado}</p>
               <p className="text-sm text-slate-600">
