@@ -1,13 +1,14 @@
 import { Lightbulb } from 'lucide-react'
-import { tema } from '../../data/topicData'
+import type { Tema } from '../../data/topicData'
 import { CompletarButton } from '../CompletarButton'
 
 interface ExplicacionTabProps {
+  tema: Tema
   completado: boolean
   onMarcarCompletado: () => void
 }
 
-export function ExplicacionTab({ completado, onMarcarCompletado }: ExplicacionTabProps) {
+export function ExplicacionTab({ tema, completado, onMarcarCompletado }: ExplicacionTabProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">

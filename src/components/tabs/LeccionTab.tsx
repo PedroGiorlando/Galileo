@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Play, Pause, CheckCircle2 } from 'lucide-react'
-import { tema } from '../../data/topicData'
+import type { Tema } from '../../data/topicData'
 import { CompletarButton } from '../CompletarButton'
 
 interface LeccionTabProps {
+  tema: Tema
   completado: boolean
   onMarcarCompletado: () => void
 }
@@ -11,7 +12,7 @@ interface LeccionTabProps {
 // El video es un placeholder: no hay archivo real, solo un botón que
 // alterna un ícono play/pausa y una barra fija. Alcanza para probar la
 // interacción sin tener que servir un video real en el prototipo.
-export function LeccionTab({ completado, onMarcarCompletado }: LeccionTabProps) {
+export function LeccionTab({ tema, completado, onMarcarCompletado }: LeccionTabProps) {
   const [reproduciendo, setReproduciendo] = useState(false)
 
   return (

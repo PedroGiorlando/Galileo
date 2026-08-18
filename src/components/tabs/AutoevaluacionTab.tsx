@@ -1,22 +1,24 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import { tema } from '../../data/topicData'
+import type { Tema } from '../../data/topicData'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CompletarButton } from '../CompletarButton'
 
 interface AutoevaluacionTabProps {
+  tema: Tema
   completado: boolean
   onMarcarCompletado: () => void
 }
 
-const TOTAL_PREGUNTAS = tema.quiz.length
 const PORCENTAJE_APROBACION = 70
 
-export function AutoevaluacionTab({ completado, onMarcarCompletado }: AutoevaluacionTabProps) {
+export function AutoevaluacionTab({ tema, completado, onMarcarCompletado }: AutoevaluacionTabProps) {
+  // Depende del tema, que ahora llega por props: no puede ser constante de módulo.
+  const TOTAL_PREGUNTAS = tema.quiz.length
   const [indice, setIndice] = useState(0)
   const [respuestas, setRespuestas] = useState<Record<number, number>>({})
   const [terminado, setTerminado] = useState(false)
-  const [mejorPuntaje, setMejorPuntaje] = useLocalStorage('galileo:quiz-mejor-puntaje-tema-7', 0)
+  const [mejorPuntaje, setMejorPuntaje] = useLocalStorage(`galileo:quiz:${tema.slug}`, 0)
 
   const pregunta = tema.quiz[indice]
   const seleccionActual = respuestas[pregunta.id]

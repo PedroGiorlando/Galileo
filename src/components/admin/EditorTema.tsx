@@ -1,69 +1,75 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Copy, Database } from 'lucide-react'
+import { AlertCircle, Check, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
 import { TemaForm } from './TemaForm'
-import { contenidoDesdeTema, metaDesdeTema } from '@/lib/borrador'
-import { tema } from '@/data/topicData'
-import type { TemaContenido, TemaMeta } from '@/lib/schemas'
+import { guardarTema } from '@/app/admin/acciones'
+import type { ContenidoBorrador } from '@/lib/borrador'
+import type { TemaMeta } from '@/lib/schemas'
 
-/**
- * ponytail: todavía no hay base de datos, así que "guardar" deja el JSON ya
- * validado a la vista para copiarlo. El día que Supabase esté conectado, lo
- * único que cambia es `onGuardar`: pasa a ser una Server Action que hace el
- * upsert. TemaForm no se entera.
- */
-export function EditorTema() {
-  const [guardado, setGuardado] = useState<{ meta: TemaMeta; contenido: TemaContenido } | null>(null)
-  const [copiado, setCopiado] = useState(false)
-
-  const json = guardado ? JSON.stringify(guardado, null, 2) : ''
-
-  async function copiar() {
-    await navigator.clipboard.writeText(json)
-    setCopiado(true)
-    setTimeout(() => setCopiado(false), 2000)
-  }
+export function EditorTema({
+  cursoId,
+  rutaCurso,
+  metaInicial,
+  contenidoInicial,
+  desdeLaBase,
+}: {
+  cursoId: number
+  rutaCurso: string
+  metaInicial: TemaMeta
+  contenidoInicial: ContenidoBorrador
+  desdeLaBase: boolean
+}) {
+  const [estado, setEstado] = useState<{ ok: boolean; mensaje: string; slug?: string } | null>(null)
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <Database size={18} className="mt-0.5 shrink-0 text-amber-600" />
-        <div className="text-sm text-amber-900">
-          <p className="font-semibold">Todavía sin base de datos conectada.</p>
-          <p className="mt-0.5 text-amber-800">
-            El formulario valida todo igual. Al guardar vas a ver el contenido listo para cargar;
-            cuando Supabase esté configurado, el mismo botón escribe directo en la base.
-          </p>
-        </div>
-      </div>
+      {!desdeLaBase && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Este tema todavía no está en la base: lo que ves viene del contenido hardcodeado.
+          Guardalo una vez y a partir de ahí se lee y se escribe desde Supabase.
+        </p>
+      )}
 
-      {guardado && (
-        <div className="space-y-2 rounded-lg border border-green-200 bg-green-50 p-4">
-          <div className="flex items-center justify-between">
-            <p className="flex items-center gap-2 text-sm font-semibold text-green-800">
-              <Check size={16} /> Contenido válido — {guardado.contenido.ejercicios.length} ejercicios,{' '}
-              {guardado.contenido.quiz.length} preguntas
-            </p>
-            <button
-              type="button"
-              onClick={copiar}
-              className="flex items-center gap-1.5 rounded-md border border-green-300 bg-white px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100"
-            >
-              <Copy size={14} /> {copiado ? 'Copiado' : 'Copiar JSON'}
-            </button>
+      {estado && (
+        <div
+          role="alert"
+          className={`flex items-start gap-2 rounded-lg border p-4 text-sm ${
+            estado.ok
+              ? 'border-green-200 bg-green-50 text-green-800'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+        >
+          {estado.ok ? (
+            <Check size={16} className="mt-0.5 shrink-0" />
+          ) : (
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          )}
+          <div className="space-y-1">
+            <p className="font-semibold">{estado.mensaje}</p>
+            {estado.ok && estado.slug && (
+              <Link
+                href={`${rutaCurso}/${estado.slug}`}
+                className="inline-flex items-center gap-1 font-medium underline"
+              >
+                Ver el tema publicado <ExternalLink size={12} />
+              </Link>
+            )}
           </div>
-          <pre className="max-h-64 overflow-auto rounded border border-green-200 bg-white p-3 text-xs text-slate-700">
-            {json}
-          </pre>
         </div>
       )}
 
       <TemaForm
-        metaInicial={metaDesdeTema(tema)}
-        contenidoInicial={contenidoDesdeTema(tema)}
-        onGuardar={(meta, contenido) => {
-          setGuardado({ meta, contenido })
+        metaInicial={metaInicial}
+        contenidoInicial={contenidoInicial}
+        onGuardar={async (meta, contenido) => {
+          const r = await guardarTema(cursoId, meta, contenido)
+          setEstado(
+            r.ok
+              ? { ok: true, mensaje: 'Tema guardado en la base.', slug: meta.slug }
+              : { ok: false, mensaje: r.error },
+          )
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }}
       />

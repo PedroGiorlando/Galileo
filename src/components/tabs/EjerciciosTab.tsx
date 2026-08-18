@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import { tema } from '../../data/topicData'
+import type { Tema } from '../../data/topicData'
 import { esCorrecta, type Respuesta } from '@/lib/correccion'
 import type { Ejercicio } from '@/lib/schemas'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { CompletarButton } from '../CompletarButton'
 
 interface EjerciciosTabProps {
+  tema: Tema
   completado: boolean
   onMarcarCompletado: () => void
 }
@@ -17,9 +18,9 @@ type Resultados = Record<number, Resultado>
 const SUBTABS = ['Ejercicios', 'Mis respuestas', 'Resueltos'] as const
 type Subtab = (typeof SUBTABS)[number]
 
-export function EjerciciosTab({ completado, onMarcarCompletado }: EjerciciosTabProps) {
+export function EjerciciosTab({ tema, completado, onMarcarCompletado }: EjerciciosTabProps) {
   const [subtab, setSubtab] = useState<Subtab>('Ejercicios')
-  const [resultados, setResultados] = useLocalStorage<Resultados>('galileo:ejercicios-tema-7', {})
+  const [resultados, setResultados] = useLocalStorage<Resultados>(`galileo:ejercicios:${tema.slug}`, {})
   const [respuestasBorrador, setRespuestasBorrador] = useState<Record<number, Respuesta>>(() =>
     Object.fromEntries(Object.entries(resultados).map(([id, r]) => [id, r.respuesta])),
   )

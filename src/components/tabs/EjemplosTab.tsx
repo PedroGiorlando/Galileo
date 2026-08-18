@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { tema } from '../../data/topicData'
+import type { Tema } from '../../data/topicData'
 import { CompletarButton } from '../CompletarButton'
 
 interface EjemplosTabProps {
+  tema: Tema
   completado: boolean
   onMarcarCompletado: () => void
 }
 
-export function EjemplosTab({ completado, onMarcarCompletado }: EjemplosTabProps) {
+export function EjemplosTab({ tema, completado, onMarcarCompletado }: EjemplosTabProps) {
   const [indice, setIndice] = useState(0)
   const ejemplo = tema.ejemplos[indice]
   const esPrimero = indice === 0

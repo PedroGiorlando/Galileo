@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
-import { tema } from '@/data/topicData'
 
-// ponytail: todavía no hay landing. Con un solo tema publicado, la home manda
-// ahí directo. Fase 4 la reemplaza por la landing real.
+// ponytail: todavía no hay landing. Con un solo curso, la home manda ahí
+// directo en vez de consultar la base para adivinar el destino. Fase 4 la
+// reemplaza por la landing real.
 export default function Home() {
-  redirect(`/primaria/${tema.gradoSlug}/${tema.materiaSlug}/${tema.slug}`)
+  redirect('/primaria/4-grado/matematica')
 }
