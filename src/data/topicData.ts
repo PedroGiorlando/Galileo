@@ -48,8 +48,12 @@ export interface SeccionExplicacion {
 
 export interface Tema {
   id: number
+  slug: string
   titulo: string
   grado: string
+  gradoSlug: string
+  materia: string
+  materiaSlug: string
   categoria: string
   duracionLabel: string
   objetivos: string[]
@@ -61,8 +65,12 @@ export interface Tema {
 
 export const tema: Tema = {
   id: 7,
+  slug: 'multiplos-y-divisores',
   titulo: 'Múltiplos y divisores',
   grado: '4° Grado',
+  gradoSlug: '4-grado',
+  materia: 'Matemática',
+  materiaSlug: 'matematica',
   categoria: 'Números y Operaciones',
   duracionLabel: '10:15',
   objetivos: [

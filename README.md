@@ -1,8 +1,11 @@
-# Academia Galileo — Prototipo "Múltiplos y divisores"
+# Academia Galileo
 
-Prototipo de un solo tema de matemática (4° grado, Números y Operaciones) para
-validar diseño e interacción antes de escalar a los 150+ temas reales.
-Sin backend, sin login — todo el contenido vive en `src/data/topicData.ts`.
+Plataforma de apoyo escolar de primaria. Hoy hay **un solo tema real**
+("Múltiplos y divisores", Matemática 4°) usado para validar diseño e
+interacción antes de escalar al resto del temario.
+
+Hoja de ruta completa (fases, modelo de datos, decisiones de negocio):
+ver el plan de proyecto acordado por separado.
 
 ## Correr el proyecto
 
@@ -11,28 +14,72 @@ npm install
 npm run dev
 ```
 
-Abrí la URL que imprime Vite (por defecto `http://localhost:5173`).
+Abrí `http://localhost:3000`. La home redirige al único tema publicado.
 
-## Decisiones de estructura (para referencia rápida)
+## Estado actual
 
-- **Sin Context/Redux:** el estado de "tema completado" vive en `App.tsx` y
-  baja por props a las 5 tabs. Con un solo nivel de anidamiento, Context
-  agrega indirección sin necesidad real.
-- **Datos separados de la UI:** todo el contenido hardcodeado está en
-  `src/data/topicData.ts`. El día que haya una API real, el archivo se
-  reemplaza por un fetch, pero hoy varios componentes hacen
-  `import { tema } from '../data/topicData'` como valor fijo (no como prop)
-  — pasar a datos que llegan async va a requerir además pasar `tema` como
-  prop (o Context) a esos componentes, no solo cambiar este archivo.
-- **localStorage por feature, no global:** el hook `useLocalStorage` se usa
-  de forma independiente en `EjerciciosTab`, `AutoevaluacionTab` y `App.tsx`
-  — cada uno persiste solo lo que le importa a él, nadie comparte ese
-  estado con nadie más.
+- **Next.js 16 (App Router) + TypeScript + Tailwind v4 + lucide-react.**
+- Sin backend, sin login, sin pagos. El contenido está hardcodeado en
+  `src/data/topicData.ts` y el progreso vive en `localStorage`.
+- La página del tema se genera como **HTML estático** en el build
+  (`generateStaticParams`), que es lo que permite que Google la indexe.
+
+## Estructura
+
+```
+src/
+  app/
+    layout.tsx                                    metadatos globales + <html>
+    page.tsx                                      redirige al tema publicado
+    globals.css                                   @import "tailwindcss"
+    primaria/[grado]/[materia]/[tema]/page.tsx    Server Component: valida la ruta,
+                                                  arma metadatos y renderiza
+  components/
+    TemaVista.tsx        'use client' — dueño del estado compartido del tema
+    Header.tsx           Server Component (solo breadcrumbs, sin estado)
+    Sidebar.tsx, RightPanel.tsx, ProgressRing.tsx, CompletarButton.tsx
+    tabs/                los 5 tabs
+  data/topicData.ts      contenido del tema
+  hooks/useLocalStorage.ts
+```
+
+## Decisiones de estructura
+
+- **Dónde cae el límite cliente/servidor.** `TemaVista` lleva `'use client'`
+  porque es dueño del estado que comparten el Sidebar (el check del tema), el
+  RightPanel (el contador) y los tabs (el botón "completado"). Todo lo que
+  `TemaVista` importa hereda el lado cliente, así que los 5 tabs **no** llevan
+  su propia directiva. `Header` queda del lado servidor: no tiene estado.
+
+- **`'use client'` no significa "no se renderiza en el servidor".** Next igual
+  genera el HTML de esos componentes en el build y después los hidrata. El
+  texto de la explicación y los ejercicios viajan en el HTML inicial.
+
+- **Sin Context/Redux.** Con un solo nivel de anidamiento (TemaVista → tab), el
+  prop drilling se sigue leyendo mejor que la indirección de un Context.
+
+- **Datos separados de la UI.** Todo el contenido está en `topicData.ts`. Ojo:
+  varios componentes hacen `import { tema } from '@/data/topicData'` como valor
+  fijo, no como prop — el día que el contenido venga de la base va a haber que
+  pasar `tema` por props además de cambiar el origen de los datos.
+
+- **`useLocalStorage` lee después de montar, no en el inicializador.** El
+  inicializador de `useState` también corre en el servidor, donde `window` no
+  existe; leer ahí produce un hydration mismatch. Costo: un parpadeo al volver
+  a entrar, que desaparece cuando el progreso venga del servidor.
 
 ## Qué probar
 
 - Navegar las 5 tabs.
 - Responder los 5 ejercicios, verificar cada uno, revisar "Mis respuestas" y "Resueltos".
 - Completar el quiz de 10 preguntas, ver el resultado final, reintentar.
-- Marcar el tema como completado y ver que el contador de "temas completados" del panel derecho pase de 6/30 a 7/30.
-- Refrescar la página (F5) y confirmar que el progreso no se perdió.
+- Marcar el tema como completado y ver que el contador del panel derecho pase
+  de 6/30 (20%) a 7/30 (23%).
+- Refrescar (F5) y confirmar que el progreso no se perdió.
+- `npm run build` y confirmar que la ruta del tema aparece como `● (SSG)`.
+
+## Limitación conocida
+
+Las respuestas correctas de ejercicios y quiz viajan en el bundle de JavaScript:
+con las herramientas del navegador se pueden leer. Es aceptable mientras el
+contenido sea gratuito; hay que corregir del lado del servidor antes de cobrar.

@@ -1,7 +1,7 @@
 node_modules
-dist
+.next
+out
 *.local
 *.tsbuildinfo
-vite.config.js
-vite.config.d.ts
+next-env.d.ts
 .claude/settings.local.json
