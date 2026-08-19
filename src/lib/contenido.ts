@@ -1,3 +1,6 @@
+/** Todo lo que hay hoy es preuniversitario. Cuando entre otro nivel, pasa a parámetro. */
+const NIVEL = 'preuniversitario'
+
 import { supabaseAdmin, supabasePublico } from './supabase'
 import { TemaContenidoSchema } from './schemas'
 import type { SubtemaCompleto } from '@/data/topicData'
@@ -7,9 +10,9 @@ import type { SubtemaCompleto } from '@/data/topicData'
  *
  * Vocabulario, que importa porque "tema" se usa para dos cosas distintas según
  * dónde se mire:
- *   Curso   = un grado (4° Grado). Es la unidad que se compra.
- *   Tema    = un área del currículum (Números y Operaciones).
- *   Subtema = lo que se estudia (Múltiplos y divisores), con sus 5 solapas.
+ *   Curso   = una materia del ingreso (Física). Es la unidad que se compra.
+ *   Tema    = una unidad del programa (Vectores).
+ *   Subtema = la clase que se estudia (Suma de vectores), con sus 5 solapas.
  */
 
 export interface SubtemaResumen {
@@ -33,37 +36,37 @@ export interface TemaConSubtemas {
 
 export interface Curso {
   id: number
-  gradoSlug: string
-  gradoNombre: string
+  slug: string
+  nombre: string
+  programa: string
   titulo: string
   descripcion: string | null
   orden: number
-  materia: string
   precioCentavos: number
 }
 
 interface FilaCurso {
   id: number
-  grado_slug: string
-  grado_nombre: string
+  slug: string
+  nombre: string
+  programa: string
   titulo: string
   descripcion: string | null
   orden: number
   precio_centavos: number
-  materias: { nombre: string } | null
 }
 
 const SELECT_CURSO =
-  'id, grado_slug, grado_nombre, titulo, descripcion, orden, precio_centavos, materias!inner(nombre)'
+  'id, slug, nombre, programa, titulo, descripcion, orden, precio_centavos'
 
 const aCurso = (f: FilaCurso): Curso => ({
   id: f.id,
-  gradoSlug: f.grado_slug,
-  gradoNombre: f.grado_nombre,
+  slug: f.slug,
+  nombre: f.nombre,
+  programa: f.programa,
   titulo: f.titulo,
   descripcion: f.descripcion,
   orden: f.orden,
-  materia: f.materias?.nombre ?? '',
   precioCentavos: f.precio_centavos,
 })
 
@@ -99,7 +102,7 @@ export async function getCursos(): Promise<Curso[]> {
   const { data, error } = await supabasePublico()
     .from('cursos')
     .select(SELECT_CURSO)
-    .eq('nivel', 'primaria')
+    .eq('nivel', NIVEL)
     .order('orden')
     .overrideTypes<FilaCurso[]>()
 
@@ -107,19 +110,19 @@ export async function getCursos(): Promise<Curso[]> {
   return (data ?? []).map(aCurso)
 }
 
-export async function getCurso(gradoSlug: string): Promise<Curso | null> {
+export async function getCurso(cursoSlug: string): Promise<Curso | null> {
   const { data, error } = await supabasePublico()
     .from('cursos')
     .select(SELECT_CURSO)
-    .eq('nivel', 'primaria')
-    .eq('grado_slug', gradoSlug)
+    .eq('nivel', NIVEL)
+    .eq('slug', cursoSlug)
     .maybeSingle<FilaCurso>()
 
   if (error) throw new Error(`No se pudo leer el curso: ${error.message}`)
   return data ? aCurso(data) : null
 }
 
-/** El temario completo de un grado: las áreas con sus subtemas adentro. */
+/** El temario completo de una materia: las unidades con sus clases adentro. */
 export async function getTemario(cursoId: number): Promise<TemaConSubtemas[]> {
   const { data, error } = await supabasePublico()
     .from('temas')
@@ -151,10 +154,10 @@ export interface SubtemaPagina {
 }
 
 export async function getSubtema(
-  gradoSlug: string,
+  cursoSlug: string,
   subtemaSlug: string,
 ): Promise<SubtemaPagina | null> {
-  const curso = await getCurso(gradoSlug)
+  const curso = await getCurso(cursoSlug)
   if (!curso) return null
 
   const { data, error } = await supabasePublico()
@@ -191,11 +194,6 @@ export async function getSubtema(
         id: data.orden,
         slug: data.slug,
         titulo: data.titulo,
-        grado: curso.gradoNombre,
-        gradoSlug: curso.gradoSlug,
-        materia: curso.materia,
-        materiaSlug: 'matematica',
-        categoria: tema.nombre,
         duracionLabel: data.duracion_label ?? '',
         ...TemaContenidoSchema.parse(data.contenido),
       }
@@ -206,14 +204,14 @@ export async function getSubtema(
 
 // --- Rutas para prerenderizar en el build ------------------------------------
 
-export async function getRutasDeCursos(): Promise<{ grado: string }[]> {
+export async function getRutasDeCursos(): Promise<{ curso: string }[]> {
   const { data, error } = await supabasePublico()
     .from('cursos')
-    .select('grado_slug')
-    .eq('nivel', 'primaria')
+    .select('slug')
+    .eq('nivel', NIVEL)
 
   if (error) throw new Error(`No se pudieron leer las rutas de cursos: ${error.message}`)
-  return (data ?? []).map(c => ({ grado: c.grado_slug }))
+  return (data ?? []).map(c => ({ curso: c.slug }))
 }
 
 /**
@@ -221,15 +219,15 @@ export async function getRutasDeCursos(): Promise<{ grado: string }[]> {
  * sirven bajo demanda: prerenderizar 170 páginas que dicen lo mismo alarga el
  * build sin que nadie las busque.
  */
-export async function getRutasDeSubtemas(): Promise<{ grado: string; subtema: string }[]> {
+export async function getRutasDeSubtemas(): Promise<{ curso: string; subtema: string }[]> {
   const { data, error } = await supabasePublico()
     .from('subtemas')
-    .select('slug, cursos!inner(grado_slug)')
+    .select('slug, cursos!inner(slug)')
     .not('contenido', 'is', null)
-    .overrideTypes<{ slug: string; cursos: { grado_slug: string } }[]>()
+    .overrideTypes<{ slug: string; cursos: { slug: string } }[]>()
 
   if (error) throw new Error(`No se pudieron leer las rutas de subtemas: ${error.message}`)
-  return (data ?? []).map(s => ({ grado: s.cursos.grado_slug, subtema: s.slug }))
+  return (data ?? []).map(s => ({ curso: s.cursos.slug, subtema: s.slug }))
 }
 
 // --- Panel -------------------------------------------------------------------

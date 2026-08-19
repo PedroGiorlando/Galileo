@@ -17,12 +17,12 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 // ponytail: un solo subtema editable por ahora. Cuando haya varios, esto pasa a
-// ser /admin (lista de subtemas del grado) y /admin/[grado]/[subtema].
-const GRADO = '4-grado'
-const SLUG = 'multiplos-y-divisores'
+// ser /admin (lista de subtemas del grado) y /admin/[curso]/[subtema].
+const CURSO = 'fisica'
+const SLUG = 'suma-de-vectores-por-componentes'
 
 export default async function AdminPage() {
-  const curso = await getCurso(GRADO)
+  const curso = await getCurso(CURSO)
   if (!curso) notFound()
 
   const fila = await getSubtemaParaAdmin(curso.id, SLUG)
@@ -58,7 +58,7 @@ export default async function AdminPage() {
       </header>
       <EditorSubtema
         cursoId={curso.id}
-        rutaCurso={`/primaria/${GRADO}`}
+        rutaCurso={`/preuniversitario/${CURSO}`}
         metaInicial={meta}
         contenidoInicial={contenido}
         desdeLaBase={tieneContenido}

@@ -1,5 +1,4 @@
 import type { SubtemaCompleto } from '@/data/topicData'
-import type { TemaMeta } from './schemas'
 
 /**
  * El "borrador" es la forma que tiene el contenido MIENTRAS se edita, que no es
@@ -98,19 +97,6 @@ export const contenidoVacio = (): ContenidoBorrador => ({
 })
 
 // --- Subtema guardado → borrador ------------------------------------------------
-
-export function metaDesdeTema(tema: SubtemaCompleto): TemaMeta {
-  return {
-    slug: tema.slug,
-    titulo: tema.titulo,
-    categoria: tema.categoria,
-    orden: tema.id,
-    duracionLabel: tema.duracionLabel,
-    videoUrl: '',
-    gratis: true,
-    publicado: true,
-  }
-}
 
 export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
   return {

@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen, Clock, Layers } from 'lucide-react'
 import { getCurso, getRutasDeCursos, getTemario } from '@/lib/contenido'
 import { Header } from '@/components/Header'
 
-type Params = { grado: string }
+type Params = { curso: string }
 
 export async function generateStaticParams() {
   return getRutasDeCursos()
@@ -16,14 +16,14 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>
 }): Promise<Metadata> {
-  const { grado } = await params
-  const curso = await getCurso(grado)
+  const { curso: cursoSlug } = await params
+  const curso = await getCurso(cursoSlug)
   if (!curso) return {}
 
   return {
     title: curso.titulo,
     description: curso.descripcion ?? undefined,
-    alternates: { canonical: `/primaria/${grado}` },
+    alternates: { canonical: `/preuniversitario/${cursoSlug}` },
   }
 }
 
@@ -33,8 +33,8 @@ export async function generateMetadata({
  * aunque todavía no tengan contenido escrito.
  */
 export default async function GradoPage({ params }: { params: Promise<Params> }) {
-  const { grado } = await params
-  const curso = await getCurso(grado)
+  const { curso: cursoSlug } = await params
+  const curso = await getCurso(cursoSlug)
   if (!curso) notFound()
 
   const temario = await getTemario(curso.id)
@@ -43,7 +43,7 @@ export default async function GradoPage({ params }: { params: Promise<Params> })
 
   return (
     <>
-      <Header breadcrumbs={['Inicio', 'Cursos', 'Primaria', curso.gradoNombre]} />
+      <Header breadcrumbs={['Inicio', 'Cursos', 'Primaria', curso.nombre]} />
 
       <main className="mx-auto max-w-5xl p-6">
         <Link
@@ -54,7 +54,7 @@ export default async function GradoPage({ params }: { params: Promise<Params> })
         </Link>
 
         <header className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">{curso.gradoNombre}</h1>
+          <h1 className="text-3xl font-bold text-slate-900">{curso.nombre}</h1>
           <p className="mt-1 max-w-2xl text-slate-600">{curso.descripcion}</p>
           <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-700">
             <span className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export default async function GradoPage({ params }: { params: Promise<Params> })
                 {tema.subtemas.map(s => (
                   <li key={s.id}>
                     <Link
-                      href={`/primaria/${grado}/${s.slug}`}
+                      href={`/preuniversitario/${cursoSlug}/${s.slug}`}
                       className="flex items-center gap-3 p-3 hover:bg-slate-50"
                     >
                       <span

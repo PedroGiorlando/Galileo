@@ -20,20 +20,14 @@ export type {
 } from '@/lib/schemas'
 
 /**
- * Forma plana del tema: metadatos y contenido al mismo nivel, que es como lo
- * consumen los componentes. En la base el contenido va en una columna jsonb; la
- * capa de datos lo aplana al leer ({ ...fila, ...fila.contenido }) para que los
- * componentes no se enteren de la diferencia.
+ * Forma plana de una clase: metadatos y contenido al mismo nivel, que es como
+ * la consumen los componentes. En la base el contenido va en una columna jsonb;
+ * la capa de datos lo aplana al leer para que los componentes no se enteren.
  */
 export interface SubtemaCompleto {
   id: number
   slug: string
   titulo: string
-  grado: string
-  gradoSlug: string
-  materia: string
-  materiaSlug: string
-  categoria: string
   duracionLabel: string
   objetivos: string[]
   explicacion: SeccionExplicacion[]
@@ -42,78 +36,86 @@ export interface SubtemaCompleto {
   quiz: PreguntaQuiz[]
 }
 
+/**
+ * Contenido de arranque: una clase real de Física, cargada una vez desde el
+ * panel para que haya algo publicado y para que sirva de vara de calidad.
+ *
+ * No es contenido de relleno: es el ejemplo de lo que tiene que ser una clase
+ * terminada. Los profesores que carguen su materia deberían poder mirar esto y
+ * saber cuánto detalle se espera.
+ */
 export const tema: SubtemaCompleto = {
-  id: 7,
-  slug: 'multiplos-y-divisores',
-  titulo: 'Múltiplos y divisores',
-  grado: '4° Grado',
-  gradoSlug: '4-grado',
-  materia: 'Matemática',
-  materiaSlug: 'matematica',
-  categoria: 'Números y Operaciones',
-  duracionLabel: '10:15',
+  id: 5,
+  slug: 'suma-de-vectores-por-componentes',
+  titulo: 'Suma de vectores por componentes',
+  duracionLabel: '12:40',
   objetivos: [
-    'Qué son los múltiplos y cómo encontrarlos.',
-    'Qué son los divisores y cómo identificarlos.',
-    'Relación entre múltiplos y divisores.',
-    'Ejercicios prácticos y ejemplos.',
+    'Descomponer un vector en sus componentes rectangulares.',
+    'Sumar varios vectores trabajando con sus componentes.',
+    'Calcular el módulo y la dirección del vector resultante.',
+    'Reconocer cuándo conviene el método analítico y cuándo el gráfico.',
   ],
   explicacion: [
     {
-      titulo: '¿Qué son los múltiplos?',
+      titulo: '¿Por qué descomponer un vector?',
       parrafo:
-        'Los múltiplos de un número son todos los resultados que obtenemos al multiplicar ese número por 0, 1, 2, 3, 4, 5, ...',
+        'Sumar vectores con regla y transportador funciona, pero la precisión depende del pulso. El método analítico cambia el problema: en vez de sumar flechas, se suman números. Cada vector se reemplaza por dos vectores perpendiculares —uno horizontal y uno vertical— que juntos producen el mismo efecto.',
       caja: {
-        tipo: 'ejemplo',
+        tipo: 'nota',
         contenido:
-          'Múltiplos de 6:\n6×0=0  6×1=6  6×2=12  6×3=18  6×4=24 ...\nPor lo tanto, los múltiplos de 6 son: 0, 6, 12, 18, 24, 30, 36, 42, 48, ...',
+          'Las componentes no son "partes" del vector: son dos vectores que, sumados, dan exactamente el original. Por eso se puede reemplazar uno por los otros dos sin cambiar nada del problema.',
       },
     },
     {
-      titulo: '¿Qué son los divisores?',
+      titulo: 'Cómo se calculan las componentes',
       parrafo:
-        'Los divisores de un número son los números que lo dividen en forma exacta, es decir, sin dejar resto.',
+        'Si un vector de módulo F forma un ángulo α con el eje x medido en sentido antihorario, sus componentes salen directo de las razones trigonométricas del triángulo rectángulo que forma con los ejes.',
       caja: {
         tipo: 'ejemplo',
         contenido:
-          'Divisores de 12:\nLos números que dividen a 12 sin dejar resto son: 1, 2, 3, 4, 6, 12',
+          'Fx = F · cos α\nFy = F · sen α\n\nPara F = 50 N y α = 30°:\nFx = 50 · cos 30° = 50 · 0,866 = 43,3 N\nFy = 50 · sen 30° = 50 · 0,500 = 25,0 N',
       },
     },
     {
-      titulo: 'Relación entre múltiplos y divisores',
-      parrafo: 'Si un número es múltiplo de otro, entonces ese otro número es divisor del primero.',
+      titulo: 'De las componentes al vector resultante',
+      parrafo:
+        'Una vez que todos los vectores están descompuestos, se suman por separado todas las componentes en x y todas las componentes en y. Esas dos sumas son las componentes de la resultante, y de ahí se recupera su módulo con Pitágoras y su ángulo con la arcotangente.',
       caja: {
-        tipo: 'ejemplo',
-        contenido: '12 es múltiplo de 3 porque 12 = 3×4.\nPor lo tanto, 3 es divisor de 12.',
+        tipo: 'tip',
+        contenido:
+          'Cuidado con el signo: hacia la izquierda y hacia abajo las componentes son negativas. Es el error más común, y hace que el resultado dé bien en módulo pero apunte al cuadrante equivocado.',
       },
     },
   ],
   ejemplos: [
     {
       id: 1,
-      enunciado: 'Escribir los 10 primeros múltiplos de 8.',
+      enunciado:
+        'Descomponer una fuerza de 80 N que forma un ángulo de 60° con el eje x positivo.',
       pasos: [
-        'Multiplicamos 8 por los números naturales desde 0 hasta 9.',
-        '8×0=0  8×1=8  8×2=16  8×3=24  8×4=32  8×5=40  8×6=48  8×7=56  8×8=64  8×9=72',
-        'Los 10 primeros múltiplos de 8 son: 0, 8, 16, 24, 32, 40, 48, 56, 64, 72',
+        'Identificamos los datos: F = 80 N y α = 60°. Como el ángulo se mide desde el eje x positivo en sentido antihorario, ambas componentes van a ser positivas.',
+        'Aplicamos las fórmulas: Fx = 80 · cos 60° = 80 · 0,500 = 40,0 N y Fy = 80 · sen 60° = 80 · 0,866 = 69,3 N.',
+        'Verificamos con Pitágoras que las componentes reconstruyan el vector: √(40,0² + 69,3²) = √(1600 + 4802) = √6402 ≈ 80,0 N. Coincide con el módulo original.',
       ],
     },
     {
       id: 2,
-      enunciado: 'Encontrar los divisores de 24.',
+      enunciado:
+        'Sumar dos fuerzas: F₁ = 30 N a 0° y F₂ = 40 N a 90°. Calcular el módulo y la dirección de la resultante.',
       pasos: [
-        'Buscamos los números que dividen a 24 en forma exacta (resto 0).',
-        '24÷1=24  24÷2=12  24÷3=8  24÷4=6  24÷6=4  24÷8=3  24÷12=2  24÷24=1',
-        'Los divisores de 24 son: 1, 2, 3, 4, 6, 8, 12, 24',
+        'Descomponemos cada una. F₁ está sobre el eje x: F₁x = 30 N, F₁y = 0 N. F₂ está sobre el eje y: F₂x = 0 N, F₂y = 40 N.',
+        'Sumamos por eje: Rx = 30 + 0 = 30 N y Ry = 0 + 40 = 40 N.',
+        'Calculamos el módulo con Pitágoras: R = √(30² + 40²) = √2500 = 50 N. Y la dirección: α = arctg(40/30) = arctg(1,333) = 53,1° respecto del eje x.',
       ],
     },
     {
       id: 3,
-      enunciado: '¿Es 15 múltiplo de 3? ¿Y 3 divisor de 15?',
+      enunciado:
+        'Sumar F₁ = 25 N a 40° y F₂ = 35 N a 160°. Prestar atención a los signos.',
       pasos: [
-        'Para saber si 15 es múltiplo de 3: 15÷3=5, resto 0 → como el resto es 0, 15 es múltiplo de 3.',
-        'Para saber si 3 es divisor de 15: 15÷3=5, resto 0 → como el resto es 0, 3 es divisor de 15.',
-        'Múltiplo y divisor son dos caras de la misma relación: 15 es múltiplo de 3 y, al mismo tiempo, 3 es divisor de 15.',
+        'Descomponemos F₁: F₁x = 25 · cos 40° = 19,2 N y F₁y = 25 · sen 40° = 16,1 N. Las dos positivas, porque 40° cae en el primer cuadrante.',
+        'Descomponemos F₂: F₂x = 35 · cos 160° = −32,9 N y F₂y = 35 · sen 160° = 12,0 N. La componente en x es negativa porque 160° cae en el segundo cuadrante y el vector apunta hacia la izquierda.',
+        'Sumamos por eje: Rx = 19,2 − 32,9 = −13,7 N y Ry = 16,1 + 12,0 = 28,1 N. El módulo es R = √(13,7² + 28,1²) = √(187,7 + 789,6) = √977,3 ≈ 31,3 N, y como Rx es negativo y Ry positivo, la resultante apunta al segundo cuadrante: α ≈ 116,0°.',
       ],
     },
   ],
@@ -121,143 +123,163 @@ export const tema: SubtemaCompleto = {
     {
       id: 1,
       tipo: 'libre',
-      enunciado: 'Escribí los 8 primeros múltiplos de 7 (empezando en 0).',
-      respuestaCorrecta: '0,7,14,21,28,35,42,49',
-      explicacion: 'Se multiplica 7 por 0,1,2,3,4,5,6 y 7: 0, 7, 14, 21, 28, 35, 42, 49.',
+      enunciado:
+        'Una fuerza de 100 N forma 30° con el eje x. Escribí sus componentes Fx y Fy en newtons, separadas por coma y redondeadas a un decimal (primero Fx, después Fy).',
+      respuestaCorrecta: '86.6,50.0',
+      explicacion:
+        'Fx = 100 · cos 30° = 86,6 N y Fy = 100 · sen 30° = 50,0 N. Si te dio al revés, revisá cuál razón va con cada eje: el coseno acompaña al eje x.',
       puntos: 2,
     },
     {
       id: 2,
       tipo: 'multiple',
-      enunciado: '¿Cuáles de estos números son múltiplos de 6? 12 - 18 - 20 - 24 - 33 - 36',
-      opciones: ['12', '18', '20', '24', '33', '36'],
-      respuestaCorrecta: ['12', '18', '24', '36'],
-      explicacion: '12, 18, 24 y 36 son múltiplos de 6 (6×2, 6×3, 6×4, 6×6). 20 y 33 no lo son.',
+      enunciado:
+        '¿Cuáles de estas afirmaciones sobre las componentes de un vector son correctas?',
+      opciones: [
+        'La componente en x se calcula con el coseno del ángulo.',
+        'Las componentes siempre son positivas.',
+        'El módulo de la resultante se obtiene con el teorema de Pitágoras.',
+        'Un vector sobre el eje y tiene componente en x igual a cero.',
+      ],
+      respuestaCorrecta: [
+        'La componente en x se calcula con el coseno del ángulo.',
+        'El módulo de la resultante se obtiene con el teorema de Pitágoras.',
+        'Un vector sobre el eje y tiene componente en x igual a cero.',
+      ],
+      explicacion:
+        'Las componentes pueden ser negativas: dependen del cuadrante. Un vector que apunta hacia la izquierda tiene componente en x negativa.',
       puntos: 2,
     },
     {
       id: 3,
       tipo: 'libre',
-      enunciado: 'Escribí todos los divisores de 30.',
-      respuestaCorrecta: '1,2,3,5,6,10,15,30',
-      explicacion: 'Los números que dividen a 30 sin dejar resto son: 1, 2, 3, 5, 6, 10, 15, 30.',
+      enunciado:
+        'Dos fuerzas perpendiculares de 60 N y 80 N actúan sobre un cuerpo. ¿Cuál es el módulo de la resultante, en newtons?',
+      respuestaCorrecta: '100',
+      explicacion:
+        'Al ser perpendiculares, R = √(60² + 80²) = √(3600 + 6400) = √10000 = 100 N. Es el triángulo 3-4-5 multiplicado por 20.',
       puntos: 2,
     },
     {
       id: 4,
       tipo: 'si-no',
-      enunciado: '¿Es 84 múltiplo de 12?',
+      enunciado:
+        'Una fuerza que forma 120° con el eje x positivo, ¿tiene componente en x negativa?',
       respuestaCorrecta: 'Sí',
-      explicacion: '84÷12=7, resto 0. Como el resto es 0, 84 sí es múltiplo de 12.',
+      explicacion:
+        '120° cae en el segundo cuadrante, donde el coseno es negativo: cos 120° = −0,5. El vector apunta hacia la izquierda, así que su componente en x es negativa.',
       puntos: 1,
     },
     {
       id: 5,
       tipo: 'multiple',
-      enunciado: '¿Cuál de estos números NO es divisor de 40? 2 - 4 - 5 - 6 - 8 - 10',
-      opciones: ['2', '4', '5', '6', '8', '10'],
-      respuestaCorrecta: ['6'],
-      explicacion: 'Los divisores de 40 son 1, 2, 4, 5, 8, 10, 20, 40. El 6 no es divisor de 40 (40÷6 no es exacto).',
+      enunciado:
+        '¿En cuál de estos casos NO conviene usar el método por componentes?',
+      opciones: [
+        'Cuando hay que sumar cinco o más vectores.',
+        'Cuando los vectores son perpendiculares entre sí.',
+        'Cuando solo se necesita una estimación rápida y aproximada.',
+        'Cuando se pide el resultado con dos decimales.',
+      ],
+      respuestaCorrecta: ['Cuando solo se necesita una estimación rápida y aproximada.'],
+      explicacion:
+        'El método analítico es más preciso pero más lento. Para una estimación rápida alcanza con dibujar los vectores y sumarlos gráficamente. En todos los otros casos el método por componentes es el que conviene.',
       puntos: 1,
     },
   ],
   quiz: [
     {
       id: 1,
-      pregunta: '¿Cuál de estos números es múltiplo de 8?',
-      opciones: ['18', '24', '30', '45'],
-      respuestaCorrectaIndex: 1,
-      explicacion: '24 es múltiplo de 8 porque 8×3=24.',
+      pregunta: '¿Cuál es la componente en x de una fuerza de 40 N que forma 60° con el eje x?',
+      opciones: ['20 N', '34,6 N', '40 N', '69,3 N'],
+      respuestaCorrectaIndex: 0,
+      explicacion: 'Fx = 40 · cos 60° = 40 · 0,5 = 20 N.',
     },
     {
       id: 2,
-      pregunta: '¿Cuál de estos números NO es múltiplo de 5?',
-      opciones: ['25', '40', '52', '60'],
-      respuestaCorrectaIndex: 2,
-      explicacion: '52 no es múltiplo de 5: no termina en 0 ni en 5.',
+      pregunta: '¿Cuál es la componente en y de esa misma fuerza de 40 N a 60°?',
+      opciones: ['20 N', '34,6 N', '40 N', '46,2 N'],
+      respuestaCorrectaIndex: 1,
+      explicacion: 'Fy = 40 · sen 60° = 40 · 0,866 = 34,6 N.',
     },
     {
       id: 3,
-      pregunta: '¿Cuáles son los divisores de 18?',
-      opciones: ['1, 2, 3, 6, 9, 18', '1, 2, 4, 6, 9, 18', '1, 3, 6, 9, 12, 18', '1, 2, 3, 6, 9, 12'],
+      pregunta: 'Si Rx = 9 N y Ry = 12 N, ¿cuál es el módulo de la resultante?',
+      opciones: ['15 N', '21 N', '10,5 N', '3 N'],
       respuestaCorrectaIndex: 0,
-      explicacion: 'Los divisores de 18 son 1, 2, 3, 6, 9 y 18.',
+      explicacion: 'R = √(9² + 12²) = √(81 + 144) = √225 = 15 N.',
     },
     {
       id: 4,
-      pregunta: '¿Es 45 divisor de 135?',
-      opciones: ['Sí, es divisor exacto', 'No, sobra resto', 'Depende del contexto', 'No se puede saber'],
+      pregunta: 'Un vector apunta hacia abajo y a la derecha. ¿Qué signos tienen sus componentes?',
+      opciones: [
+        'Rx positiva, Ry negativa',
+        'Rx negativa, Ry positiva',
+        'Las dos positivas',
+        'Las dos negativas',
+      ],
       respuestaCorrectaIndex: 0,
-      explicacion: '135÷45=3, resto 0. Como el resto es 0, 45 es divisor de 135.',
+      explicacion:
+        'Hacia la derecha es x positivo; hacia abajo es y negativo. Por eso Rx > 0 y Ry < 0.',
     },
     {
       id: 5,
-      pregunta: '¿Cuál es el primer múltiplo de 9 mayor que 50?',
-      opciones: ['45', '54', '60', '63'],
+      pregunta: '¿Cuál es la componente en y de un vector que está sobre el eje x?',
+      opciones: ['Igual a su módulo', 'Cero', 'La mitad de su módulo', 'Depende del sentido'],
       respuestaCorrectaIndex: 1,
-      explicacion: '9×5=45 (no supera 50). 9×6=54, que sí supera 50 y es el primero en hacerlo.',
+      explicacion:
+        'Si está sobre el eje x, el ángulo es 0° (o 180°) y sen 0° = 0, así que la componente en y vale cero.',
     },
     {
       id: 6,
-      pregunta: '¿Cuántos divisores tiene el número 16?',
-      opciones: ['3', '4', '5', '6'],
-      respuestaCorrectaIndex: 2,
-      explicacion: 'Los divisores de 16 son 1, 2, 4, 8 y 16: en total 5.',
+      pregunta: 'Dos fuerzas de 50 N cada una forman entre sí un ángulo de 90°. ¿La resultante vale?',
+      opciones: ['100 N', '70,7 N', '50 N', '25 N'],
+      respuestaCorrectaIndex: 1,
+      explicacion: 'R = √(50² + 50²) = √5000 = 70,7 N. No se suman los módulos: no son colineales.',
     },
     {
       id: 7,
-      pregunta: '¿Cuál de estos números es divisor de 60 y también múltiplo de 4?',
-      opciones: ['9', '14', '20', '26'],
-      respuestaCorrectaIndex: 2,
-      explicacion: '20 divide a 60 exactamente (60÷20=3) y además es múltiplo de 4 (4×5=20).',
+      pregunta: '¿Con qué operación se recupera el ángulo de la resultante a partir de Rx y Ry?',
+      opciones: [
+        'arctg(Ry / Rx)',
+        'arcsen(Rx / Ry)',
+        'arccos(Ry / Rx)',
+        'Rx · Ry',
+      ],
+      respuestaCorrectaIndex: 0,
+      explicacion:
+        'La tangente del ángulo es el cateto opuesto sobre el adyacente, es decir Ry/Rx. El ángulo sale con la arcotangente.',
     },
     {
       id: 8,
-      pregunta: '¿Cuál de estas afirmaciones es correcta?',
-      opciones: [
-        'Todo número tiene infinitos múltiplos.',
-        'Todo número tiene infinitos divisores.',
-        'El 1 no es divisor de ningún número.',
-        'Los múltiplos de un número son siempre menores que él.',
-      ],
-      respuestaCorrectaIndex: 0,
-      explicacion: 'Todo número tiene infinitos múltiplos (se puede multiplicar por 0,1,2,3... sin parar), pero una cantidad limitada de divisores.',
+      pregunta:
+        'Al sumar tres vectores por componentes, ¿cuántas sumas hay que hacer antes de aplicar Pitágoras?',
+      opciones: ['Una', 'Dos', 'Tres', 'Seis'],
+      respuestaCorrectaIndex: 1,
+      explicacion:
+        'Dos: una para todas las componentes en x y otra para todas las componentes en y. No importa cuántos vectores haya.',
     },
     {
       id: 9,
-      pregunta: '¿Cuál de estos pares tiene una relación correcta de múltiplo-divisor?',
-      opciones: ['5 es múltiplo de 20', '20 es múltiplo de 5', '5 es divisor de 3', '20 no tiene divisores'],
-      respuestaCorrectaIndex: 1,
-      explicacion: '20 es múltiplo de 5 porque 5×4=20.',
+      pregunta: '¿Cuál de estas afirmaciones es correcta?',
+      opciones: [
+        'El módulo de la resultante nunca puede ser menor que el de uno de los vectores sumados.',
+        'El módulo de la resultante es siempre la suma de los módulos.',
+        'Dos vectores opuestos de igual módulo dan resultante nula.',
+        'Las componentes de un vector son siempre menores que 1.',
+      ],
+      respuestaCorrectaIndex: 2,
+      explicacion:
+        'Si tienen igual módulo y sentidos opuestos, sus componentes se cancelan y la resultante es cero. Ese caso también muestra que la resultante sí puede ser menor que cada vector.',
     },
     {
       id: 10,
-      pregunta: 'Si un número es divisor de 48, ¿cuál de estos NO puede ser?',
-      opciones: ['7', '8', '12', '16'],
-      respuestaCorrectaIndex: 0,
-      explicacion: 'Los divisores de 48 son 1, 2, 3, 4, 6, 8, 12, 16, 24 y 48. El 7 no está en esa lista.',
+      pregunta:
+        'Una fuerza de 20 N a 180° y otra de 12 N a 0° actúan sobre un cuerpo. ¿Cuál es la resultante?',
+      opciones: ['32 N hacia la derecha', '8 N hacia la izquierda', '8 N hacia la derecha', '32 N hacia la izquierda'],
+      respuestaCorrectaIndex: 1,
+      explicacion:
+        'Son colineales y opuestas: Rx = −20 + 12 = −8 N. El signo negativo indica que apunta hacia la izquierda.',
     },
   ],
 }
-
-export interface TemaSidebarItem {
-  id: number
-  titulo: string
-  completado: boolean
-  actual: boolean
-}
-
-export const temarioSidebar: TemaSidebarItem[] = [
-  { id: 1, titulo: 'Números naturales hasta el 100.000', completado: true, actual: false },
-  { id: 2, titulo: 'Cálculos mentales y aproximaciones', completado: true, actual: false },
-  { id: 3, titulo: 'Suma y resta', completado: true, actual: false },
-  { id: 4, titulo: 'Multiplicación', completado: true, actual: false },
-  { id: 5, titulo: 'División', completado: true, actual: false },
-  { id: 6, titulo: 'Criterios de divisibilidad', completado: true, actual: false },
-  { id: 7, titulo: 'Múltiplos y divisores', completado: false, actual: true },
-  { id: 8, titulo: 'Situaciones problemáticas', completado: false, actual: false },
-  { id: 9, titulo: 'Potencias y raíces', completado: false, actual: false },
-  { id: 10, titulo: 'Números romanos', completado: false, actual: false },
-]
-
-export const TOTAL_TEMAS_GRADO = 30

@@ -50,7 +50,7 @@ export function SubtemaVista({
   // subtema: el contador de progreso la necesita entera. En la Fase 2 esto pasa
   // a ser una consulta a la tabla `progreso`.
   const [completados, setCompletados] = useLocalStorage<string[]>(
-    `galileo:completados:${curso.gradoSlug}`,
+    `galileo:completados:${curso.slug}`,
     [],
   )
   const completado = completados.includes(subtema.slug)
@@ -72,8 +72,8 @@ export function SubtemaVista({
   return (
     <main className="mx-auto flex max-w-7xl items-start gap-6 p-6">
       <Sidebar
-        gradoSlug={curso.gradoSlug}
-        gradoNombre={curso.gradoNombre}
+        cursoSlug={curso.slug}
+        cursoNombre={curso.nombre}
         temaNombre={temaNombre}
         temario={temario}
         slugActual={subtema.slug}

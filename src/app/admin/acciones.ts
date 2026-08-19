@@ -54,9 +54,9 @@ export async function guardarSubtema(cursoId: number, meta: unknown, contenido: 
 
   // Las páginas son estáticas: sin esto seguirían mostrando la versión vieja
   // hasta el próximo build.
-  revalidatePath('/primaria/[grado]/[subtema]', 'page')
-  revalidatePath('/primaria/[grado]', 'page')
-  revalidatePath('/primaria')
+  revalidatePath('/preuniversitario/[curso]/[subtema]', 'page')
+  revalidatePath('/preuniversitario/[curso]', 'page')
+  revalidatePath('/preuniversitario')
 
   return { ok: true as const }
 }

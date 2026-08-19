@@ -5,51 +5,50 @@
 --
 -- NO copiarlo con "Get-Content archivo | Set-Clipboard" a secas: Windows
 -- PowerShell lo lee en la codificación ANSI del sistema y las tildes llegan
--- corruptas a la base ('Matemática' termina como 'MatemÃ¡tica'). Si hace falta
--- desde la terminal, va con encoding explícito:
+-- corruptas a la base ('Física' termina como 'FÃ­sica'). Si hace falta desde la
+-- terminal, va con encoding explícito:
 --     Get-Content archivo -Raw -Encoding UTF8 | Set-Clipboard
 --
 -- ⚠ ESTE ARCHIVO BORRA LAS TABLAS Y LAS VUELVE A CREAR. Está pensado para la
--- etapa de desarrollo, donde el único contenido real se recarga en un clic
--- desde el panel. En cuanto haya alumnos o pagos, esto se reemplaza por
--- migraciones incrementales que nunca hacen drop.
+-- etapa de desarrollo, donde el contenido se recarga desde el seed y el panel.
+-- En cuanto haya alumnos o pagos, esto se reemplaza por migraciones
+-- incrementales que nunca hacen drop.
 --
--- Jerarquía: Curso (un grado) → Tema (área) → Subtema (lo que se estudia).
+-- Jerarquía. Los nombres de las tablas son genéricos a propósito: lo que cambia
+-- según el nivel son las etiquetas que ve el alumno.
+--
+--   cursos   → una materia del ingreso   "Física"        (lo que se compra)
+--   temas    → una unidad                "Vectores"
+--   subtemas → una clase                 "Suma de vectores por componentes"
 
 drop table if exists progreso cascade;
 drop table if exists compras  cascade;
 drop table if exists subtemas cascade;
 drop table if exists temas    cascade;
 drop table if exists cursos   cascade;
-drop table if exists materias cascade;
+drop table if exists materias cascade;   -- de una versión anterior del modelo
 drop table if exists admins   cascade;
 
 -- ---------------------------------------------------------------------------
 -- Catálogo
 -- ---------------------------------------------------------------------------
 
-create table materias (
-  id     serial primary key,
-  slug   text not null unique,
-  nombre text not null
-);
-
--- Un curso es lo que se compra: un grado completo de una materia.
+-- Un curso es lo que se compra: una materia completa de un programa.
 create table cursos (
   id              serial primary key,
-  materia_id      integer not null references materias(id) on delete restrict,
-  nivel           text    not null default 'primaria',   -- primaria | secundaria | ingreso
-  grado_slug      text    not null,                      -- '4-grado'
-  grado_nombre    text    not null,                      -- '4° Grado'
-  titulo          text    not null,
+  nivel           text    not null default 'preuniversitario',
+  slug            text    not null,                      -- 'fisica' (va en la URL)
+  nombre          text    not null,                      -- 'Física'
+  programa        text    not null,                      -- 'Ingreso UNCuyo'
+  titulo          text    not null,                      -- 'Física — Ingreso UNCuyo'
   descripcion     text,
   orden           integer not null default 0,
   precio_centavos integer not null default 0,            -- centavos: la plata nunca en float
   publicado       boolean not null default false,
-  unique (nivel, grado_slug, materia_id)
+  unique (nivel, slug)
 );
 
--- Tema = área del currículum: 'Números y Operaciones', 'Geometría'...
+-- Tema = unidad del programa: 'Vectores', 'Cinemática'...
 create table temas (
   id       serial primary key,
   curso_id integer not null references cursos(id) on delete cascade,
@@ -61,12 +60,13 @@ create table temas (
   unique (id, curso_id)
 );
 
--- Subtema = la unidad que se estudia, con sus 5 solapas.
+-- Subtema = la clase que se estudia, con sus 5 solapas.
 --
--- `curso_id` está repetido acá a propósito: la URL es /primaria/4-grado/slug,
--- sin el área en el medio, así que buscar un subtema por su dirección tiene que
--- ser una consulta a una sola tabla. La clave foránea compuesta contra
--- temas(id, curso_id) hace imposible que este curso_id contradiga al del tema.
+-- `curso_id` está repetido acá a propósito: la URL es
+-- /preuniversitario/fisica/slug, sin la unidad en el medio, así que buscar una
+-- clase por su dirección tiene que ser una consulta a una sola tabla. La clave
+-- foránea compuesta contra temas(id, curso_id) hace imposible que este curso_id
+-- contradiga al de la unidad a la que pertenece.
 --
 -- `contenido` es nullable: la fila existe y se ve en el temario desde el día
 -- uno, pero mientras no haya contenido escrito la página muestra "Próximamente"
@@ -95,8 +95,8 @@ create index subtemas_tema_orden_idx  on subtemas (tema_id, orden);
 -- Personas
 -- ---------------------------------------------------------------------------
 
--- Quién puede entrar al panel. Con dos hermanos alcanza una tabla de dos filas;
--- el user_id se agrega a mano desde el dashboard tras el primer registro.
+-- Quién puede entrar al panel: los profesores que cargan su materia. El user_id
+-- se agrega a mano desde el dashboard después de que la persona se registre.
 create table admins (
   user_id uuid primary key references auth.users(id) on delete cascade
 );
@@ -130,7 +130,6 @@ create table progreso (
 -- una tabla con RLS habilitado no devuelve NADA — hay que declarar cada permiso.
 -- ---------------------------------------------------------------------------
 
-alter table materias enable row level security;
 alter table cursos   enable row level security;
 alter table temas    enable row level security;
 alter table subtemas enable row level security;
@@ -144,12 +143,10 @@ language sql security definer stable set search_path = public as $$
 $$;
 
 -- Catálogo: cualquiera lee lo publicado; solo un admin escribe.
-create policy materias_lectura on materias for select using (true);
 create policy cursos_lectura   on cursos   for select using (publicado or es_admin());
 create policy temas_lectura    on temas    for select using (true);
 create policy subtemas_lectura on subtemas for select using (publicado or es_admin());
 
-create policy materias_admin on materias for all using (es_admin()) with check (es_admin());
 create policy cursos_admin   on cursos   for all using (es_admin()) with check (es_admin());
 create policy temas_admin    on temas    for all using (es_admin()) with check (es_admin());
 create policy subtemas_admin on subtemas for all using (es_admin()) with check (es_admin());
@@ -168,8 +165,5 @@ create policy progreso_propio on progreso for all
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- ---------------------------------------------------------------------------
--- Materia base. Los grados, temas y subtemas vienen en seed-primaria.sql.
+-- Las materias, unidades y clases vienen en seed-preuniversitario.sql.
 -- ---------------------------------------------------------------------------
-
-insert into materias (slug, nombre) values ('matematica', 'Matemática')
-  on conflict (slug) do update set nombre = excluded.nombre;

@@ -1,27 +1,26 @@
-# Plantilla de tema — Academia Galileo
+# Plantilla de clase — Academia Galileo
 
 **Para quién es esto:** para escribir temas sin tocar código ni esperar al panel de
-administración. Copiá este archivo a un Google Doc (uno por tema) y completá los
+administración. Copiá este archivo a un Google Doc (uno por clase) y completá los
 campos. Cuando el panel exista, se pasa lo escrito tal cual.
 
 **Regla de oro:** respetá los títulos con `##` y la cantidad de ítems de cada
 sección. La estructura no es decorativa — es exactamente la forma que espera la
 base de datos. Si falta un campo, el tema no se puede cargar.
 
-**Cuánto es un tema:** 3 secciones de teoría, 3 ejemplos, 5 ejercicios, 10
-preguntas de quiz. Ni más ni menos. Si un tema "no entra", casi siempre son dos
-temas.
+**Cuánto es una clase:** 3 secciones de teoría, 3 ejemplos, 5 ejercicios, 10
+preguntas de quiz. Ni más ni menos. Si una clase "no entra", casi
+siempre son dos clases.
 
 ---
 
 ## Ficha
 
-- **Materia:** (Matemática / Lengua / ...)
-- **Grado:** (4° Grado)
-- **Categoría:** (Números y Operaciones)
-- **Título del tema:** (Múltiplos y divisores)
+- **Materia:** (Física / Química / Matemática)
+- **Unidad:** (Vectores)
+- **Título de la clase:** (Suma de vectores por componentes)
 - **Orden en el temario:** (7)
-- **¿Es tema gratis?** (Sí / No — los primeros 2-3 de cada curso van gratis, son
+- **¿Es clase gratis?** (Sí / No — los primeros 2-3 de cada curso van gratis, son
   la muestra y lo que Google indexa)
 
 ## Objetivos

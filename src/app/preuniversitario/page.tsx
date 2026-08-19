@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Primaria',
   description:
     'Cursos de matemática de primaria organizados por grado y tema, con explicaciones, ejemplos resueltos y ejercicios que se corrigen solos.',
-  alternates: { canonical: '/primaria' },
+  alternates: { canonical: '/preuniversitario' },
 }
 
 export default async function PrimariaPage() {
@@ -62,11 +62,11 @@ export default async function PrimariaPage() {
             return (
               <Link
                 key={curso.id}
-                href={`/primaria/${curso.gradoSlug}`}
+                href={`/preuniversitario/${curso.slug}`}
                 className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 hover:border-green-400 hover:shadow-sm"
               >
                 <span className="mb-3 self-start rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
-                  {curso.gradoNombre}
+                  {curso.nombre}
                 </span>
                 <h2 className="text-lg font-bold text-slate-900">{curso.titulo}</h2>
                 <p className="mt-1 flex-1 text-sm text-slate-600">{curso.descripcion}</p>

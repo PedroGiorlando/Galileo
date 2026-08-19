@@ -6,7 +6,7 @@ import { getRutasDeSubtemas, getSubtema } from '@/lib/contenido'
 import { Header } from '@/components/Header'
 import { SubtemaVista } from '@/components/SubtemaVista'
 
-type Params = { grado: string; subtema: string }
+type Params = { curso: string; subtema: string }
 
 /**
  * Solo se prerenderizan los subtemas que ya tienen contenido. Los demás se
@@ -21,11 +21,11 @@ export async function generateMetadata({
 }: {
   params: Promise<Params>
 }): Promise<Metadata> {
-  const { grado, subtema: slug } = await params
-  const datos = await getSubtema(grado, slug)
+  const { curso: cursoSlug, subtema: slug } = await params
+  const datos = await getSubtema(cursoSlug, slug)
   if (!datos) return {}
 
-  const canonical = `/primaria/${grado}/${slug}`
+  const canonical = `/preuniversitario/${cursoSlug}/${slug}`
 
   // Un subtema sin contenido no aporta nada a quien llega de Google: se sirve,
   // pero pidiendo explícitamente que no se indexe. Indexar 170 páginas casi
@@ -46,15 +46,15 @@ export async function generateMetadata({
 }
 
 export default async function SubtemaPage({ params }: { params: Promise<Params> }) {
-  const { grado, subtema: slug } = await params
-  const datos = await getSubtema(grado, slug)
+  const { curso: cursoSlug, subtema: slug } = await params
+  const datos = await getSubtema(cursoSlug, slug)
   if (!datos) notFound()
 
   const breadcrumbs = [
     'Inicio',
     'Cursos',
     'Primaria',
-    datos.curso.gradoNombre,
+    datos.curso.nombre,
     datos.tema.nombre,
     datos.resumen.titulo,
   ]
@@ -74,10 +74,10 @@ export default async function SubtemaPage({ params }: { params: Promise<Params> 
             resueltos y los ejercicios.
           </p>
           <Link
-            href={`/primaria/${grado}`}
+            href={`/preuniversitario/${cursoSlug}`}
             className="mt-6 inline-flex items-center gap-1.5 rounded-md bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700"
           >
-            <ArrowLeft size={16} /> Ver el temario de {datos.curso.gradoNombre}
+            <ArrowLeft size={16} /> Ver el temario de {datos.curso.nombre}
           </Link>
         </main>
       </>
