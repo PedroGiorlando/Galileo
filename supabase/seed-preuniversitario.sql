@@ -10,8 +10,8 @@
 -- ========================================================================
 
 insert into cursos (nivel, slug, nombre, programa, titulo, descripcion, orden, publicado)
-values ('preuniversitario', 'fisica', 'Física', 'Ingreso Universitario',
-        'Física — Ingreso Universitario', 'Todo el programa de Física del ingreso, desde magnitudes y unidades hasta trabajo y energía, con teoría, ejercicios resueltos y exámenes reales.',
+values ('preuniversitario', 'fisica', 'Física', 'Ingreso UNCuyo',
+        'Física — Ingreso UNCuyo', 'Todo el programa de Física del ingreso, desde magnitudes y unidades hasta trabajo y energía, con teoría, ejercicios resueltos y exámenes reales.',
         1, true)
   on conflict (nivel, slug) do update set
     nombre = excluded.nombre, programa = excluded.programa, titulo = excluded.titulo,
@@ -312,8 +312,8 @@ where c.nivel = 'preuniversitario' and c.slug = 'fisica' and t.slug = 'examenes-
 -- ========================================================================
 
 insert into cursos (nivel, slug, nombre, programa, titulo, descripcion, orden, publicado)
-values ('preuniversitario', 'matematica', 'Matemática', 'Ingreso Universitario',
-        'Matemática — Ingreso Universitario', 'Todo el programa de Matemática del ingreso: conjuntos numéricos, álgebra, ecuaciones, funciones y trigonometría, con ejercicios resueltos y exámenes reales.',
+values ('preuniversitario', 'matematica', 'Matemática', 'Ingreso UNCuyo',
+        'Matemática — Ingreso UNCuyo', 'Todo el programa de Matemática del ingreso: conjuntos numéricos, álgebra, ecuaciones, funciones y trigonometría, con ejercicios resueltos y exámenes reales.',
         2, false)
   on conflict (nivel, slug) do update set
     nombre = excluded.nombre, programa = excluded.programa, titulo = excluded.titulo,
@@ -576,8 +576,8 @@ where c.nivel = 'preuniversitario' and c.slug = 'matematica' and t.slug = 'exame
 -- ========================================================================
 
 insert into cursos (nivel, slug, nombre, programa, titulo, descripcion, orden, publicado)
-values ('preuniversitario', 'quimica', 'Química', 'Ingreso Universitario',
-        'Química — Ingreso Universitario', 'Todo el programa de Química del ingreso: estructura de la materia, tabla periódica, uniones, nomenclatura y estequiometría.',
+values ('preuniversitario', 'quimica', 'Química', 'Ingreso UNCuyo',
+        'Química — Ingreso UNCuyo', 'Todo el programa de Química del ingreso: estructura de la materia, tabla periódica, uniones, nomenclatura y estequiometría.',
         3, false)
   on conflict (nivel, slug) do update set
     nombre = excluded.nombre, programa = excluded.programa, titulo = excluded.titulo,

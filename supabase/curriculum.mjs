@@ -19,7 +19,7 @@
  */
 
 /** ⚠ Cambiar por el ingreso real. Aparece en títulos y breadcrumbs. */
-export const PROGRAMA = 'Ingreso Universitario'
+export const PROGRAMA = 'Ingreso UNCuyo'
 
 export const MATERIAS = [
   {

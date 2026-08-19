@@ -137,19 +137,39 @@ alter table admins   enable row level security;
 alter table compras  enable row level security;
 alter table progreso enable row level security;
 
-create or replace function es_admin() returns boolean
+-- es_admin() vive en un esquema que PostgREST no publica: si estuviera en
+-- public quedaria expuesta como endpoint REST (/rest/v1/rpc/es_admin). Los
+-- roles necesitan USAGE sobre el esquema porque las politicas se evaluan con
+-- sus permisos, pero eso no la vuelve llamable por HTTP.
+create schema if not exists private;
+grant usage on schema private to anon, authenticated;
+
+create or replace function private.es_admin() returns boolean
 language sql security definer stable set search_path = public as $$
   select exists (select 1 from admins where user_id = auth.uid());
 $$;
 
 -- Catálogo: cualquiera lee lo publicado; solo un admin escribe.
-create policy cursos_lectura   on cursos   for select using (publicado or es_admin());
-create policy temas_lectura    on temas    for select using (true);
-create policy subtemas_lectura on subtemas for select using (publicado or es_admin());
+--
+-- El "exists" sobre cursos no repite la condición "publicado": la consulta
+-- interna también pasa por RLS, así que ya solo ve los cursos que quien
+-- pregunta puede ver. Sin eso, los títulos de las unidades y clases de una
+-- materia sin publicar quedan legibles con la clave pública.
+create policy cursos_lectura on cursos for select
+  using (publicado or private.es_admin());
 
-create policy cursos_admin   on cursos   for all using (es_admin()) with check (es_admin());
-create policy temas_admin    on temas    for all using (es_admin()) with check (es_admin());
-create policy subtemas_admin on subtemas for all using (es_admin()) with check (es_admin());
+create policy temas_lectura on temas for select
+  using (exists (select 1 from cursos c where c.id = temas.curso_id));
+
+create policy subtemas_lectura on subtemas for select
+  using (
+    (publicado or private.es_admin())
+    and exists (select 1 from cursos c where c.id = subtemas.curso_id)
+  );
+
+create policy cursos_admin   on cursos   for all using (private.es_admin()) with check (private.es_admin());
+create policy temas_admin    on temas    for all using (private.es_admin()) with check (private.es_admin());
+create policy subtemas_admin on subtemas for all using (private.es_admin()) with check (private.es_admin());
 
 -- Cada quien ve si es admin; nadie se agrega solo (eso se hace desde el dashboard).
 create policy admins_lectura_propia on admins for select using (user_id = auth.uid());
