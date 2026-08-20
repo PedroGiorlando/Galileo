@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, BookOpen, GraduationCap, Layers, PlayCircle } from 'lucide-react'
 import { getCursos, getTemario } from '@/lib/contenido'
+import { paletaDeMateria, paletaDeUnidad } from '@/lib/colores'
 import { Header } from '@/components/Header'
 
 export const metadata: Metadata = {
@@ -45,15 +46,17 @@ export default async function PreuniversitarioPage() {
         ]}
       />
 
-      <div className="border-b border-slate-200 bg-gradient-to-r from-green-50 to-white">
+      <div className="border-b border-linea bg-white/70">
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="flex items-start gap-5">
             <span className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-full bg-green-100 sm:flex">
               <GraduationCap size={36} className="text-green-700" />
             </span>
             <div className="min-w-0">
-              <h1 className="text-4xl font-bold text-slate-900">{programa}</h1>
-              <p className="mt-2 max-w-2xl text-slate-600">
+              <h1 className="font-display text-4xl font-bold text-tinta sm:text-5xl">
+                {programa}
+              </h1>
+              <p className="mt-3 max-w-2xl text-tinta-suave">
                 Todas las materias del ingreso, organizadas por unidad y clase, para que estudies
                 paso a paso y llegues al examen sabiendo qué te van a tomar.
               </p>
@@ -114,9 +117,11 @@ export default async function PreuniversitarioPage() {
           )}
 
           {cursos.map((curso, i) => (
-            <section key={curso.id}>
+            <section key={curso.id} className={`rounded-2xl border border-linea p-5 ${paletaDeMateria(curso.slug).fondo}`}>
               <div className="mb-1 flex items-baseline justify-between gap-3">
-                <h2 className="text-2xl font-bold text-slate-900">{curso.nombre}</h2>
+                <h2 className="font-display text-2xl font-bold text-tinta">
+                  {curso.nombre}
+                </h2>
                 <Link
                   href={`/preuniversitario/${curso.slug}`}
                   className="flex shrink-0 items-center gap-1 text-sm font-medium text-green-700 hover:underline"
@@ -129,17 +134,18 @@ export default async function PreuniversitarioPage() {
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {temarios[i].map(unidad => {
                   const listasEnUnidad = unidad.subtemas.filter(s => s.tieneContenido).length
+                  const p = paletaDeUnidad(curso.slug, unidad.orden)
                   return (
                     <Link
                       key={unidad.id}
                       // Cae directo en el ancla de esa unidad dentro del temario.
                       href={`/preuniversitario/${curso.slug}#${unidad.slug}`}
-                      className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 hover:border-green-400 hover:shadow-sm"
+                      className={`flex flex-col rounded-2xl border border-linea bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md ${p.bordeActivo}`}
                     >
-                      <span className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+                      <span className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl font-mono text-sm text-white ${p.solido}`}>
                         {unidad.orden}
                       </span>
-                      <h3 className="font-semibold text-slate-800">{unidad.nombre}</h3>
+                      <h3 className="font-display font-semibold text-tinta">{unidad.nombre}</h3>
                       <ul className="mt-2 flex-1 space-y-0.5">
                         {unidad.subtemas.slice(0, 3).map(s => (
                           <li key={s.id} className="truncate text-xs text-slate-500">

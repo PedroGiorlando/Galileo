@@ -43,10 +43,10 @@ export function Header({ breadcrumbs }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Sin menú hamburguesa: en pantallas chicas la barra se envuelve y
-            hace scroll horizontal. Un desplegable pediría estado de cliente y
-            volvería cliente toda la cabecera para nada. */}
-        <nav className="order-3 flex w-full gap-5 overflow-x-auto text-sm whitespace-nowrap lg:order-none lg:w-auto">
+        {/* Envuelve en vez de deslizar: una barra de desplazamiento horizontal
+            en la cabecera esconde la mitad del menú y nadie la busca. Sin menú
+            hamburguesa, que pediría estado y volvería cliente toda la cabecera. */}
+        <nav className="order-3 flex w-full flex-wrap gap-x-5 gap-y-1 text-sm lg:order-none lg:w-auto">
           {NAV_LINKS.map(link => (
             <Link
               key={link.href}

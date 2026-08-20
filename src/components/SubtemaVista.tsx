@@ -5,6 +5,7 @@ import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide
 import type { SubtemaCompleto } from '@/data/topicData'
 import type { Curso, TemaConSubtemas } from '@/lib/contenido'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { paletaDeMateria } from '@/lib/colores'
 import { Sidebar } from './Sidebar'
 import { RightPanel } from './RightPanel'
 import { CompletarButton } from './CompletarButton'
@@ -60,6 +61,7 @@ export function SubtemaVista({
   const completado = completados.includes(subtema.slug)
 
   const total = temario.reduce((n, t) => n + t.subtemas.length, 0) || 1
+  const paleta = paletaDeMateria(curso.slug)
 
   const tabProps = { subtema }
 
@@ -79,13 +81,17 @@ export function SubtemaVista({
             <h1>, así que la página tenía cinco (cuatro ocultos): Google espera
             uno solo y un lector de pantalla anunciaba cinco títulos distintos
             para la misma página. */}
-        <header className="rounded-lg border border-slate-200 bg-white p-5">
+        <header className={`rounded-2xl border border-linea p-6 ${paleta.fondo}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold uppercase text-orange-500">{temaNombre}</p>
-              <h1 className="mt-0.5 text-2xl font-bold text-slate-900">{subtema.titulo}</h1>
+              <p className={`font-mono text-xs uppercase tracking-widest ${paleta.texto}`}>
+                {temaNombre}
+              </p>
+              <h1 className="mt-1 font-display text-3xl font-bold text-tinta">
+                {subtema.titulo}
+              </h1>
               {subtema.descripcion && (
-                <p className="mt-1 max-w-2xl text-slate-600">{subtema.descripcion}</p>
+                <p className="mt-2 max-w-2xl text-tinta-suave">{subtema.descripcion}</p>
               )}
             </div>
             <CompletarButton
@@ -103,7 +109,7 @@ export function SubtemaVista({
 
         <div
           role="tablist"
-          className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1"
+          className="flex flex-wrap gap-1 rounded-xl border border-linea bg-white p-1.5"
         >
           {TABS.map(tab => (
             <button
@@ -112,10 +118,10 @@ export function SubtemaVista({
               role="tab"
               aria-selected={tabActivo === tab.id}
               onClick={() => setTabActivo(tab.id)}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                 tabActivo === tab.id
-                  ? 'bg-green-600 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  ? `${paleta.solido} text-white shadow-sm`
+                  : 'text-tinta-suave hover:bg-slate-50'
               }`}
             >
               <tab.icon size={16} />
@@ -124,7 +130,7 @@ export function SubtemaVista({
           ))}
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-2xl border border-linea bg-white p-6">
           {hayVideo && (
             <div className={tabActivo === 'leccion' ? '' : 'hidden'}>
               <LeccionTab {...tabProps} />
