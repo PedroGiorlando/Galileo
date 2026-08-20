@@ -43,7 +43,14 @@ export default async function CursoPage({ params }: { params: Promise<Params> })
 
   return (
     <>
-      <Header breadcrumbs={['Inicio', 'Cursos', curso.programa, curso.nombre]} />
+      <Header
+        breadcrumbs={[
+          { label: 'Inicio', href: '/' },
+          { label: 'Cursos', href: '/preuniversitario' },
+          { label: curso.programa, href: '/preuniversitario' },
+          { label: curso.nombre },
+        ]}
+      />
 
       <main className="mx-auto max-w-5xl p-6">
         <Link

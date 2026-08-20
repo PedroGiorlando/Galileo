@@ -5,6 +5,7 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import { getRutasDeSubtemas, getSubtema } from '@/lib/contenido'
 import { Header } from '@/components/Header'
 import { SubtemaVista } from '@/components/SubtemaVista'
+import { NavegacionClases } from '@/components/NavegacionClases'
 
 type Params = { curso: string; subtema: string }
 
@@ -50,13 +51,15 @@ export default async function SubtemaPage({ params }: { params: Promise<Params> 
   const datos = await getSubtema(cursoSlug, slug)
   if (!datos) notFound()
 
+  // La unidad no tiene página propia: la clase se llega desde el temario de la
+  // materia, así que esa miga va sin enlace.
   const breadcrumbs = [
-    'Inicio',
-    'Cursos',
-    datos.curso.programa,
-    datos.curso.nombre,
-    datos.tema.nombre,
-    datos.resumen.titulo,
+    { label: 'Inicio', href: '/' },
+    { label: 'Cursos', href: '/preuniversitario' },
+    { label: datos.curso.programa, href: '/preuniversitario' },
+    { label: datos.curso.nombre, href: `/preuniversitario/${cursoSlug}` },
+    { label: datos.tema.nombre },
+    { label: datos.resumen.titulo },
   ]
 
   if (!datos.subtema) {
@@ -92,6 +95,11 @@ export default async function SubtemaPage({ params }: { params: Promise<Params> 
         curso={datos.curso}
         temaNombre={datos.tema.nombre}
         temario={datos.temario}
+      />
+      <NavegacionClases
+        cursoSlug={cursoSlug}
+        temario={datos.temario}
+        slugActual={datos.resumen.slug}
       />
     </>
   )

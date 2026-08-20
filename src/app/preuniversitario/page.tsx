@@ -26,7 +26,13 @@ export default async function PreuniversitarioPage() {
 
   return (
     <>
-      <Header breadcrumbs={['Inicio', 'Cursos', 'Preuniversitario']} />
+      <Header
+        breadcrumbs={[
+          { label: 'Inicio', href: '/' },
+          { label: 'Cursos', href: '/preuniversitario' },
+          { label: programa },
+        ]}
+      />
 
       <main className="mx-auto max-w-6xl p-6">
         <header className="mb-8 flex items-start gap-5">
