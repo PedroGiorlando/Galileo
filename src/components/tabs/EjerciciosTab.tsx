@@ -4,12 +4,9 @@ import type { SubtemaCompleto } from '../../data/topicData'
 import { esCorrecta, type Respuesta } from '@/lib/correccion'
 import type { Ejercicio } from '@/lib/schemas'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { CompletarButton } from '../CompletarButton'
 
 interface EjerciciosTabProps {
   subtema: SubtemaCompleto
-  completado: boolean
-  onMarcarCompletado: () => void
 }
 
 type Resultado = { respuesta: Respuesta; correcto: boolean }
@@ -18,7 +15,7 @@ type Resultados = Record<number, Resultado>
 const SUBTABS = ['Ejercicios', 'Mis respuestas', 'Resueltos'] as const
 type Subtab = (typeof SUBTABS)[number]
 
-export function EjerciciosTab({ subtema, completado, onMarcarCompletado }: EjerciciosTabProps) {
+export function EjerciciosTab({ subtema }: EjerciciosTabProps) {
   const [subtab, setSubtab] = useState<Subtab>('Ejercicios')
   const [resultados, setResultados] = useLocalStorage<Resultados>(`galileo:ejercicios:${subtema.slug}`, {})
   const [respuestasBorrador, setRespuestasBorrador] = useState<Record<number, Respuesta>>(() =>
@@ -40,11 +37,6 @@ export function EjerciciosTab({ subtema, completado, onMarcarCompletado }: Ejerc
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
-        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
-      </div>
-
       <div role="tablist" className="flex gap-2 border-b border-slate-200">
         {SUBTABS.map(s => (
           <button

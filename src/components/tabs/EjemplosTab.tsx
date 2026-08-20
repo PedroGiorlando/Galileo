@@ -1,61 +1,63 @@
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { SubtemaCompleto } from '../../data/topicData'
-import { CompletarButton } from '../CompletarButton'
 
-interface EjemplosTabProps {
-  subtema: SubtemaCompleto
-  completado: boolean
-  onMarcarCompletado: () => void
-}
-
-export function EjemplosTab({ subtema, completado, onMarcarCompletado }: EjemplosTabProps) {
-  const [indice, setIndice] = useState(0)
-  const ejemplo = subtema.ejemplos[indice]
-  const esPrimero = indice === 0
-  const esUltimo = indice === subtema.ejemplos.length - 1
-
+/**
+ * Los ejemplos se muestran todos, uno debajo del otro, y no de a uno con
+ * botones. Tres razones: se pueden comparar entre sí, se puede volver a mirar
+ * el anterior mientras se lee el siguiente, y todo el texto queda en el HTML
+ * en vez de aparecer recién al hacer click.
+ */
+export function EjemplosTab({ subtema }: { subtema: SubtemaCompleto }) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
-        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
-      </div>
+    <div className="space-y-6">
+      <p className="text-sm text-slate-500">
+        Mirá cómo se resuelve cada situación paso a paso antes de pasar a los ejercicios.
+      </p>
 
-      <div className="rounded-lg border border-slate-200 bg-white p-5">
-        <p className="mb-1 text-xs font-semibold text-green-600">
-          EJEMPLO {indice + 1} DE {subtema.ejemplos.length}
-        </p>
-        <h2 className="mb-4 text-lg font-bold text-slate-800">{ejemplo.enunciado}</h2>
-
-        <p className="mb-2 text-sm font-semibold text-slate-500">Solución:</p>
-        <ol className="space-y-2">
-          {ejemplo.pasos.map((paso, i) => (
-            <li key={i} className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">
-              {paso}
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      <div className="flex justify-between">
-        <button
-          type="button"
-          disabled={esPrimero}
-          onClick={() => setIndice(i => i - 1)}
-          className="flex items-center gap-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+      {subtema.ejemplos.map((ejemplo, i) => (
+        <article
+          key={ejemplo.id}
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
         >
-          <ChevronLeft size={16} /> Ejemplo anterior
-        </button>
-        <button
-          type="button"
-          disabled={esUltimo}
-          onClick={() => setIndice(i => i + 1)}
-          className="flex items-center gap-1 rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Siguiente ejemplo <ChevronRight size={16} />
-        </button>
-      </div>
+          <div className="flex items-start gap-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 text-sm font-bold text-green-700">
+              {i + 1}
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase text-green-600">Ejemplo {i + 1}</p>
+              <h2 className="mt-0.5 text-lg font-bold text-slate-900">{ejemplo.enunciado}</h2>
+
+              <p className="mt-4 mb-2 text-sm font-semibold text-slate-500">Solución:</p>
+              <ol className="space-y-2">
+                {ejemplo.pasos.map((paso, j) => {
+                  const esUltimo = j === ejemplo.pasos.length - 1
+                  return (
+                    <li
+                      key={j}
+                      // El último paso es el resultado: se destaca para que no
+                      // se pierda entre los pasos intermedios.
+                      className={`flex gap-3 rounded-md p-3 text-sm leading-relaxed ${
+                        esUltimo
+                          ? 'border border-green-200 bg-green-50 font-medium text-green-900'
+                          : 'bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      <span
+                        className={`shrink-0 font-bold ${
+                          esUltimo ? 'text-green-600' : 'text-slate-400'
+                        }`}
+                      >
+                        {j + 1}.
+                      </span>
+                      <span className="whitespace-pre-wrap">{paso}</span>
+                    </li>
+                  )
+                })}
+              </ol>
+            </div>
+          </div>
+        </article>
+      ))}
     </div>
   )
 }

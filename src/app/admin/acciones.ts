@@ -34,6 +34,7 @@ export async function guardarSubtema(cursoId: number, meta: unknown, contenido: 
     .from('subtemas')
     .update({
       titulo: m.titulo,
+      descripcion: m.descripcion || null,
       duracion_label: m.duracionLabel,
       video_url: m.videoUrl || null,
       gratis: m.gratis,

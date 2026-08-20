@@ -28,7 +28,9 @@ export interface SubtemaCompleto {
   id: number
   slug: string
   titulo: string
+  descripcion: string | null
   duracionLabel: string
+  videoUrl: string | null
   objetivos: string[]
   explicacion: SeccionExplicacion[]
   ejemplos: Ejemplo[]
@@ -48,7 +50,10 @@ export const tema: SubtemaCompleto = {
   id: 5,
   slug: 'suma-de-vectores-por-componentes',
   titulo: 'Suma de vectores por componentes',
+  descripcion:
+    'Aprendé a sumar vectores trabajando con sus componentes, sin regla ni transportador.',
   duracionLabel: '12:40',
+  videoUrl: null,
   objetivos: [
     'Descomponer un vector en sus componentes rectangulares.',
     'Sumar varios vectores trabajando con sus componentes.',

@@ -2,17 +2,14 @@ import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import type { SubtemaCompleto } from '../../data/topicData'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { CompletarButton } from '../CompletarButton'
 
 interface AutoevaluacionTabProps {
   subtema: SubtemaCompleto
-  completado: boolean
-  onMarcarCompletado: () => void
 }
 
 const PORCENTAJE_APROBACION = 70
 
-export function AutoevaluacionTab({ subtema, completado, onMarcarCompletado }: AutoevaluacionTabProps) {
+export function AutoevaluacionTab({ subtema }: AutoevaluacionTabProps) {
   // Depende del tema, que ahora llega por props: no puede ser constante de módulo.
   const TOTAL_PREGUNTAS = subtema.quiz.length
   const [indice, setIndice] = useState(0)
@@ -77,7 +74,6 @@ export function AutoevaluacionTab({ subtema, completado, onMarcarCompletado }: A
           >
             Reintentar
           </button>
-          <CompletarButton completado={completado} onClick={onMarcarCompletado} />
         </div>
       </div>
     )
@@ -85,11 +81,6 @@ export function AutoevaluacionTab({ subtema, completado, onMarcarCompletado }: A
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">{subtema.titulo}</h1>
-        <CompletarButton completado={completado} onClick={onMarcarCompletado} />
-      </div>
-
       <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500">
         <span>Pregunta {indice + 1} / {TOTAL_PREGUNTAS}</span>
         <span>Puntaje: {puntaje} / {TOTAL_PREGUNTAS}</span>

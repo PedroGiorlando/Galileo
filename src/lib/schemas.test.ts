@@ -69,11 +69,12 @@ describe('ejercicio de selección múltiple', () => {
 
 describe('metadatos del tema', () => {
   const base = {
-    slug: 'multiplos-y-divisores',
-    titulo: 'Múltiplos y divisores',
-    categoria: 'Números y Operaciones',
-    orden: 7,
-    duracionLabel: '10:15',
+    slug: 'suma-de-vectores-por-componentes',
+    titulo: 'Suma de vectores por componentes',
+    descripcion: 'Aprendé a sumar vectores trabajando con sus componentes.',
+    categoria: 'Vectores',
+    orden: 5,
+    duracionLabel: '12:40',
     videoUrl: '',
     gratis: true,
     publicado: true,
@@ -81,6 +82,17 @@ describe('metadatos del tema', () => {
 
   it('acepta metadatos bien formados', () => {
     expect(TemaMetaSchema.safeParse(base).success).toBe(true)
+  })
+
+  it('acepta una descripción vacía', () => {
+    // Un campo vacío es distinto de un campo ausente: la clase puede todavía
+    // no tener descripción, pero el formulario siempre manda la propiedad.
+    expect(TemaMetaSchema.safeParse({ ...base, descripcion: '' }).success).toBe(true)
+  })
+
+  it('rechaza una descripción demasiado larga', () => {
+    // Va en una celda de tabla: si crece sin límite, rompe el temario.
+    expect(TemaMetaSchema.safeParse({ ...base, descripcion: 'x'.repeat(201) }).success).toBe(false)
   })
 
   it('rechaza un slug con mayúsculas, tildes o espacios', () => {

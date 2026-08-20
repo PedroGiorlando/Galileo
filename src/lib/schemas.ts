@@ -94,6 +94,8 @@ export const TemaMetaSchema = z.object({
     .string()
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Solo minúsculas, números y guiones'),
   titulo: textoNoVacio,
+  // Va bajo el título de la clase y en la columna Contenido del temario.
+  descripcion: z.string().trim().max(200, 'Máximo 200 caracteres'),
   categoria: textoNoVacio,
   orden: z.number().int().positive(),
   duracionLabel: z.string().regex(/^\d{1,2}:\d{2}$/, 'Formato mm:ss'),

@@ -7,27 +7,19 @@ import type { Curso, TemaConSubtemas } from '@/lib/contenido'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { Sidebar } from './Sidebar'
 import { RightPanel } from './RightPanel'
+import { CompletarButton } from './CompletarButton'
 import { LeccionTab } from './tabs/LeccionTab'
 import { ExplicacionTab } from './tabs/ExplicacionTab'
 import { EjemplosTab } from './tabs/EjemplosTab'
 import { EjerciciosTab } from './tabs/EjerciciosTab'
 import { AutoevaluacionTab } from './tabs/AutoevaluacionTab'
 
-const TABS = [
-  { id: 'leccion', label: 'Lección', icon: PlayCircle },
-  { id: 'explicacion', label: 'Explicación escrita', icon: FileText },
-  { id: 'ejemplos', label: 'Ejemplos resueltos', icon: PencilLine },
-  { id: 'ejercicios', label: 'Ejercicios', icon: ClipboardCheck },
-  { id: 'autoevaluacion', label: 'Autoevaluación', icon: MapPin },
-] as const
-
-type TabId = (typeof TABS)[number]['id']
+type TabId = 'leccion' | 'explicacion' | 'ejemplos' | 'ejercicios' | 'autoevaluacion'
 
 /**
- * Client Component: es dueño del estado compartido del subtema (solapa activa y
- * qué subtemas están completados), que necesitan a la vez el Sidebar (los
- * checks), el RightPanel (el contador) y las solapas (el botón). Por eso el
- * límite cliente/servidor cae acá y no más adentro.
+ * Client Component: es dueño del estado compartido de la clase (solapa activa y
+ * qué clases están completadas), que necesitan a la vez el Sidebar (los checks),
+ * el RightPanel (el contador) y el botón de completar.
  *
  * Ojo: 'use client' NO significa "no se renderiza en el servidor". Next igual
  * genera el HTML de esto en el servidor y después lo hidrata — el texto de la
@@ -44,11 +36,23 @@ export function SubtemaVista({
   temaNombre: string
   temario: TemaConSubtemas[]
 }) {
-  const [tabActivo, setTabActivo] = useState<TabId>('leccion')
+  // La solapa Lección solo existe si hay video cargado. Sin esto, una clase sin
+  // video abría en un reproductor vacío.
+  const hayVideo = Boolean(subtema.videoUrl)
 
-  // Una sola lista de slugs completados por curso, en vez de una clave por
-  // subtema: el contador de progreso la necesita entera. En la Fase 2 esto pasa
-  // a ser una consulta a la tabla `progreso`.
+  const TABS = [
+    ...(hayVideo ? [{ id: 'leccion' as const, label: 'Lección', icon: PlayCircle }] : []),
+    { id: 'explicacion' as const, label: 'Explicación escrita', icon: FileText },
+    { id: 'ejemplos' as const, label: 'Ejemplos resueltos', icon: PencilLine },
+    { id: 'ejercicios' as const, label: 'Ejercicios', icon: ClipboardCheck },
+    { id: 'autoevaluacion' as const, label: 'Autoevaluación', icon: MapPin },
+  ]
+
+  const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')
+
+  // Una sola lista de slugs completados por materia, en vez de una clave por
+  // clase: el contador de progreso la necesita entera. En la Fase 2 esto pasa a
+  // ser una consulta a la tabla `progreso`.
   const [completados, setCompletados] = useLocalStorage<string[]>(
     `galileo:completados:${curso.slug}`,
     [],
@@ -56,21 +60,11 @@ export function SubtemaVista({
   const completado = completados.includes(subtema.slug)
 
   const total = temario.reduce((n, t) => n + t.subtemas.length, 0) || 1
-  const courseProgressPercent = (completados.length / total) * 100
 
-  const tabProps = {
-    subtema,
-    completado,
-    onMarcarCompletado: () =>
-      setCompletados(prev =>
-        prev.includes(subtema.slug)
-          ? prev.filter(s => s !== subtema.slug)
-          : [...prev, subtema.slug],
-      ),
-  }
+  const tabProps = { subtema }
 
   return (
-    <main className="mx-auto flex max-w-7xl items-start gap-6 p-6">
+    <main className="mx-auto flex max-w-7xl flex-col items-start gap-6 p-6 lg:flex-row">
       <Sidebar
         cursoSlug={curso.slug}
         cursoNombre={curso.nombre}
@@ -81,6 +75,32 @@ export function SubtemaVista({
       />
 
       <div className="min-w-0 flex-1 space-y-4">
+        {/* Encabezado único de la clase. Antes cada solapa repetía su propio
+            <h1>, así que la página tenía cinco (cuatro ocultos): Google espera
+            uno solo y un lector de pantalla anunciaba cinco títulos distintos
+            para la misma página. */}
+        <header className="rounded-lg border border-slate-200 bg-white p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold uppercase text-orange-500">{temaNombre}</p>
+              <h1 className="mt-0.5 text-2xl font-bold text-slate-900">{subtema.titulo}</h1>
+              {subtema.descripcion && (
+                <p className="mt-1 max-w-2xl text-slate-600">{subtema.descripcion}</p>
+              )}
+            </div>
+            <CompletarButton
+              completado={completado}
+              onClick={() =>
+                setCompletados(prev =>
+                  prev.includes(subtema.slug)
+                    ? prev.filter(s => s !== subtema.slug)
+                    : [...prev, subtema.slug],
+                )
+              }
+            />
+          </div>
+        </header>
+
         <div
           role="tablist"
           className="flex gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1"
@@ -105,9 +125,11 @@ export function SubtemaVista({
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <div className={tabActivo === 'leccion' ? '' : 'hidden'}>
-            <LeccionTab {...tabProps} />
-          </div>
+          {hayVideo && (
+            <div className={tabActivo === 'leccion' ? '' : 'hidden'}>
+              <LeccionTab {...tabProps} />
+            </div>
+          )}
           <div className={tabActivo === 'explicacion' ? '' : 'hidden'}>
             <ExplicacionTab {...tabProps} />
           </div>
@@ -124,7 +146,7 @@ export function SubtemaVista({
       </div>
 
       <RightPanel
-        courseProgressPercent={courseProgressPercent}
+        courseProgressPercent={(completados.length / total) * 100}
         completedCount={completados.length}
         totalCount={total}
       />

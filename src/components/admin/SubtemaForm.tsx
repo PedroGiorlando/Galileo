@@ -171,11 +171,11 @@ export function SubtemaForm({
               placeholder="multiplos-y-divisores"
             />
           </Campo>
-          <Campo label="Categoría">
+          <Campo label="Unidad">
             <Texto
               value={meta.categoria}
               onChange={v => campoMeta('categoria', v)}
-              placeholder="Números y Operaciones"
+              placeholder="Vectores"
             />
           </Campo>
           <Campo label="Orden en el temario">
@@ -196,6 +196,18 @@ export function SubtemaForm({
             />
           </Campo>
         </div>
+        <Campo
+          label="Descripción corta"
+          ayuda="Una línea. Aparece bajo el título de la clase y en la columna Contenido del temario."
+        >
+          <TextoLargo
+            value={meta.descripcion}
+            onChange={v => campoMeta('descripcion', v)}
+            rows={2}
+            placeholder="Aprendé a sumar vectores trabajando con sus componentes."
+          />
+        </Campo>
+
         <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-3">
           <Casilla
             label="Subtema gratis (visible sin comprar)"

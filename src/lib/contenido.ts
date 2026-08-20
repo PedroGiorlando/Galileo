@@ -194,6 +194,8 @@ export async function getSubtema(
         id: data.orden,
         slug: data.slug,
         titulo: data.titulo,
+        descripcion: data.descripcion,
+        videoUrl: data.video_url,
         duracionLabel: data.duracion_label ?? '',
         ...TemaContenidoSchema.parse(data.contenido),
       }

@@ -35,6 +35,7 @@ export default async function AdminPage() {
   const meta: TemaMeta = {
     slug: fila.slug,
     titulo: fila.titulo,
+    descripcion: fila.descripcion ?? contenidoDeArranque.descripcion ?? '',
     categoria: (fila.temas as unknown as { nombre: string }).nombre,
     orden: fila.orden,
     duracionLabel: fila.duracion_label ?? contenidoDeArranque.duracionLabel,
