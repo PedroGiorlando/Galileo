@@ -241,7 +241,7 @@ export function SubtemaForm({
                   placeholder="¿Qué son los múltiplos?"
                 />
               </Campo>
-              <Campo label="Párrafo" ayuda="3 a 5 líneas, en lenguaje de primaria.">
+              <Campo label="Párrafo" ayuda="3 a 5 líneas, claras y sin dar por sabido el tema.">
                 <TextoLargo
                   value={s.parrafo}
                   onChange={v => editarLista('explicacion', i, { parrafo: v })}

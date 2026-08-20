@@ -53,7 +53,7 @@ export default async function SubtemaPage({ params }: { params: Promise<Params> 
   const breadcrumbs = [
     'Inicio',
     'Cursos',
-    'Primaria',
+    datos.curso.programa,
     datos.curso.nombre,
     datos.tema.nombre,
     datos.resumen.titulo,

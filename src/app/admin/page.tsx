@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 // ponytail: un solo subtema editable por ahora. Cuando haya varios, esto pasa a
-// ser /admin (lista de subtemas del grado) y /admin/[curso]/[subtema].
+// ser /admin (lista de clases de la materia) y /admin/[curso]/[subtema].
 const CURSO = 'fisica'
 const SLUG = 'suma-de-vectores-por-componentes'
 

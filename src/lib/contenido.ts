@@ -220,14 +220,25 @@ export async function getRutasDeCursos(): Promise<{ curso: string }[]> {
  * build sin que nadie las busque.
  */
 export async function getRutasDeSubtemas(): Promise<{ curso: string; subtema: string }[]> {
+  // No se puede pedir `cursos!inner(slug)` desde subtemas: `subtemas.curso_id`
+  // no es una clave foránea a cursos por sí sola. La que existe es compuesta,
+  // contra temas(id, curso_id), y PostgREST solo sabe anidar por relaciones
+  // declaradas. Con tres cursos, resolverlo con un Map es más simple que meter
+  // un anidamiento de dos niveles a través de temas.
+  const cursos = await getCursos()
+  const slugPorId = new Map(cursos.map(c => [c.id, c.slug]))
+
   const { data, error } = await supabasePublico()
     .from('subtemas')
-    .select('slug, cursos!inner(slug)')
+    .select('slug, curso_id')
     .not('contenido', 'is', null)
-    .overrideTypes<{ slug: string; cursos: { slug: string } }[]>()
 
   if (error) throw new Error(`No se pudieron leer las rutas de subtemas: ${error.message}`)
-  return (data ?? []).map(s => ({ curso: s.cursos.slug, subtema: s.slug }))
+
+  return (data ?? []).flatMap(s => {
+    const curso = slugPorId.get(s.curso_id)
+    return curso ? [{ curso, subtema: s.slug }] : []
+  })
 }
 
 // --- Panel -------------------------------------------------------------------

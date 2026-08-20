@@ -28,11 +28,11 @@ export async function generateMetadata({
 }
 
 /**
- * Temario completo de un grado, agrupado por área. Es la puerta de entrada que
- * Google indexa, así que los títulos de todos los subtemas están en el HTML
+ * Temario completo de una materia, agrupado por unidad. Es la puerta de entrada
+ * que Google indexa, así que los títulos de todas las clases están en el HTML
  * aunque todavía no tengan contenido escrito.
  */
-export default async function GradoPage({ params }: { params: Promise<Params> }) {
+export default async function CursoPage({ params }: { params: Promise<Params> }) {
   const { curso: cursoSlug } = await params
   const curso = await getCurso(cursoSlug)
   if (!curso) notFound()
@@ -43,14 +43,14 @@ export default async function GradoPage({ params }: { params: Promise<Params> })
 
   return (
     <>
-      <Header breadcrumbs={['Inicio', 'Cursos', 'Primaria', curso.nombre]} />
+      <Header breadcrumbs={['Inicio', 'Cursos', curso.programa, curso.nombre]} />
 
       <main className="mx-auto max-w-5xl p-6">
         <Link
-          href="/primaria"
+          href="/preuniversitario"
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
         >
-          <ArrowLeft size={14} /> Volver a Primaria
+          <ArrowLeft size={14} /> Volver a {curso.programa}
         </Link>
 
         <header className="mb-8">

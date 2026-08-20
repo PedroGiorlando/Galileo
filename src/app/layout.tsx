@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     template: '%s | Academia Galileo',
   },
   description:
-    'Apoyo escolar de primaria con explicaciones, ejemplos resueltos y ejercicios que se corrigen solos.',
+    'Preparación para el ingreso universitario con explicaciones, ejemplos resueltos, ejercicios que se corrigen solos y exámenes reales.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
