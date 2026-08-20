@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { GraduationCap } from 'lucide-react'
+import { GraduationCap, Search } from 'lucide-react'
 import { BotonesSesion } from './BotonesSesion'
 
 /**
@@ -17,14 +17,19 @@ interface HeaderProps {
 }
 
 /**
- * ponytail: el menú tiene solo lo que existe. "Nosotros", "Método" y
- * "Preguntas Frecuentes" están en el diseño pero todavía no hay páginas
- * detrás, y un link que no lleva a ningún lado es peor que no tenerlo.
- * Vuelven cuando haya contenido. Lo mismo con el buscador.
+ * Todas las entradas llevan a una página real. Las que todavía no tienen
+ * contenido muestran "en preparación" y piden `noindex`, así que sirven para
+ * ver el producto completo mientras se construye sin que Google indexe páginas
+ * vacías. Cuando cada una tenga contenido, se reemplaza el placeholder y el
+ * menú no cambia.
  */
 const NAV_LINKS = [
   { label: 'Inicio', href: '/' },
   { label: 'Cursos', href: '/preuniversitario' },
+  { label: 'Nosotros', href: '/nosotros' },
+  { label: 'Método', href: '/metodo' },
+  { label: 'Preguntas Frecuentes', href: '/preguntas-frecuentes' },
+  { label: 'Contacto', href: '/contacto' },
 ]
 
 export function Header({ breadcrumbs }: HeaderProps) {
@@ -38,9 +43,10 @@ export function Header({ breadcrumbs }: HeaderProps) {
           </span>
         </Link>
 
-        {/* Sin menú hamburguesa: con dos links entran en pantalla igual, y un
-            desplegable exigiría estado de cliente para nada. */}
-        <nav className="order-3 flex w-full gap-6 text-sm sm:order-none sm:w-auto">
+        {/* Sin menú hamburguesa: en pantallas chicas la barra se envuelve y
+            hace scroll horizontal. Un desplegable pediría estado de cliente y
+            volvería cliente toda la cabecera para nada. */}
+        <nav className="order-3 flex w-full gap-5 overflow-x-auto text-sm whitespace-nowrap lg:order-none lg:w-auto">
           {NAV_LINKS.map(link => (
             <Link
               key={link.href}
@@ -52,7 +58,12 @@ export function Header({ breadcrumbs }: HeaderProps) {
           ))}
         </nav>
 
-        <BotonesSesion />
+        <div className="flex items-center gap-3">
+          <Link href="/buscar" aria-label="Buscar" className="text-slate-300 hover:text-green-400">
+            <Search size={18} />
+          </Link>
+          <BotonesSesion />
+        </div>
       </header>
 
       <nav
