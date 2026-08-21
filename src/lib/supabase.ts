@@ -2,41 +2,43 @@ import { createClient } from '@supabase/supabase-js'
 import { createBrowserClient } from '@supabase/ssr'
 
 /**
- * Cuatro clientes, cuatro situaciones. La diferencia importa:
+ * Clientes de Supabase según quién y desde dónde consulta:
  *
- * - `supabasePublico`  clave pública, sin sesión. Lee el catálogo publicado.
- *                      Lo usan las páginas estáticas, que no tienen usuario.
- * - `supabaseSesion`   (en supabase-servidor.ts) clave pública + cookies. Vive
- *                      aparte porque importa next/headers, y ese import no
- *                      puede aparecer en un archivo que toque el cliente.
- * - `supabaseNavegador` la misma sesión, del lado del cliente.
- * - `supabaseAdmin`    clave secreta. SALTEA RLS por completo. Solo servidor.
+ * - `supabasePublico`   clave pública, sin sesión. Lee el catálogo publicado
+ *                       desde el servidor, en páginas estáticas.
+ * - `supabaseNavegador` la misma clave, con la sesión del visitante, en el
+ *                       navegador.
+ * - `supabaseSesion`    (en supabase-servidor.ts) clave pública + cookies.
+ *                       Vive aparte porque importa next/headers, y ese import
+ *                       no puede aparecer en un archivo que toque el cliente.
+ * - `supabaseAdmin`     clave secreta. SALTEA RLS por completo. Solo servidor.
  *
- * Se crean dentro de funciones y no como constantes de módulo: si fueran
- * constantes, importar este archivo desde un Client Component reventaría en el
- * build por falta de variables, aun sin usar el cliente que las necesita.
+ * IMPORTANTE: las variables se nombran completas y literales, nunca con una
+ * clave dinámica como `process.env[nombre]`.
+ *
+ * Las `NEXT_PUBLIC_*` no existen en el navegador: el compilador reemplaza el
+ * texto exacto `process.env.NEXT_PUBLIC_ALGO` por su valor al construir. Con
+ * una clave dinámica no hay texto que reconocer, así que no reemplaza nada y en
+ * el navegador queda `undefined`. En el servidor no se nota, porque ahí
+ * `process.env` sí existe en tiempo de ejecución.
  */
 
-function requerir(nombre: string): string {
-  const valor = process.env[nombre]
-  if (!valor) {
-    throw new Error(
-      `Falta la variable de entorno ${nombre}. Copiá .env.example a .env.local y completala.`,
-    )
-  }
-  return valor
-}
-
-const URL = () => requerir('NEXT_PUBLIC_SUPABASE_URL')
-const CLAVE_PUBLICA = () => requerir('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+const FALTA = 'Faltan las variables de Supabase. Copiá .env.example a .env.local y completalas.'
 
 export function supabasePublico() {
-  return createClient(URL(), CLAVE_PUBLICA(), { auth: { persistSession: false } })
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const clave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !clave) throw new Error(FALTA)
+
+  return createClient(url, clave, { auth: { persistSession: false } })
 }
 
-/** El mismo usuario, pero desde el navegador. */
 export function supabaseNavegador() {
-  return createBrowserClient(URL(), CLAVE_PUBLICA())
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const clave = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !clave) throw new Error(FALTA)
+
+  return createBrowserClient(url, clave)
 }
 
 export function supabaseAdmin() {
@@ -45,7 +47,12 @@ export function supabaseAdmin() {
   if (typeof window !== 'undefined') {
     throw new Error('supabaseAdmin() no puede usarse en el navegador.')
   }
-  return createClient(URL(), requerir('SUPABASE_SERVICE_ROLE_KEY'), {
-    auth: { persistSession: false },
-  })
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const secreta = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !secreta) {
+    throw new Error('Falta SUPABASE_SERVICE_ROLE_KEY en .env.local.')
+  }
+
+  return createClient(url, secreta, { auth: { persistSession: false } })
 }
