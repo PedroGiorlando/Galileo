@@ -1,11 +1,10 @@
 # Academia Galileo
 
-Plataforma de apoyo escolar de primaria. Hoy hay **un solo tema real**
-("Múltiplos y divisores", Matemática 4°) usado para validar diseño e
-interacción antes de escalar al resto del temario.
+Plataforma de preparación para el ingreso universitario en Mendoza: UNCuyo y
+UTN FRM, Ingeniería.
 
-Hoja de ruta completa (fases, modelo de datos, decisiones de negocio):
-ver el plan de proyecto acordado por separado.
+- **[Hoja de ruta](docs/hoja-de-ruta.md)** — qué es, cómo está armado, qué falta
+- **[Plantilla de clase](docs/plantilla-clase.md)** — para escribir contenido sin el panel
 
 ## Correr el proyecto
 
@@ -14,72 +13,76 @@ npm install
 npm run dev
 ```
 
-Abrí `http://localhost:3000`. La home redirige al único tema publicado.
+Necesita `.env.local` con las claves de Supabase. Copiá `.env.example` y
+completalo; las claves salen de Supabase → Project Settings → API Keys.
 
-## Estado actual
+## Stack
 
-- **Next.js 16 (App Router) + TypeScript + Tailwind v4 + lucide-react.**
-- Sin backend, sin login, sin pagos. El contenido está hardcodeado en
-  `src/data/topicData.ts` y el progreso vive en `localStorage`.
-- La página del tema se genera como **HTML estático** en el build
-  (`generateStaticParams`), que es lo que permite que Google la indexe.
+Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase (Postgres + Auth)
+· Bunny Stream para video · Zod para validar contenido.
 
 ## Estructura
 
 ```
 src/
   app/
-    layout.tsx                                    metadatos globales + <html>
-    page.tsx                                      redirige al tema publicado
-    globals.css                                   @import "tailwindcss"
-    primaria/[grado]/[materia]/[tema]/page.tsx    Server Component: valida la ruta,
-                                                  arma metadatos y renderiza
+    preuniversitario/[programa]/[carrera]/[materia]/   temario de una materia
+    clase/[materia]/[clase]/                           la clase, con sus solapas
+    admin/[materia]/[clase]/                           panel de carga
+    ingresar, registrarse, mi-cuenta, auth/callback    cuentas
   components/
-    TemaVista.tsx        'use client' — dueño del estado compartido del tema
-    Header.tsx           Server Component (solo breadcrumbs, sin estado)
-    Sidebar.tsx, RightPanel.tsx, ProgressRing.tsx, CompletarButton.tsx
-    tabs/                los 5 tabs
-  data/topicData.ts      contenido del tema
-  hooks/useLocalStorage.ts
+    SubtemaVista.tsx      dueño del estado de la clase (solapa activa, progreso)
+    tabs/                 Lección, Explicación, Ejemplos, Prácticos, Evaluaciones
+    admin/                formulario de carga y gestión de módulos
+    curso/                temario y panel de avance
+  lib/
+    contenido.ts          la única capa que sabe que existe una base
+    schemas.ts            Zod: fuente de verdad de la forma del contenido
+    correccion.ts         corrección de ejercicios
+    progreso.ts           avance del alumno y permisos de admin
+supabase/
+  schema.sql              instalación desde cero (BORRA TODO — solo para eso)
+  migraciones/            cambios sobre una base con datos, en orden
+  curriculum.mjs          el currículum como dato editable
 ```
 
-## Decisiones de estructura
+## Base de datos
 
-- **Dónde cae el límite cliente/servidor.** `TemaVista` lleva `'use client'`
-  porque es dueño del estado que comparten el Sidebar (el check del tema), el
-  RightPanel (el contador) y los tabs (el botón "completado"). Todo lo que
-  `TemaVista` importa hereda el lado cliente, así que los 5 tabs **no** llevan
-  su propia directiva. `Header` queda del lado servidor: no tiene estado.
+**Nunca corras `schema.sql` sobre la base real:** empieza con `drop table`. Está
+para instalar desde cero. Cualquier cambio sobre una base con usuarios va como
+migración nueva en `supabase/migraciones/`, numerada y sin borrar nada.
 
-- **`'use client'` no significa "no se renderiza en el servidor".** Next igual
-  genera el HTML de esos componentes en el build y después los hidrata. El
-  texto de la explicación y los ejercicios viajan en el HTML inicial.
+Para aplicar una migración: abrir el archivo en el editor, copiar todo, pegar en
+Supabase → SQL Editor → New query → Run.
 
-- **Sin Context/Redux.** Con un solo nivel de anidamiento (TemaVista → tab), el
-  prop drilling se sigue leyendo mejor que la indirección de un Context.
+> **No la copies con `Get-Content archivo | Set-Clipboard`.** Windows PowerShell
+> lo lee en la codificación ANSI del sistema y las tildes llegan corruptas
+> (`Física` termina como `FÃ­sica`). Copiá desde el editor, o usá
+> `Get-Content archivo -Raw -Encoding UTF8 | Set-Clipboard`.
 
-- **Datos separados de la UI.** Todo el contenido está en `topicData.ts`. Ojo:
-  varios componentes hacen `import { tema } from '@/data/topicData'` como valor
-  fijo, no como prop — el día que el contenido venga de la base va a haber que
-  pasar `tema` por props además de cambiar el origen de los datos.
+## Decisiones que conviene conocer antes de tocar el código
 
-- **`useLocalStorage` lee después de montar, no en el inicializador.** El
-  inicializador de `useState` también corre en el servidor, donde `window` no
-  existe; leer ahí produce un hydration mismatch. Costo: un parpadeo al volver
-  a entrar, que desaparece cuando el progreso venga del servidor.
+**El contenido pertenece a la materia, no al curso.** Un curso es una selección
+de módulos. Cinemática se escribe una vez y aparece en Física-UNCuyo y en
+Física-UTN.
 
-## Panel de contenido
+**PostgREST solo anida por claves foráneas simples.** `clases.materia_id` existe
+como columna, pero la clave foránea es compuesta contra `modulos(id, materia_id)`.
+Pedir `clases → materias` hace fallar la consulta entera. Dos consultas y un Map.
 
-`/admin` tiene el formulario de carga de temas. Valida contra el mismo schema
-Zod que protege la base (`src/lib/schemas.ts`), así que lo que el formulario
-rechaza tampoco se habría podido guardar.
+**Leer cookies en un componente compartido saca de estático todo el sitio.** La
+sesión se resuelve en el navegador por eso, no por comodidad.
 
-Todavía no está conectado a la base: al guardar muestra el JSON validado para
-copiar. Cuando Supabase esté configurado, lo único que cambia es la función
-`onGuardar` que `EditorTema` le pasa al formulario — `TemaForm` no se toca.
+**`'use client'` no significa "no se renderiza en el servidor".** Next igual
+genera el HTML y después lo hidrata: el texto de la clase viaja en el HTML
+inicial, que es lo que indexa Google. La directiva marca el **límite**, y todo
+lo que ese componente importa lo hereda.
 
-Para conectarlo: copiar `.env.example` a `.env.local`, completar las claves, y
-correr `supabase/schema.sql` en el SQL Editor de Supabase.
+**Proteger la página no protege la acción.** Una Server Action es un endpoint
+HTTP. El permiso se verifica en los dos lugares.
+
+**La ausencia de error no es evidencia de éxito.** `?? []` y `catch {}`
+convierten una falla en un resultado vacío. Si el dato importa, el error también.
 
 ## Tests
 
@@ -88,21 +91,28 @@ npm test
 ```
 
 Cubren lo que se puede romper en silencio: la corrección de ejercicios (orden y
-espacios indistintos, conjunto exacto), la validación de contenido, y que cargar
-un tema en el panel y guardarlo sin tocarlo devuelva exactamente lo mismo.
+espacios indistintos, conjunto exacto), la validación del contenido, y que
+cargar una clase en el panel y guardarla sin tocar nada devuelva exactamente lo
+mismo.
 
 ## Qué probar
 
-- Navegar las 5 tabs.
-- Responder los 5 ejercicios, verificar cada uno, revisar "Mis respuestas" y "Resueltos".
-- Completar el quiz de 10 preguntas, ver el resultado final, reintentar.
-- Marcar el tema como completado y ver que el contador del panel derecho pase
-  de 6/30 (20%) a 7/30 (23%).
-- Refrescar (F5) y confirmar que el progreso no se perdió.
-- `npm run build` y confirmar que la ruta del tema aparece como `● (SSG)`.
+- Recorrer `/preuniversitario` → programa → carrera → materia → clase.
+- Resolver un ejercicio de un TP y verificarlo. Probá desordenado y con
+  espacios: `50.0, 86.6` tiene que dar correcto.
+- Hacer una evaluación entera y ver el puntaje.
+- Marcar una clase como completada, entrar desde otro dispositivo con la misma
+  cuenta y confirmar que el progreso está.
+- Completar una clase sin sesión, después iniciar sesión: ese progreso se
+  rescata.
+- `npm run build` y confirmar que el temario y las clases aparecen como `● SSG`.
 
-## Limitación conocida
+## Limitaciones conocidas
 
-Las respuestas correctas de ejercicios y quiz viajan en el bundle de JavaScript:
-con las herramientas del navegador se pueden leer. Es aceptable mientras el
-contenido sea gratuito; hay que corregir del lado del servidor antes de cobrar.
+**Las respuestas correctas viajan al navegador.** Con las herramientas del
+navegador se pueden leer. Es aceptable mientras el contenido sea gratuito; hay
+que corregir del lado del servidor antes de cobrar.
+
+**Las URLs de video no están firmadas.** Quien copie el enlace del reproductor
+puede compartirlo. Bunny permite URLs con token que vencen en minutos; falta
+activarlo.
