@@ -1,17 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 /**
- * Dos clientes, dos niveles de permiso. La diferencia importa:
+ * Cuatro clientes, cuatro situaciones. La diferencia importa:
  *
- * - `supabasePublico` usa la clave pública. Respeta RLS, así que solo ve lo
- *   publicado. Es el que usan las páginas del alumno.
- * - `supabaseAdmin` usa la clave secreta y SALTEA RLS por completo. Solo puede
- *   correr en el servidor (Server Actions, scripts, webhooks). Si esta clave
- *   llegara al navegador, cualquiera podría leer y escribir toda la base.
+ * - `supabasePublico`  clave pública, sin sesión. Lee el catálogo publicado.
+ *                      Lo usan las páginas estáticas, que no tienen usuario.
+ * - `supabaseSesion`   (en supabase-servidor.ts) clave pública + cookies. Vive
+ *                      aparte porque importa next/headers, y ese import no
+ *                      puede aparecer en un archivo que toque el cliente.
+ * - `supabaseNavegador` la misma sesión, del lado del cliente.
+ * - `supabaseAdmin`    clave secreta. SALTEA RLS por completo. Solo servidor.
  *
  * Se crean dentro de funciones y no como constantes de módulo: si fueran
  * constantes, importar este archivo desde un Client Component reventaría en el
- * build por falta de variables, aun sin usar el cliente admin.
+ * build por falta de variables, aun sin usar el cliente que las necesita.
  */
 
 function requerir(nombre: string): string {
@@ -24,12 +27,16 @@ function requerir(nombre: string): string {
   return valor
 }
 
+const URL = () => requerir('NEXT_PUBLIC_SUPABASE_URL')
+const CLAVE_PUBLICA = () => requerir('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+
 export function supabasePublico() {
-  return createClient(
-    requerir('NEXT_PUBLIC_SUPABASE_URL'),
-    requerir('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-    { auth: { persistSession: false } },
-  )
+  return createClient(URL(), CLAVE_PUBLICA(), { auth: { persistSession: false } })
+}
+
+/** El mismo usuario, pero desde el navegador. */
+export function supabaseNavegador() {
+  return createBrowserClient(URL(), CLAVE_PUBLICA())
 }
 
 export function supabaseAdmin() {
@@ -38,7 +45,7 @@ export function supabaseAdmin() {
   if (typeof window !== 'undefined') {
     throw new Error('supabaseAdmin() no puede usarse en el navegador.')
   }
-  return createClient(requerir('NEXT_PUBLIC_SUPABASE_URL'), requerir('SUPABASE_SERVICE_ROLE_KEY'), {
+  return createClient(URL(), requerir('SUPABASE_SERVICE_ROLE_KEY'), {
     auth: { persistSession: false },
   })
 }

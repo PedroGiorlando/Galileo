@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide-react'
 import type { SubtemaCompleto } from '@/data/topicData'
 import type { Curso, TemaConSubtemas } from '@/lib/contenido'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeMateria } from '@/lib/colores'
 import { Sidebar } from './Sidebar'
 import { RightPanel } from './RightPanel'
@@ -28,11 +28,13 @@ type TabId = 'leccion' | 'explicacion' | 'ejemplos' | 'ejercicios' | 'autoevalua
  */
 export function SubtemaVista({
   subtema,
+  subtemaId,
   curso,
   temaNombre,
   temario,
 }: {
   subtema: SubtemaCompleto
+  subtemaId: number
   curso: Curso
   temaNombre: string
   temario: TemaConSubtemas[]
@@ -51,13 +53,7 @@ export function SubtemaVista({
 
   const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')
 
-  // Una sola lista de slugs completados por materia, en vez de una clave por
-  // clase: el contador de progreso la necesita entera. En la Fase 2 esto pasa a
-  // ser una consulta a la tabla `progreso`.
-  const [completados, setCompletados] = useLocalStorage<string[]>(
-    `galileo:completados:${curso.slug}`,
-    [],
-  )
+  const { completados, alternar } = useProgreso(curso.slug)
   const completado = completados.includes(subtema.slug)
 
   const total = temario.reduce((n, t) => n + t.subtemas.length, 0) || 1
@@ -96,13 +92,7 @@ export function SubtemaVista({
             </div>
             <CompletarButton
               completado={completado}
-              onClick={() =>
-                setCompletados(prev =>
-                  prev.includes(subtema.slug)
-                    ? prev.filter(s => s !== subtema.slug)
-                    : [...prev, subtema.slug],
-                )
-              }
+              onClick={() => alternar(subtema.slug, subtemaId)}
             />
           </div>
         </header>

@@ -92,6 +92,7 @@ export default async function SubtemaPage({ params }: { params: Promise<Params> 
       <Header breadcrumbs={breadcrumbs} />
       <SubtemaVista
         subtema={datos.subtema}
+        subtemaId={datos.resumen.id}
         curso={datos.curso}
         temaNombre={datos.tema.nombre}
         temario={datos.temario}

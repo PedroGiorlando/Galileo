@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase'
 import { TemaContenidoSchema, TemaMetaSchema } from '@/lib/schemas'
+import { esAdmin } from '@/lib/progreso'
 
 /**
  * 'use server' hace que esta función corra SIEMPRE en el servidor, aunque se la
@@ -14,6 +15,13 @@ import { TemaContenidoSchema, TemaMetaSchema } from '@/lib/schemas'
  * validado antes es comodidad para quien carga, no una garantía.
  */
 export async function guardarSubtema(cursoId: number, meta: unknown, contenido: unknown) {
+  // Proteger la página /admin no alcanza: una Server Action es un endpoint
+  // HTTP y se puede llamar sin pasar por ninguna pantalla. Como acá se escribe
+  // con la clave secreta, que saltea RLS, el permiso se verifica de nuevo.
+  if (!(await esAdmin())) {
+    return { ok: false as const, error: 'Tu cuenta no tiene permiso para editar contenido.' }
+  }
+
   const rMeta = TemaMetaSchema.safeParse(meta)
   const rContenido = TemaContenidoSchema.safeParse(contenido)
 

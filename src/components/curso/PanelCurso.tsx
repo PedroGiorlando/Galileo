@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useProgreso } from '@/hooks/useProgreso'
 import type { Paleta } from '@/lib/colores'
 
 /**
@@ -21,7 +21,7 @@ export function PanelCurso({
   totalClases: number
   paleta: Paleta
 }) {
-  const [completados] = useLocalStorage<string[]>(`galileo:completados:${cursoSlug}`, [])
+  const { completados, hayUsuario } = useProgreso(cursoSlug)
   const hechas = completados.length
   const porcentaje = totalClases > 0 ? Math.round((hechas / totalClases) * 100) : 0
 
@@ -44,10 +44,20 @@ export function PanelCurso({
         />
       </div>
 
-      {hechas === 0 && (
+      {hechas === 0 ? (
         <p className="mt-2 text-xs text-tinta-suave">
           Empezá por la primera clase de la primera unidad.
         </p>
+      ) : (
+        !hayUsuario && (
+          <p className="mt-2 text-xs text-tinta-suave">
+            Este avance vive solo en este navegador.{' '}
+            <a href="/registrarse" className="font-medium text-galileo hover:underline">
+              Creá una cuenta
+            </a>{' '}
+            para no perderlo.
+          </p>
+        )
       )}
     </div>
   )

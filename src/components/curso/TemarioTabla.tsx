@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, Check, Clock, Lock } from 'lucide-react'
-import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeUnidad } from '@/lib/colores'
 import type { TemaConSubtemas } from '@/lib/contenido'
 
@@ -17,8 +17,9 @@ import type { TemaConSubtemas } from '@/lib/contenido'
  * El conector vertical entre clases no es adorno: muestra que las clases de una
  * unidad tienen un orden, y se va llenando de verde a medida que se completan.
  *
- * Es Client Component solo por el progreso, que sale de localStorage. Todo el
- * texto igual se renderiza en el servidor y viaja en el HTML.
+ * Es Client Component solo por el progreso, que se resuelve en el navegador
+ * para que esta página siga siendo estática. Todo el texto igual se renderiza
+ * en el servidor y viaja en el HTML.
  */
 export function TemarioTabla({
   cursoSlug,
@@ -27,7 +28,7 @@ export function TemarioTabla({
   cursoSlug: string
   temario: TemaConSubtemas[]
 }) {
-  const [completados] = useLocalStorage<string[]>(`galileo:completados:${cursoSlug}`, [])
+  const { completados } = useProgreso(cursoSlug)
 
   return (
     <div className="min-w-0 flex-1 space-y-10">

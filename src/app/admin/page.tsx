@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { EditorSubtema } from '@/components/admin/EditorSubtema'
 import { getCurso, getSubtemaParaAdmin } from '@/lib/contenido'
+import { esAdmin, getUsuario } from '@/lib/progreso'
 import { contenidoDesdeTema, type ContenidoBorrador } from '@/lib/borrador'
 import { TemaContenidoSchema, type TemaMeta } from '@/lib/schemas'
 import { tema as contenidoDeArranque } from '@/data/topicData'
@@ -22,6 +23,23 @@ const CURSO = 'fisica'
 const SLUG = 'suma-de-vectores-por-componentes'
 
 export default async function AdminPage() {
+  // El panel escribe con la clave secreta, que saltea RLS. Si esta puerta no
+  // estuviera cerrada, cualquiera que adivinara la dirección podría editar el
+  // contenido de todas las materias.
+  const usuario = await getUsuario()
+  if (!usuario) redirect(`/ingresar`)
+  if (!(await esAdmin())) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16 text-center">
+        <h1 className="font-display text-2xl font-bold text-tinta">Panel de contenido</h1>
+        <p className="mt-2 text-tinta-suave">
+          Tu cuenta no tiene permiso para editar contenido. Si sos profesor y deberías tenerlo,
+          pedile a quien administra la plataforma que te habilite.
+        </p>
+      </main>
+    )
+  }
+
   const curso = await getCurso(CURSO)
   if (!curso) notFound()
 
