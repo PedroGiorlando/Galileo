@@ -46,6 +46,7 @@ export default async function AdminPage() {
   const { data: materias } = await db
     .from('materias')
     .select('id, slug, nombre')
+    .eq('activa', true)
     .order('orden')
 
   const { data: modulos } = await db.from('modulos').select('id, materia_id')

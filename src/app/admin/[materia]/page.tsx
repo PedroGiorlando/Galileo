@@ -7,6 +7,12 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { paletaDeMateria } from '@/lib/colores'
 import { Header } from '@/components/Header'
 import { AsignarModulo } from '@/components/admin/AsignarModulo'
+import {
+  BorrarClase,
+  BorrarModulo,
+  NuevaClase,
+  NuevoModulo,
+} from '@/components/admin/GestionModulo'
 
 export const metadata: Metadata = {
   title: 'Editar materia',
@@ -107,10 +113,11 @@ export default async function AdminMateriaPage({
                 key={modulo.id}
                 className="rounded-2xl border border-linea bg-white p-5"
               >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="font-display text-lg font-bold text-tinta">{modulo.nombre}</h2>
-                  <span className="font-mono text-xs text-tinta-suave">
+                  <span className="flex items-center gap-2 font-mono text-xs text-tinta-suave">
                     {escritas}/{suyas.length} escritas
+                    <BorrarModulo moduloId={modulo.id} />
                   </span>
                 </div>
 
@@ -123,10 +130,10 @@ export default async function AdminMateriaPage({
 
                 <ul className="mt-4 divide-y divide-linea border-t border-linea">
                   {suyas.map(clase => (
-                    <li key={clase.id}>
+                    <li key={clase.id} className="flex items-center gap-2">
                       <Link
                         href={`/admin/${materia.slug}/${clase.slug}`}
-                        className="flex items-center gap-3 py-2.5 text-sm hover:bg-slate-50"
+                        className="flex flex-1 items-center gap-3 py-2.5 text-sm hover:bg-slate-50"
                       >
                         <span
                           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-xs ${
@@ -140,12 +147,17 @@ export default async function AdminMateriaPage({
                         <span className="min-w-0 flex-1 text-tinta">{clase.titulo}</span>
                         <PencilLine size={14} className={paleta.texto} />
                       </Link>
+                      <BorrarClase claseId={clase.id} />
                     </li>
                   ))}
                 </ul>
+
+                <NuevaClase materiaId={materia.id} moduloId={modulo.id} />
               </section>
             )
           })}
+
+          <NuevoModulo materiaId={materia.id} />
         </div>
       </main>
     </>

@@ -41,6 +41,7 @@ export async function getResumenPorMateria(): Promise<ResumenProgreso[]> {
   const { data: materias, error: e1 } = await supabase
     .from('materias')
     .select('id, slug, nombre')
+    .eq('activa', true)
     .order('orden')
 
   if (e1) throw new Error(`No se pudieron leer las materias: ${e1.message}`)
