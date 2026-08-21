@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide-react'
 import type { SubtemaCompleto } from '@/data/topicData'
-import type { Curso, TemaConSubtemas } from '@/lib/contenido'
+import type { Materia, ModuloConClases } from '@/lib/contenido'
 import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeMateria } from '@/lib/colores'
 import { Sidebar } from './Sidebar'
@@ -29,15 +29,15 @@ type TabId = 'leccion' | 'explicacion' | 'ejemplos' | 'ejercicios' | 'autoevalua
 export function SubtemaVista({
   subtema,
   subtemaId,
-  curso,
-  temaNombre,
+  materia,
+  moduloNombre,
   temario,
 }: {
   subtema: SubtemaCompleto
   subtemaId: number
-  curso: Curso
-  temaNombre: string
-  temario: TemaConSubtemas[]
+  materia: Materia
+  moduloNombre: string
+  temario: ModuloConClases[]
 }) {
   // La solapa Lección solo existe si hay video cargado. Sin esto, una clase sin
   // video abría en un reproductor vacío.
@@ -53,20 +53,20 @@ export function SubtemaVista({
 
   const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')
 
-  const { completados, alternar } = useProgreso(curso.slug, curso.id)
+  const { completados, alternar } = useProgreso(materia.slug, materia.id)
   const completado = completados.includes(subtema.slug)
 
-  const total = temario.reduce((n, t) => n + t.subtemas.length, 0) || 1
-  const paleta = paletaDeMateria(curso.slug)
+  const total = temario.reduce((n, t) => n + t.clases.length, 0) || 1
+  const paleta = paletaDeMateria(materia.slug)
 
   const tabProps = { subtema }
 
   return (
     <main className="mx-auto flex max-w-7xl flex-col items-start gap-6 p-6 lg:flex-row">
       <Sidebar
-        cursoSlug={curso.slug}
-        cursoNombre={curso.nombre}
-        temaNombre={temaNombre}
+        materiaSlug={materia.slug}
+        materiaNombre={materia.nombre}
+        moduloNombre={moduloNombre}
         temario={temario}
         slugActual={subtema.slug}
         completados={completados}
@@ -81,7 +81,7 @@ export function SubtemaVista({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <p className={`font-mono text-xs uppercase tracking-widest ${paleta.texto}`}>
-                {temaNombre}
+                {moduloNombre}
               </p>
               <h1 className="mt-1 font-display text-3xl font-bold text-tinta">
                 {subtema.titulo}

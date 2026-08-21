@@ -4,19 +4,19 @@ import { useState } from 'react'
 import { AlertCircle, Check, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import { SubtemaForm } from './SubtemaForm'
-import { guardarSubtema } from '@/app/admin/acciones'
+import { guardarClase } from '@/app/admin/acciones'
 import type { ContenidoBorrador } from '@/lib/borrador'
 import type { TemaMeta } from '@/lib/schemas'
 
 export function EditorSubtema({
-  cursoId,
-  rutaCurso,
+  materiaId,
+  rutaClase,
   metaInicial,
   contenidoInicial,
   desdeLaBase,
 }: {
-  cursoId: number
-  rutaCurso: string
+  materiaId: number
+  rutaClase: string
   metaInicial: TemaMeta
   contenidoInicial: ContenidoBorrador
   desdeLaBase: boolean
@@ -27,8 +27,7 @@ export function EditorSubtema({
     <div className="space-y-5">
       {!desdeLaBase && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Este tema todavía no está en la base: lo que ves viene del contenido hardcodeado.
-          Guardalo una vez y a partir de ahí se lee y se escribe desde Supabase.
+          Esta clase todavía no tiene contenido guardado. Completá el formulario y guardá.
         </p>
       )}
 
@@ -50,10 +49,10 @@ export function EditorSubtema({
             <p className="font-semibold">{estado.mensaje}</p>
             {estado.ok && estado.slug && (
               <Link
-                href={`${rutaCurso}/${estado.slug}`}
+                href={`${rutaClase}/${estado.slug}`}
                 className="inline-flex items-center gap-1 font-medium underline"
               >
-                Ver el tema publicado <ExternalLink size={12} />
+                Ver la clase publicada <ExternalLink size={12} />
               </Link>
             )}
           </div>
@@ -64,10 +63,10 @@ export function EditorSubtema({
         metaInicial={metaInicial}
         contenidoInicial={contenidoInicial}
         onGuardar={async (meta, contenido) => {
-          const r = await guardarSubtema(cursoId, meta, contenido)
+          const r = await guardarClase(materiaId, meta, contenido)
           setEstado(
             r.ok
-              ? { ok: true, mensaje: 'Subtema guardado en la base.', slug: meta.slug }
+              ? { ok: true, mensaje: 'Clase guardada.', slug: meta.slug }
               : { ok: false, mensaje: r.error },
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })

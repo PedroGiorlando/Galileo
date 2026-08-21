@@ -1,6 +1,3 @@
-/** Todo lo que hay hoy es preuniversitario. Cuando entre otro nivel, pasa a parámetro. */
-const NIVEL = 'preuniversitario'
-
 import { supabaseAdmin, supabasePublico } from './supabase'
 import { TemaContenidoSchema } from './schemas'
 import type { SubtemaCompleto } from '@/data/topicData'
@@ -8,14 +5,41 @@ import type { SubtemaCompleto } from '@/data/topicData'
 /**
  * Capa de datos: lo único que sabe que existe una base.
  *
- * Vocabulario, que importa porque "tema" se usa para dos cosas distintas según
- * dónde se mire:
- *   Curso   = una materia del ingreso (Física). Es la unidad que se compra.
- *   Tema    = una unidad del programa (Vectores).
- *   Subtema = la clase que se estudia (Suma de vectores), con sus 5 solapas.
+ * Vocabulario:
+ *   programa → carrera → curso     dónde se dicta y qué se compra
+ *   materia  → módulo  → clase     el contenido, escrito una sola vez
+ *   curso_modulos                  qué módulos incluye cada curso
+ *
+ * Una clase de Cinemática existe una vez y aparece tanto en Física-UNCuyo como
+ * en Física-UTN. Por eso su dirección es /clase/fisica/velocidad-media: depende
+ * de la materia, no del curso desde el que se llegó.
+ *
+ * REGLA APRENDIDA A LOS GOLPES: acá no se anida nada que no tenga una clave
+ * foránea simple. `clases.materia_id` existe como columna, pero la clave
+ * foránea es compuesta contra modulos(id, materia_id), así que PostgREST no
+ * sabe hacer `clases → materias` y la consulta falla entera. Dos consultas
+ * chicas y un Map son más aburridas y no fallan.
  */
 
-export interface SubtemaResumen {
+export interface Programa {
+  id: number
+  slug: string
+  nombre: string
+}
+
+export interface Carrera {
+  id: number
+  slug: string
+  nombre: string
+}
+
+export interface Materia {
+  id: number
+  slug: string
+  nombre: string
+}
+
+export interface ClaseResumen {
   id: number
   slug: string
   titulo: string
@@ -26,155 +50,229 @@ export interface SubtemaResumen {
   tieneContenido: boolean
 }
 
-export interface TemaConSubtemas {
+export interface ModuloConClases {
   id: number
   slug: string
   nombre: string
   orden: number
-  subtemas: SubtemaResumen[]
+  clases: ClaseResumen[]
 }
 
 export interface Curso {
   id: number
-  slug: string
-  nombre: string
-  programa: string
   titulo: string
   descripcion: string | null
-  orden: number
   precioCentavos: number
+  materia: Materia
+  carrera: Carrera
+  programa: Programa
 }
+
+// --- Programas y carreras ----------------------------------------------------
+
+export async function getProgramas(): Promise<Programa[]> {
+  const { data, error } = await supabasePublico()
+    .from('programas')
+    .select('id, slug, nombre')
+    .order('orden')
+
+  if (error) throw new Error(`No se pudieron leer los programas: ${error.message}`)
+  return data ?? []
+}
+
+export async function getPrograma(slug: string): Promise<Programa | null> {
+  const { data, error } = await supabasePublico()
+    .from('programas')
+    .select('id, slug, nombre')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (error) throw new Error(`No se pudo leer el programa: ${error.message}`)
+  return data
+}
+
+export async function getCarreras(programaId: number): Promise<Carrera[]> {
+  const { data, error } = await supabasePublico()
+    .from('carreras')
+    .select('id, slug, nombre')
+    .eq('programa_id', programaId)
+    .order('orden')
+
+  if (error) throw new Error(`No se pudieron leer las carreras: ${error.message}`)
+  return data ?? []
+}
+
+export async function getCarrera(programaId: number, slug: string): Promise<Carrera | null> {
+  const { data, error } = await supabasePublico()
+    .from('carreras')
+    .select('id, slug, nombre')
+    .eq('programa_id', programaId)
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (error) throw new Error(`No se pudo leer la carrera: ${error.message}`)
+  return data
+}
+
+// --- Cursos ------------------------------------------------------------------
 
 interface FilaCurso {
   id: number
-  slug: string
-  nombre: string
-  programa: string
   titulo: string
   descripcion: string | null
-  orden: number
   precio_centavos: number
+  materias: Materia
 }
 
-const SELECT_CURSO =
-  'id, slug, nombre, programa, titulo, descripcion, orden, precio_centavos'
+const SELECT_CURSO = 'id, titulo, descripcion, precio_centavos, materias!inner(id, slug, nombre)'
 
-const aCurso = (f: FilaCurso): Curso => ({
-  id: f.id,
-  slug: f.slug,
-  nombre: f.nombre,
-  programa: f.programa,
-  titulo: f.titulo,
-  descripcion: f.descripcion,
-  orden: f.orden,
-  precioCentavos: f.precio_centavos,
-})
-
-// `contenido is not null` es lo que separa un subtema listo de uno que todavía
-// se ve como "Próximamente". Se pide como `contenido->>'objetivos'` en vez del
-// jsonb entero para no traer kilobytes de teoría solo para armar un listado.
-const SELECT_SUBTEMA_RESUMEN =
-  'id, slug, titulo, descripcion, orden, gratis, duracion_label, tiene_contenido:contenido'
-
-interface FilaSubtemaResumen {
-  id: number
-  slug: string
-  titulo: string
-  descripcion: string | null
-  orden: number
-  gratis: boolean
-  duracion_label: string | null
-  tiene_contenido: unknown
-}
-
-const aSubtemaResumen = (f: FilaSubtemaResumen): SubtemaResumen => ({
-  id: f.id,
-  slug: f.slug,
-  titulo: f.titulo,
-  descripcion: f.descripcion,
-  orden: f.orden,
-  gratis: f.gratis,
-  duracionLabel: f.duracion_label,
-  tieneContenido: f.tiene_contenido != null,
-})
-
-export async function getCursos(): Promise<Curso[]> {
+/** Las materias que ofrece una carrera. */
+export async function getCursosDeCarrera(
+  programa: Programa,
+  carrera: Carrera,
+): Promise<Curso[]> {
   const { data, error } = await supabasePublico()
     .from('cursos')
     .select(SELECT_CURSO)
-    .eq('nivel', NIVEL)
+    .eq('carrera_id', carrera.id)
     .order('orden')
     .overrideTypes<FilaCurso[]>()
 
   if (error) throw new Error(`No se pudieron leer los cursos: ${error.message}`)
-  return (data ?? []).map(aCurso)
-}
 
-export async function getCurso(cursoSlug: string): Promise<Curso | null> {
-  const { data, error } = await supabasePublico()
-    .from('cursos')
-    .select(SELECT_CURSO)
-    .eq('nivel', NIVEL)
-    .eq('slug', cursoSlug)
-    .maybeSingle<FilaCurso>()
-
-  if (error) throw new Error(`No se pudo leer el curso: ${error.message}`)
-  return data ? aCurso(data) : null
-}
-
-/** El temario completo de una materia: las unidades con sus clases adentro. */
-export async function getTemario(cursoId: number): Promise<TemaConSubtemas[]> {
-  const { data, error } = await supabasePublico()
-    .from('temas')
-    .select(`id, slug, nombre, orden, subtemas(${SELECT_SUBTEMA_RESUMEN})`)
-    .eq('curso_id', cursoId)
-    .order('orden')
-    .order('orden', { referencedTable: 'subtemas' })
-    .overrideTypes<
-      { id: number; slug: string; nombre: string; orden: number; subtemas: FilaSubtemaResumen[] }[]
-    >()
-
-  if (error) throw new Error(`No se pudo leer el temario: ${error.message}`)
-
-  return (data ?? []).map(t => ({
-    id: t.id,
-    slug: t.slug,
-    nombre: t.nombre,
-    orden: t.orden,
-    subtemas: (t.subtemas ?? []).map(aSubtemaResumen),
+  return (data ?? []).map(c => ({
+    id: c.id,
+    titulo: c.titulo,
+    descripcion: c.descripcion,
+    precioCentavos: c.precio_centavos,
+    materia: c.materias,
+    carrera,
+    programa,
   }))
 }
 
-export interface SubtemaPagina {
-  curso: Curso
-  tema: { slug: string; nombre: string }
-  subtema: SubtemaCompleto | null
-  resumen: SubtemaResumen
-  temario: TemaConSubtemas[]
+export async function getCurso(
+  programaSlug: string,
+  carreraSlug: string,
+  materiaSlug: string,
+): Promise<Curso | null> {
+  const programa = await getPrograma(programaSlug)
+  if (!programa) return null
+
+  const carrera = await getCarrera(programa.id, carreraSlug)
+  if (!carrera) return null
+
+  const cursos = await getCursosDeCarrera(programa, carrera)
+  return cursos.find(c => c.materia.slug === materiaSlug) ?? null
 }
 
-export async function getSubtema(
-  cursoSlug: string,
-  subtemaSlug: string,
-): Promise<SubtemaPagina | null> {
-  const curso = await getCurso(cursoSlug)
-  if (!curso) return null
+/**
+ * El temario de un curso: los módulos que incluye, en el orden que definió ese
+ * curso, con sus clases.
+ *
+ * El orden lo manda `curso_modulos.orden` y no `modulos.orden`, porque el mismo
+ * módulo puede ir tercero en una carrera y quinto en otra.
+ */
+export async function getTemario(cursoId: number): Promise<ModuloConClases[]> {
+  const supabase = supabasePublico()
 
+  const { data: asignados, error: e1 } = await supabase
+    .from('curso_modulos')
+    .select('orden, modulos!inner(id, slug, nombre)')
+    .eq('curso_id', cursoId)
+    .order('orden')
+    .overrideTypes<{ orden: number; modulos: { id: number; slug: string; nombre: string } }[]>()
+
+  if (e1) throw new Error(`No se pudo leer el temario: ${e1.message}`)
+  if (!asignados || asignados.length === 0) return []
+
+  const ids = asignados.map(a => a.modulos.id)
+
+  const { data: clases, error: e2 } = await supabase
+    .from('clases')
+    .select('id, slug, titulo, descripcion, orden, gratis, duracion_label, modulo_id, contenido')
+    .in('modulo_id', ids)
+    .order('orden')
+
+  if (e2) throw new Error(`No se pudieron leer las clases: ${e2.message}`)
+
+  const porModulo = new Map<number, ClaseResumen[]>()
+  for (const c of clases ?? []) {
+    const lista = porModulo.get(c.modulo_id) ?? []
+    lista.push({
+      id: c.id,
+      slug: c.slug,
+      titulo: c.titulo,
+      descripcion: c.descripcion,
+      orden: c.orden,
+      gratis: c.gratis,
+      duracionLabel: c.duracion_label,
+      tieneContenido: c.contenido != null,
+    })
+    porModulo.set(c.modulo_id, lista)
+  }
+
+  return asignados.map(a => ({
+    id: a.modulos.id,
+    slug: a.modulos.slug,
+    nombre: a.modulos.nombre,
+    orden: a.orden,
+    clases: porModulo.get(a.modulos.id) ?? [],
+  }))
+}
+
+// --- Clases ------------------------------------------------------------------
+
+export async function getMateria(slug: string): Promise<Materia | null> {
   const { data, error } = await supabasePublico()
-    .from('subtemas')
-    .select(
-      'id, slug, titulo, descripcion, orden, gratis, duracion_label, video_url, contenido, temas!inner(slug, nombre)',
-    )
-    .eq('curso_id', curso.id)
-    .eq('slug', subtemaSlug)
+    .from('materias')
+    .select('id, slug, nombre')
+    .eq('slug', slug)
     .maybeSingle()
 
-  if (error) throw new Error(`No se pudo leer el subtema: ${error.message}`)
+  if (error) throw new Error(`No se pudo leer la materia: ${error.message}`)
+  return data
+}
+
+export interface ClasePagina {
+  materia: Materia
+  modulo: { id: number; slug: string; nombre: string }
+  clase: SubtemaCompleto | null
+  resumen: ClaseResumen
+  /** Todas las clases de la materia, agrupadas por módulo, para navegar. */
+  temario: ModuloConClases[]
+}
+
+export async function getClase(
+  materiaSlug: string,
+  claseSlug: string,
+): Promise<ClasePagina | null> {
+  const materia = await getMateria(materiaSlug)
+  if (!materia) return null
+
+  const supabase = supabasePublico()
+
+  const { data, error } = await supabase
+    .from('clases')
+    .select(
+      'id, slug, titulo, descripcion, orden, gratis, duracion_label, video_url, contenido, modulo_id',
+    )
+    .eq('materia_id', materia.id)
+    .eq('slug', claseSlug)
+    .maybeSingle()
+
+  if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
   if (!data) return null
 
-  const tema = data.temas as unknown as { slug: string; nombre: string }
+  const { data: modulo, error: e2 } = await supabase
+    .from('modulos')
+    .select('id, slug, nombre')
+    .eq('id', data.modulo_id)
+    .maybeSingle()
 
-  const resumen: SubtemaResumen = {
+  if (e2 || !modulo) throw new Error('No se pudo leer el módulo de la clase.')
+
+  const resumen: ClaseResumen = {
     id: data.id,
     slug: data.slug,
     titulo: data.titulo,
@@ -185,11 +283,10 @@ export async function getSubtema(
     tieneContenido: data.contenido != null,
   }
 
-  // Sin contenido no hay página completa: la ruta responde "Próximamente".
-  // Con contenido, se valida antes de renderizar — lo guardado pudo haberse
-  // cargado con una versión vieja del schema, y es mejor romper que mostrar
-  // un subtema a medias.
-  const subtema: SubtemaCompleto | null = data.contenido
+  // Sin contenido no hay página completa: la ruta responde "Próximamente". Con
+  // contenido, se valida antes de renderizar — lo guardado pudo cargarse con
+  // una versión vieja del schema, y es mejor romper que mostrar algo a medias.
+  const clase: SubtemaCompleto | null = data.contenido
     ? {
         id: data.orden,
         slug: data.slug,
@@ -201,73 +298,119 @@ export async function getSubtema(
       }
     : null
 
-  return { curso, tema, subtema, resumen, temario: await getTemario(curso.id) }
+  return { materia, modulo, clase, resumen, temario: await getTemarioDeMateria(materia.id) }
+}
+
+/** Todos los módulos y clases de una materia, sin filtrar por curso. */
+export async function getTemarioDeMateria(materiaId: number): Promise<ModuloConClases[]> {
+  const supabase = supabasePublico()
+
+  const { data: modulos, error: e1 } = await supabase
+    .from('modulos')
+    .select('id, slug, nombre, orden')
+    .eq('materia_id', materiaId)
+    .order('orden')
+
+  if (e1) throw new Error(`No se pudieron leer los módulos: ${e1.message}`)
+  if (!modulos || modulos.length === 0) return []
+
+  const { data: clases, error: e2 } = await supabase
+    .from('clases')
+    .select('id, slug, titulo, descripcion, orden, gratis, duracion_label, modulo_id, contenido')
+    .eq('materia_id', materiaId)
+    .order('orden')
+
+  if (e2) throw new Error(`No se pudieron leer las clases: ${e2.message}`)
+
+  const porModulo = new Map<number, ClaseResumen[]>()
+  for (const c of clases ?? []) {
+    const lista = porModulo.get(c.modulo_id) ?? []
+    lista.push({
+      id: c.id,
+      slug: c.slug,
+      titulo: c.titulo,
+      descripcion: c.descripcion,
+      orden: c.orden,
+      gratis: c.gratis,
+      duracionLabel: c.duracion_label,
+      tieneContenido: c.contenido != null,
+    })
+    porModulo.set(c.modulo_id, lista)
+  }
+
+  return modulos.map(m => ({
+    id: m.id,
+    slug: m.slug,
+    nombre: m.nombre,
+    orden: m.orden,
+    clases: porModulo.get(m.id) ?? [],
+  }))
 }
 
 // --- Rutas para prerenderizar en el build ------------------------------------
 
-export async function getRutasDeCursos(): Promise<{ curso: string }[]> {
-  const { data, error } = await supabasePublico()
-    .from('cursos')
-    .select('slug')
-    .eq('nivel', NIVEL)
+export async function getRutasDeCarreras(): Promise<{ programa: string; carrera: string }[]> {
+  const supabase = supabasePublico()
+  const { data: programas } = await supabase.from('programas').select('id, slug')
+  const { data: carreras } = await supabase.from('carreras').select('slug, programa_id')
 
-  if (error) throw new Error(`No se pudieron leer las rutas de cursos: ${error.message}`)
-  return (data ?? []).map(c => ({ curso: c.slug }))
+  const slugPorId = new Map((programas ?? []).map(p => [p.id, p.slug]))
+  return (carreras ?? []).flatMap(c => {
+    const programa = slugPorId.get(c.programa_id)
+    return programa ? [{ programa, carrera: c.slug }] : []
+  })
 }
 
-/**
- * Solo los subtemas que YA tienen contenido. Los que están "Próximamente" se
- * sirven bajo demanda: prerenderizar 170 páginas que dicen lo mismo alarga el
- * build sin que nadie las busque.
- */
-export async function getRutasDeSubtemas(): Promise<{ curso: string; subtema: string }[]> {
-  // No se puede pedir `cursos!inner(slug)` desde subtemas: `subtemas.curso_id`
-  // no es una clave foránea a cursos por sí sola. La que existe es compuesta,
-  // contra temas(id, curso_id), y PostgREST solo sabe anidar por relaciones
-  // declaradas. Con tres cursos, resolverlo con un Map es más simple que meter
-  // un anidamiento de dos niveles a través de temas.
-  const cursos = await getCursos()
-  const slugPorId = new Map(cursos.map(c => [c.id, c.slug]))
+export async function getRutasDeCursos(): Promise<
+  { programa: string; carrera: string; materia: string }[]
+> {
+  const supabase = supabasePublico()
+  const { data: programas } = await supabase.from('programas').select('id, slug')
+  const { data: carreras } = await supabase.from('carreras').select('id, slug, programa_id')
+  const { data: materias } = await supabase.from('materias').select('id, slug')
+  const { data: cursos } = await supabase.from('cursos').select('carrera_id, materia_id')
 
-  const { data, error } = await supabasePublico()
-    .from('subtemas')
-    .select('slug, curso_id')
+  const prog = new Map((programas ?? []).map(p => [p.id, p.slug]))
+  const carr = new Map((carreras ?? []).map(c => [c.id, c]))
+  const mat = new Map((materias ?? []).map(m => [m.id, m.slug]))
+
+  return (cursos ?? []).flatMap(c => {
+    const carrera = carr.get(c.carrera_id)
+    const programa = carrera ? prog.get(carrera.programa_id) : undefined
+    const materia = mat.get(c.materia_id)
+    return programa && carrera && materia
+      ? [{ programa, carrera: carrera.slug, materia }]
+      : []
+  })
+}
+
+/** Solo las clases que YA tienen contenido: el resto no vale prerenderizarlo. */
+export async function getRutasDeClases(): Promise<{ materia: string; clase: string }[]> {
+  const supabase = supabasePublico()
+  const { data: materias } = await supabase.from('materias').select('id, slug')
+  const { data: clases } = await supabase
+    .from('clases')
+    .select('slug, materia_id')
     .not('contenido', 'is', null)
 
-  if (error) throw new Error(`No se pudieron leer las rutas de subtemas: ${error.message}`)
-
-  return (data ?? []).flatMap(s => {
-    const curso = slugPorId.get(s.curso_id)
-    return curso ? [{ curso, subtema: s.slug }] : []
+  const slugPorId = new Map((materias ?? []).map(m => [m.id, m.slug]))
+  return (clases ?? []).flatMap(c => {
+    const materia = slugPorId.get(c.materia_id)
+    return materia ? [{ materia, clase: c.slug }] : []
   })
 }
 
 // --- Panel -------------------------------------------------------------------
 
-/**
- * Lectura para el panel: usa la clave secreta, así que ve también lo que no
- * está publicado. Nunca debe llamarse desde una página del alumno.
- */
-export async function getSubtemasParaAdmin(cursoId: number) {
+/** Lee con la clave secreta: ve también lo que no está publicado. */
+export async function getClaseParaAdmin(materiaId: number, claseSlug: string) {
   const { data, error } = await supabaseAdmin()
-    .from('subtemas')
-    .select('id, slug, titulo, orden, publicado, gratis, contenido, temas!inner(nombre, orden)')
-    .eq('curso_id', cursoId)
-    .order('orden')
-
-  if (error) throw new Error(`No se pudieron leer los subtemas: ${error.message}`)
-  return data ?? []
-}
-
-export async function getSubtemaParaAdmin(cursoId: number, subtemaSlug: string) {
-  const { data, error } = await supabaseAdmin()
-    .from('subtemas')
-    .select('id, slug, titulo, descripcion, orden, gratis, publicado, duracion_label, video_url, contenido, temas!inner(id, slug, nombre)')
-    .eq('curso_id', cursoId)
-    .eq('slug', subtemaSlug)
+    .from('clases')
+    .select('*, modulos!inner(id, slug, nombre)')
+    .eq('materia_id', materiaId)
+    .eq('slug', claseSlug)
     .maybeSingle()
 
-  if (error) throw new Error(`No se pudo leer el subtema: ${error.message}`)
+  if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
   return data
 }

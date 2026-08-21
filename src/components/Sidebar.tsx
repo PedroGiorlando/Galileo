@@ -1,12 +1,12 @@
 import Link from 'next/link'
 import { ArrowLeft, Check, LifeBuoy, Lock } from 'lucide-react'
-import type { TemaConSubtemas } from '@/lib/contenido'
+import type { ModuloConClases } from '@/lib/contenido'
 
 interface SidebarProps {
-  cursoSlug: string
-  cursoNombre: string
-  temaNombre: string
-  temario: TemaConSubtemas[]
+  materiaSlug: string
+  materiaNombre: string
+  moduloNombre: string
+  temario: ModuloConClases[]
   slugActual: string
   completados: string[]
 }
@@ -17,29 +17,29 @@ interface SidebarProps {
  * "Ver las N clases" lleva a la página de la materia, que sí las tiene todas.
  */
 export function Sidebar({
-  cursoSlug,
-  cursoNombre,
-  temaNombre,
+  materiaSlug,
+  materiaNombre,
+  moduloNombre,
   temario,
   slugActual,
   completados,
 }: SidebarProps) {
-  const temaActual = temario.find(t => t.subtemas.some(s => s.slug === slugActual))
-  const hermanos = temaActual?.subtemas ?? []
+  const temaActual = temario.find(t => t.clases.some(s => s.slug === slugActual))
+  const hermanos = temaActual?.clases ?? []
   const posicion = hermanos.findIndex(s => s.slug === slugActual)
-  const totalDelCurso = temario.reduce((n, t) => n + t.subtemas.length, 0)
+  const totalDelCurso = temario.reduce((n, t) => n + t.clases.length, 0)
 
   return (
     <aside className="w-72 shrink-0 space-y-4">
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         <Link
-          href={`/preuniversitario/${cursoSlug}`}
+          href="/preuniversitario"
           className="mb-3 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
         >
-          <ArrowLeft size={14} /> Volver a {cursoNombre}
+          <ArrowLeft size={14} /> Volver a {materiaNombre}
         </Link>
 
-        <h2 className="text-sm font-bold text-slate-800">{temaNombre}</h2>
+        <h2 className="text-sm font-bold text-slate-800">{moduloNombre}</h2>
         {posicion >= 0 && (
           <>
             <p className="mt-0.5 mb-2 text-xs text-slate-500">
@@ -62,7 +62,7 @@ export function Sidebar({
             return (
               <li key={s.id}>
                 <Link
-                  href={`/preuniversitario/${cursoSlug}/${s.slug}`}
+                  href={`/clase/${materiaSlug}/${s.slug}`}
                   className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm ${
                     actual
                       ? 'bg-orange-50 font-medium text-orange-800'
@@ -89,7 +89,7 @@ export function Sidebar({
         </ul>
 
         <Link
-          href={`/preuniversitario/${cursoSlug}`}
+          href="/preuniversitario"
           className="mt-4 block rounded-md border border-slate-200 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
         >
           Ver las {totalDelCurso} clases

@@ -19,79 +19,63 @@ export async function getUsuario() {
   return data.user
 }
 
-/** Slugs de las clases completadas de una materia. */
-export async function getCompletados(cursoId: number): Promise<string[]> {
-  const supabase = await supabaseSesion()
-  const { data: sesion } = await supabase.auth.getUser()
-  if (!sesion.user) return []
-
-  const { data, error } = await supabase
-    .from('progreso')
-    .select('subtemas!inner(slug, curso_id)')
-    .eq('completado', true)
-    .eq('subtemas.curso_id', cursoId)
-    .overrideTypes<{ subtemas: { slug: string } }[]>()
-
-  if (error) throw new Error(`No se pudo leer el progreso: ${error.message}`)
-  return (data ?? []).map(p => p.subtemas.slug)
-}
-
 export interface ResumenProgreso {
-  cursoId: number
-  cursoSlug: string
-  cursoNombre: string
+  materiaId: number
+  materiaSlug: string
+  materiaNombre: string
   completadas: number
   total: number
 }
 
-/** Avance por materia, para la página de cuenta. */
-export async function getResumenPorCurso(): Promise<ResumenProgreso[]> {
+/**
+ * Avance por materia, para la página de cuenta.
+ *
+ * Va por materia y no por carrera porque el progreso vive en la clase: quien
+ * completó Cinemática la completó, sin importar desde qué carrera entró.
+ */
+export async function getResumenPorMateria(): Promise<ResumenProgreso[]> {
   const supabase = await supabaseSesion()
   const { data: sesion } = await supabase.auth.getUser()
   if (!sesion.user) return []
 
-  const { data: cursos, error: e1 } = await supabase
-    .from('cursos')
+  const { data: materias, error: e1 } = await supabase
+    .from('materias')
     .select('id, slug, nombre')
-    .eq('nivel', 'preuniversitario')
     .order('orden')
 
-  if (e1) throw new Error(`No se pudieron leer los cursos: ${e1.message}`)
+  if (e1) throw new Error(`No se pudieron leer las materias: ${e1.message}`)
 
-  // Una consulta por materia sería más prolija de leer, pero son dos consultas
-  // en total contra N+1: se traen todos los subtemas y todo el progreso, y se
-  // cruzan en memoria.
-  const { data: subtemas, error: e2 } = await supabase
-    .from('subtemas')
-    .select('id, curso_id')
-
+  // Dos consultas y un cruce en memoria, en vez de una por materia.
+  const { data: clases, error: e2 } = await supabase.from('clases').select('id, materia_id')
   if (e2) throw new Error(`No se pudieron leer las clases: ${e2.message}`)
 
   const { data: hechas, error: e3 } = await supabase
     .from('progreso')
-    .select('subtema_id')
+    .select('clase_id')
     .eq('completado', true)
 
   if (e3) throw new Error(`No se pudo leer el progreso: ${e3.message}`)
 
-  const cursoDeSubtema = new Map((subtemas ?? []).map(s => [s.id, s.curso_id]))
-  const completadasPorCurso = new Map<number, number>()
+  const materiaDeClase = new Map((clases ?? []).map(c => [c.id, c.materia_id]))
+  const completadasPorMateria = new Map<number, number>()
   for (const fila of hechas ?? []) {
-    const curso = cursoDeSubtema.get(fila.subtema_id)
-    if (curso != null) completadasPorCurso.set(curso, (completadasPorCurso.get(curso) ?? 0) + 1)
+    const materia = materiaDeClase.get(fila.clase_id)
+    if (materia != null) {
+      completadasPorMateria.set(materia, (completadasPorMateria.get(materia) ?? 0) + 1)
+    }
   }
 
-  const totalPorCurso = new Map<number, number>()
-  for (const s of subtemas ?? []) {
-    totalPorCurso.set(s.curso_id, (totalPorCurso.get(s.curso_id) ?? 0) + 1)
+  const totalPorMateria = new Map<number, number>()
+  for (const c of clases ?? []) {
+    totalPorMateria.set(c.materia_id, (totalPorMateria.get(c.materia_id) ?? 0) + 1)
   }
 
-  return (cursos ?? []).map(c => ({
-    cursoId: c.id,
-    cursoSlug: c.slug,
-    cursoNombre: c.nombre,
-    completadas: completadasPorCurso.get(c.id) ?? 0,
-    total: totalPorCurso.get(c.id) ?? 0,
+  return (materias ?? []).map(m => ({
+    materiaId: m.id,
+    materiaSlug: m.slug,
+    materiaNombre: m.nombre,
+    completadas: completadasPorMateria.get(m.id) ?? 0,
+    total: totalPorMateria.get(m.id) ?? 0,
   }))
 }
 

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
-import type { TemaConSubtemas } from '@/lib/contenido'
+import type { ModuloConClases } from '@/lib/contenido'
 
 /**
  * Anterior y siguiente dentro de la materia completa, no de la unidad: al
@@ -8,15 +8,15 @@ import type { TemaConSubtemas } from '@/lib/contenido'
  * Cinemática, no un callejón sin salida.
  */
 export function NavegacionClases({
-  cursoSlug,
+  materiaSlug,
   temario,
   slugActual,
 }: {
-  cursoSlug: string
-  temario: TemaConSubtemas[]
+  materiaSlug: string
+  temario: ModuloConClases[]
   slugActual: string
 }) {
-  const todas = temario.flatMap(t => t.subtemas.map(s => ({ ...s, unidad: t.nombre })))
+  const todas = temario.flatMap(t => t.clases.map(s => ({ ...s, unidad: t.nombre })))
   const i = todas.findIndex(s => s.slug === slugActual)
   if (i < 0) return null
 
@@ -31,7 +31,7 @@ export function NavegacionClases({
     >
       {anterior ? (
         <Link
-          href={`/preuniversitario/${cursoSlug}/${anterior.slug}`}
+          href={`/clase/${materiaSlug}/${anterior.slug}`}
           className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 hover:border-green-400 hover:bg-green-50"
         >
           <ArrowLeft size={18} className="shrink-0 text-slate-400" />
@@ -48,7 +48,7 @@ export function NavegacionClases({
 
       {siguiente && (
         <Link
-          href={`/preuniversitario/${cursoSlug}/${siguiente.slug}`}
+          href={`/clase/${materiaSlug}/${siguiente.slug}`}
           className="flex min-w-0 flex-1 items-center justify-end gap-3 rounded-lg border border-slate-200 bg-white p-4 text-right hover:border-green-400 hover:bg-green-50"
         >
           <span className="min-w-0">

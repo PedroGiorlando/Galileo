@@ -19,11 +19,15 @@ import { importarProgresoLocal, marcarClase } from '@/app/acciones-progreso'
  *   registrarse, y eso es lo que después lo empuja a crear la cuenta.
  * - Con sesión: la tabla `progreso`, que lo sigue en cualquier dispositivo.
  *
+ * Se lleva por MATERIA y no por curso: la misma clase de Cinemática aparece en
+ * Física de UNCuyo y en la de UTN, y completarla en una es completarla en la
+ * otra, porque es literalmente la misma clase.
+ *
  * Al iniciar sesión, lo que había en localStorage se sube una vez. Sin eso,
  * quien completó cinco clases y recién ahí se registró las perdería todas.
  */
-export function useProgreso(cursoSlug: string, cursoId: number) {
-  const clave = `galileo:completados:${cursoSlug}`
+export function useProgreso(materiaSlug: string, materiaId: number) {
+  const clave = `galileo:completados:${materiaSlug}`
   const [completados, setCompletados] = useState<string[]>([])
   const [hayUsuario, setHayUsuario] = useState(false)
   const [cargando, setCargando] = useState(true)
@@ -63,10 +67,10 @@ export function useProgreso(cursoSlug: string, cursoId: number) {
       // la consulta falla entera.
       const { data: filas, error } = await supabase
         .from('progreso')
-        .select('subtemas!inner(slug, curso_id)')
+        .select('clases!inner(slug, materia_id)')
         .eq('completado', true)
-        .eq('subtemas.curso_id', cursoId)
-        .overrideTypes<{ subtemas: { slug: string } }[]>()
+        .eq('clases.materia_id', materiaId)
+        .overrideTypes<{ clases: { slug: string } }[]>()
 
       if (!vivo) return
 
@@ -79,7 +83,7 @@ export function useProgreso(cursoSlug: string, cursoId: number) {
         return
       }
 
-      const deLaBase = (filas ?? []).map(f => f.subtemas.slug)
+      const deLaBase = (filas ?? []).map(f => f.clases.slug)
 
       // Con sesión, lo local ya no manda: se sube y se borra, así no queda una
       // segunda fuente de verdad desincronizándose en silencio.
@@ -87,7 +91,7 @@ export function useProgreso(cursoSlug: string, cursoId: number) {
       const nuevos = locales.filter(s => !deLaBase.includes(s))
 
       if (nuevos.length > 0) {
-        await importarProgresoLocal(cursoId, nuevos)
+        await importarProgresoLocal(materiaId, nuevos)
         if (!vivo) return
       }
       try {
@@ -104,7 +108,7 @@ export function useProgreso(cursoSlug: string, cursoId: number) {
     return () => {
       vivo = false
     }
-  }, [clave, cursoSlug, cursoId, leerLocal])
+  }, [clave, materiaSlug, materiaId, leerLocal])
 
   async function alternar(slug: string, subtemaId: number) {
     const estaba = completados.includes(slug)

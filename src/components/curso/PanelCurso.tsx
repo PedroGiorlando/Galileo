@@ -13,17 +13,17 @@ import type { Paleta } from '@/lib/colores'
  * además lo hace lo primero que se ve al entrar.
  */
 export function PanelCurso({
-  cursoSlug,
-  cursoId,
+  materiaSlug,
+  materiaId,
   totalClases,
   paleta,
 }: {
-  cursoSlug: string
-  cursoId: number
+  materiaSlug: string
+  materiaId: number
   totalClases: number
   paleta: Paleta
 }) {
-  const { completados, hayUsuario } = useProgreso(cursoSlug, cursoId)
+  const { completados, hayUsuario } = useProgreso(materiaSlug, materiaId)
   const hechas = completados.length
   const porcentaje = totalClases > 0 ? Math.round((hechas / totalClases) * 100) : 0
 

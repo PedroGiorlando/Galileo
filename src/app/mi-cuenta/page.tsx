@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { ArrowRight, PencilLine, UserRound } from 'lucide-react'
 import { Header } from '@/components/Header'
-import { esAdmin, getResumenPorCurso, getUsuario } from '@/lib/progreso'
+import { esAdmin, getResumenPorMateria, getUsuario } from '@/lib/progreso'
 import { paletaDeMateria } from '@/lib/colores'
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function MiCuentaPage() {
   const usuario = await getUsuario()
   if (!usuario) redirect('/ingresar')
 
-  const [resumen, admin] = await Promise.all([getResumenPorCurso(), esAdmin()])
+  const [resumen, admin] = await Promise.all([getResumenPorMateria(), esAdmin()])
   const totalHechas = resumen.reduce((n, r) => n + r.completadas, 0)
 
   return (
@@ -63,16 +63,16 @@ export default async function MiCuentaPage() {
 
           <ul className="space-y-3">
             {resumen.map(r => {
-              const paleta = paletaDeMateria(r.cursoSlug)
+              const paleta = paletaDeMateria(r.materiaSlug)
               const pct = r.total > 0 ? Math.round((r.completadas / r.total) * 100) : 0
               return (
-                <li key={r.cursoId}>
+                <li key={r.materiaId}>
                   <Link
-                    href={`/preuniversitario/${r.cursoSlug}`}
+                    href="/preuniversitario"
                     className={`block rounded-2xl border border-linea bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-sm ${paleta.bordeActivo}`}
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="font-display font-semibold text-tinta">{r.cursoNombre}</span>
+                      <span className="font-display font-semibold text-tinta">{r.materiaNombre}</span>
                       <span className="flex items-center gap-2 font-mono text-sm text-tinta-suave">
                         {r.completadas}/{r.total}
                         <ArrowRight size={14} className={paleta.texto} />

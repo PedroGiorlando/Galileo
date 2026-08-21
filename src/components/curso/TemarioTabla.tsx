@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ArrowRight, Check, Clock, Lock } from 'lucide-react'
 import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeUnidad } from '@/lib/colores'
-import type { TemaConSubtemas } from '@/lib/contenido'
+import type { ModuloConClases } from '@/lib/contenido'
 
 /**
  * El temario, como una línea de tiempo por unidad.
@@ -22,22 +22,22 @@ import type { TemaConSubtemas } from '@/lib/contenido'
  * en el servidor y viaja en el HTML.
  */
 export function TemarioTabla({
-  cursoSlug,
-  cursoId,
+  materiaSlug,
+  materiaId,
   temario,
 }: {
-  cursoSlug: string
-  cursoId: number
-  temario: TemaConSubtemas[]
+  materiaSlug: string
+  materiaId: number
+  temario: ModuloConClases[]
 }) {
-  const { completados } = useProgreso(cursoSlug, cursoId)
+  const { completados } = useProgreso(materiaSlug, materiaId)
 
   return (
     <div className="min-w-0 flex-1 space-y-10">
       {temario.map(unidad => {
-        const paleta = paletaDeUnidad(cursoSlug, unidad.orden)
-        const hechas = unidad.subtemas.filter(s => completados.includes(s.slug)).length
-        const avance = unidad.subtemas.length ? (hechas / unidad.subtemas.length) * 100 : 0
+        const paleta = paletaDeUnidad(materiaSlug, unidad.orden)
+        const hechas = unidad.clases.filter(s => completados.includes(s.slug)).length
+        const avance = unidad.clases.length ? (hechas / unidad.clases.length) * 100 : 0
 
         return (
           <section key={unidad.id} id={unidad.slug} className="scroll-mt-6">
@@ -51,7 +51,7 @@ export function TemarioTabla({
                 {unidad.nombre}
               </h2>
               <span className="font-mono text-xs text-tinta-suave">
-                {hechas}/{unidad.subtemas.length}
+                {hechas}/{unidad.clases.length}
               </span>
 
               <div className="h-1.5 w-full max-w-32 overflow-hidden rounded-full bg-linea">
@@ -63,9 +63,9 @@ export function TemarioTabla({
             </div>
 
             <ol className="space-y-1.5">
-              {unidad.subtemas.map((clase, i) => {
+              {unidad.clases.map((clase, i) => {
                 const completa = completados.includes(clase.slug)
-                const esUltima = i === unidad.subtemas.length - 1
+                const esUltima = i === unidad.clases.length - 1
 
                 const contenido = (
                   <>
@@ -134,7 +134,7 @@ export function TemarioTabla({
                   <li key={clase.id} className="relative">
                     {conector}
                     <Link
-                      href={`/preuniversitario/${cursoSlug}/${clase.slug}`}
+                      href={`/clase/${materiaSlug}/${clase.slug}`}
                       className={`group flex items-start gap-3 rounded-xl border border-transparent bg-white/70 px-3 py-3 transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-sm ${paleta.bordeActivo}`}
                     >
                       {contenido}
