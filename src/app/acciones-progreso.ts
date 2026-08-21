@@ -47,12 +47,12 @@ export async function marcarClase(subtemaId: number, completado: boolean) {
  * plataforma. Se corre una sola vez, al detectar sesión con progreso local
  * pendiente.
  */
-export async function importarProgresoLocal(cursoSlug: string, slugs: string[]) {
+export async function importarProgresoLocal(cursoId: number, slugs: string[]) {
   const Lista = z.object({
-    cursoSlug: z.string().min(1),
+    cursoId: z.number().int().positive(),
     slugs: z.array(z.string().min(1)).max(500),
   })
-  const r = Lista.safeParse({ cursoSlug, slugs })
+  const r = Lista.safeParse({ cursoId, slugs })
   if (!r.success) return { ok: false as const, importadas: 0 }
 
   const supabase = await supabaseSesion()
@@ -61,14 +61,15 @@ export async function importarProgresoLocal(cursoSlug: string, slugs: string[]) 
 
   // Se traducen los slugs a ids dentro de esa materia. Si alguno no existe,
   // simplemente no entra: no hay motivo para fallar por un slug viejo.
+  // Filtra por la columna curso_id: subtemas no tiene clave foránea directa a
+  // cursos, así que anidarla haría fallar la consulta entera.
   const { data: subtemas } = await supabase
     .from('subtemas')
-    .select('id, slug, cursos!inner(slug)')
+    .select('id, slug')
+    .eq('curso_id', r.data.cursoId)
     .in('slug', r.data.slugs)
-    .overrideTypes<{ id: number; slug: string; cursos: { slug: string } }[]>()
 
   const filas = (subtemas ?? [])
-    .filter(s => s.cursos.slug === r.data.cursoSlug)
     .map(s => ({
       user_id: sesion.user!.id,
       subtema_id: s.id,

@@ -94,7 +94,12 @@ export default async function CursoPage({ params }: { params: Promise<Params> })
             </div>
 
             <div className="w-full lg:w-80">
-              <PanelCurso cursoSlug={curso.slug} totalClases={total} paleta={paleta} />
+              <PanelCurso
+                cursoSlug={curso.slug}
+                cursoId={curso.id}
+                totalClases={total}
+                paleta={paleta}
+              />
             </div>
           </div>
         </div>
@@ -152,7 +157,7 @@ export default async function CursoPage({ params }: { params: Promise<Params> })
             Todavía no hay clases cargadas en esta materia.
           </p>
         ) : (
-          <TemarioTabla cursoSlug={curso.slug} temario={temario} />
+          <TemarioTabla cursoSlug={curso.slug} cursoId={curso.id} temario={temario} />
         )}
       </main>
     </>

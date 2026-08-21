@@ -22,7 +22,7 @@ import { importarProgresoLocal, marcarClase } from '@/app/acciones-progreso'
  * Al iniciar sesión, lo que había en localStorage se sube una vez. Sin eso,
  * quien completó cinco clases y recién ahí se registró las perdería todas.
  */
-export function useProgreso(cursoSlug: string) {
+export function useProgreso(cursoSlug: string, cursoId: number) {
   const clave = `galileo:completados:${cursoSlug}`
   const [completados, setCompletados] = useState<string[]>([])
   const [hayUsuario, setHayUsuario] = useState(false)
@@ -57,14 +57,28 @@ export function useProgreso(cursoSlug: string) {
       // RLS limita esta consulta a las filas del propio usuario, así que no
       // hace falta filtrar por user_id: la base no devolvería las de otro
       // aunque se lo pidiera.
-      const { data: filas } = await supabase
+      // Se filtra por la COLUMNA subtemas.curso_id, no anidando cursos:
+      // subtemas no tiene clave foránea directa a cursos (la que existe es
+      // compuesta contra temas), así que PostgREST no sabe hacer ese anidado y
+      // la consulta falla entera.
+      const { data: filas, error } = await supabase
         .from('progreso')
-        .select('subtemas!inner(slug, cursos!inner(slug))')
+        .select('subtemas!inner(slug, curso_id)')
         .eq('completado', true)
-        .eq('subtemas.cursos.slug', cursoSlug)
+        .eq('subtemas.curso_id', cursoId)
         .overrideTypes<{ subtemas: { slug: string } }[]>()
 
       if (!vivo) return
+
+      if (error) {
+        // Antes este error se ignoraba y el progreso aparecía vacío sin que
+        // nada lo explicara. Mejor dejar rastro que fallar en silencio.
+        console.error('No se pudo leer el progreso:', error.message)
+        setCompletados(leerLocal())
+        setCargando(false)
+        return
+      }
+
       const deLaBase = (filas ?? []).map(f => f.subtemas.slug)
 
       // Con sesión, lo local ya no manda: se sube y se borra, así no queda una
@@ -73,7 +87,7 @@ export function useProgreso(cursoSlug: string) {
       const nuevos = locales.filter(s => !deLaBase.includes(s))
 
       if (nuevos.length > 0) {
-        await importarProgresoLocal(cursoSlug, nuevos)
+        await importarProgresoLocal(cursoId, nuevos)
         if (!vivo) return
       }
       try {
@@ -90,7 +104,7 @@ export function useProgreso(cursoSlug: string) {
     return () => {
       vivo = false
     }
-  }, [clave, cursoSlug, leerLocal])
+  }, [clave, cursoSlug, cursoId, leerLocal])
 
   async function alternar(slug: string, subtemaId: number) {
     const estaba = completados.includes(slug)

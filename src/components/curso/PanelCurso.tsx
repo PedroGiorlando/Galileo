@@ -14,14 +14,16 @@ import type { Paleta } from '@/lib/colores'
  */
 export function PanelCurso({
   cursoSlug,
+  cursoId,
   totalClases,
   paleta,
 }: {
   cursoSlug: string
+  cursoId: number
   totalClases: number
   paleta: Paleta
 }) {
-  const { completados, hayUsuario } = useProgreso(cursoSlug)
+  const { completados, hayUsuario } = useProgreso(cursoSlug, cursoId)
   const hechas = completados.length
   const porcentaje = totalClases > 0 ? Math.round((hechas / totalClases) * 100) : 0
 

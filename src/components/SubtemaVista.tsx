@@ -53,7 +53,7 @@ export function SubtemaVista({
 
   const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')
 
-  const { completados, alternar } = useProgreso(curso.slug)
+  const { completados, alternar } = useProgreso(curso.slug, curso.id)
   const completado = completados.includes(subtema.slug)
 
   const total = temario.reduce((n, t) => n + t.subtemas.length, 0) || 1

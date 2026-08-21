@@ -23,12 +23,14 @@ import type { TemaConSubtemas } from '@/lib/contenido'
  */
 export function TemarioTabla({
   cursoSlug,
+  cursoId,
   temario,
 }: {
   cursoSlug: string
+  cursoId: number
   temario: TemaConSubtemas[]
 }) {
-  const { completados } = useProgreso(cursoSlug)
+  const { completados } = useProgreso(cursoSlug, cursoId)
 
   return (
     <div className="min-w-0 flex-1 space-y-10">
