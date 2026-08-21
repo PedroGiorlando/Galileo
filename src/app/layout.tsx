@@ -39,7 +39,22 @@ const mono = IBM_Plex_Mono({
   display: 'swap',
 })
 
+/**
+ * Mientras el sitio esté en construcción, ninguna página se indexa.
+ *
+ * Un sitio con tres clases cargadas indexado como si estuviera terminado es
+ * contenido pobre, y Google castiga el dominio entero — justo lo que estamos
+ * cuidando. Se abre poniendo NEXT_PUBLIC_INDEXABLE=true, el día que haya
+ * contenido suficiente.
+ *
+ * Es `noindex` en los metadatos y no un robots.txt a propósito: robots.txt
+ * pide que no rastreen, pero una página enlazada desde afuera puede terminar
+ * indexada igual. El metadato es el que de verdad lo impide.
+ */
+const INDEXABLE = process.env.NEXT_PUBLIC_INDEXABLE === 'true'
+
 export const metadata: Metadata = {
+  ...(INDEXABLE ? {} : { robots: { index: false, follow: false } }),
   title: {
     default: 'Academia Galileo',
     template: '%s | Academia Galileo',
