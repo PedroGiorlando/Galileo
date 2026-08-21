@@ -10,7 +10,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-export default async function IngresarPage() {
+const MENSAJES: Record<string, string> = {
+  'sin-codigo': 'Ese link no traía el código de confirmación. Probá ingresar directamente.',
+  'link-vencido': 'El link de confirmación ya venció o fue usado. Ingresá con tu correo y contraseña.',
+}
+
+export default async function IngresarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+  const aviso = error ? MENSAJES[error] : null
+
   const supabase = await supabaseSesion()
   const { data } = await supabase.auth.getUser()
   if (data.user) redirect('/mi-cuenta')
@@ -25,6 +37,15 @@ export default async function IngresarPage() {
         <p className="mt-1 mb-6 text-tinta-suave">
           Entrá para que tu progreso te siga en cualquier dispositivo.
         </p>
+
+        {aviso && (
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"
+          >
+            {aviso}
+          </p>
+        )}
 
         <FormularioAcceso modo="ingresar" />
 

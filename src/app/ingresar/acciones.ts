@@ -31,8 +31,15 @@ export async function registrarse(_previo: unknown, datos: FormData): Promise<Re
   const r = leerCredenciales(datos)
   if (!r.success) return { error: r.error.issues[0].message }
 
+  // Sin emailRedirectTo, el link del correo vuelve a la portada y el código de
+  // confirmación se pierde. Tiene que apuntar a la ruta que sabe canjearlo.
+  const sitio = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
   const supabase = await supabaseSesion()
-  const { data, error } = await supabase.auth.signUp(r.data)
+  const { data, error } = await supabase.auth.signUp({
+    ...r.data,
+    options: { emailRedirectTo: `${sitio}/auth/callback` },
+  })
 
   if (error) {
     return { error: 'No pudimos crear la cuenta. Probá de nuevo en un momento.' }
