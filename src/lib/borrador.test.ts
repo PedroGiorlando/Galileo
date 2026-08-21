@@ -18,8 +18,9 @@ describe('ida y vuelta entre tema guardado y borrador', () => {
       objetivos: tema.objetivos,
       explicacion: tema.explicacion,
       ejemplos: tema.ejemplos,
-      ejercicios: tema.ejercicios,
-      quiz: tema.quiz,
+      videos: tema.videos,
+      practicos: tema.practicos,
+      evaluaciones: tema.evaluaciones,
     })
   })
 })
@@ -40,24 +41,29 @@ describe('conversión de un ejercicio en edición', () => {
     const salida = aContenido({
       objetivos: ['x'],
       explicacion: [{ titulo: 't', parrafo: 'p', conCaja: false, cajaTipo: 'ejemplo', cajaContenido: '' }],
-      ejemplos: [{ enunciado: 'e', pasos: ['p'] }],
-      ejercicios: [borrador],
-      quiz: [{ pregunta: 'q', opciones: ['a', 'b'], respuestaCorrectaIndex: 0, explicacion: 'x' }],
-    }) as { ejercicios: { respuestaCorrecta: string[] }[] }
+      ejemplos: [{ enunciado: 'e', pasos: ['p'], videoIndice: -1, videoSegundo: 0 }],
+      videos: [],
+      practicos: [{ titulo: '', ejercicios: [borrador] }],
+      evaluaciones: [],
+    }) as { practicos: { ejercicios: { respuestaCorrecta: string[] }[] }[] }
 
-    expect(salida.ejercicios[0].respuestaCorrecta).toEqual(['12'])
+    expect(salida.practicos[0].ejercicios[0].respuestaCorrecta).toEqual(['12'])
   })
 
   it('numera los ítems por posición, sin que nadie cargue ids a mano', () => {
     const salida = aContenido({
       objetivos: ['x'],
       explicacion: [{ titulo: 't', parrafo: 'p', conCaja: false, cajaTipo: 'ejemplo', cajaContenido: '' }],
-      ejemplos: [{ enunciado: 'a', pasos: ['p'] }, { enunciado: 'b', pasos: ['p'] }],
-      ejercicios: [ejercicioVacio(), ejercicioVacio()],
-      quiz: [{ pregunta: 'q', opciones: ['a', 'b'], respuestaCorrectaIndex: 0, explicacion: 'x' }],
-    }) as { ejemplos: { id: number }[]; ejercicios: { id: number }[] }
+      ejemplos: [
+        { enunciado: 'a', pasos: ['p'], videoIndice: -1, videoSegundo: 0 },
+        { enunciado: 'b', pasos: ['p'], videoIndice: -1, videoSegundo: 0 },
+      ],
+      videos: [],
+      practicos: [{ titulo: '', ejercicios: [ejercicioVacio(), ejercicioVacio()] }],
+      evaluaciones: [],
+    }) as { ejemplos: { id: number }[]; practicos: { ejercicios: { id: number }[] }[] }
 
     expect(salida.ejemplos.map(e => e.id)).toEqual([1, 2])
-    expect(salida.ejercicios.map(e => e.id)).toEqual([1, 2])
+    expect(salida.practicos[0].ejercicios.map(e => e.id)).toEqual([1, 2])
   })
 })

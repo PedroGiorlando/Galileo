@@ -39,16 +39,16 @@ export function SubtemaVista({
   moduloNombre: string
   temario: ModuloConClases[]
 }) {
-  // La solapa Lección solo existe si hay video cargado. Sin esto, una clase sin
-  // video abría en un reproductor vacío.
-  const hayVideo = Boolean(subtema.videoUrl)
+  // La solapa Lección solo existe si hay al menos un video. Sin esto, una clase
+  // sin video abría en un reproductor vacío.
+  const hayVideo = subtema.videos.length > 0
 
   const TABS = [
     ...(hayVideo ? [{ id: 'leccion' as const, label: 'Lección', icon: PlayCircle }] : []),
     { id: 'explicacion' as const, label: 'Explicación escrita', icon: FileText },
     { id: 'ejemplos' as const, label: 'Ejemplos resueltos', icon: PencilLine },
-    { id: 'ejercicios' as const, label: 'Ejercicios', icon: ClipboardCheck },
-    { id: 'autoevaluacion' as const, label: 'Autoevaluación', icon: MapPin },
+    { id: 'ejercicios' as const, label: 'Trabajos prácticos', icon: ClipboardCheck },
+    { id: 'autoevaluacion' as const, label: 'Evaluaciones', icon: MapPin },
   ]
 
   const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')

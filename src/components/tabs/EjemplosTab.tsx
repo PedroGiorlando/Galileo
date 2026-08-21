@@ -1,4 +1,8 @@
+'use client'
+
+import { PlayCircle } from 'lucide-react'
 import type { SubtemaCompleto } from '../../data/topicData'
+import { comoMinutos } from '@/lib/video'
 
 /**
  * Los ejemplos se muestran todos, uno debajo del otro, y no de a uno con
@@ -6,7 +10,13 @@ import type { SubtemaCompleto } from '../../data/topicData'
  * el anterior mientras se lee el siguiente, y todo el texto queda en el HTML
  * en vez de aparecer recién al hacer click.
  */
-export function EjemplosTab({ subtema }: { subtema: SubtemaCompleto }) {
+export function EjemplosTab({
+  subtema,
+  onIrAlVideo,
+}: {
+  subtema: SubtemaCompleto
+  onIrAlVideo?: (videoId: number, segundo: number) => void
+}) {
   return (
     <div className="space-y-6">
       <p className="text-sm text-slate-500">
@@ -26,6 +36,17 @@ export function EjemplosTab({ subtema }: { subtema: SubtemaCompleto }) {
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase text-green-600">Ejemplo {i + 1}</p>
               <h2 className="mt-0.5 text-lg font-bold text-slate-900">{ejemplo.enunciado}</h2>
+
+              {ejemplo.video && onIrAlVideo && (
+                <button
+                  type="button"
+                  onClick={() => onIrAlVideo(ejemplo.video!.videoId, ejemplo.video!.segundo)}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-galileo/10 px-3 py-1 text-xs font-medium text-galileo hover:bg-galileo/20"
+                >
+                  <PlayCircle size={13} />
+                  Verlo explicado en el video, minuto {comoMinutos(ejemplo.video.segundo)}
+                </button>
+              )}
 
               <p className="mt-4 mb-2 text-sm font-semibold text-slate-500">Solución:</p>
               <ol className="space-y-2">

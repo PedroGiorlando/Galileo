@@ -6,11 +6,13 @@ import {
   aContenido,
   ejemploVacio,
   ejercicioVacio,
+  evaluacionVacia,
+  practicoVacio,
   preguntaVacia,
   seccionVacia,
+  videoVacio,
   type ContenidoBorrador,
   type TipoCaja,
-  type TipoEjercicio,
 } from '@/lib/borrador'
 import {
   TemaContenidoSchema,
@@ -28,16 +30,7 @@ import {
   Texto,
   TextoLargo,
 } from './campos'
-
-const TIPOS_EJERCICIO: { valor: TipoEjercicio; label: string; ayuda: string }[] = [
-  {
-    valor: 'libre',
-    label: 'Respuesta libre',
-    ayuda: 'Lista separada por comas. El orden y los espacios no importan al corregir.',
-  },
-  { valor: 'multiple', label: 'Selección múltiple', ayuda: 'El alumno tilda una o varias opciones.' },
-  { valor: 'si-no', label: 'Sí / No', ayuda: 'Respuesta binaria.' },
-]
+import { EditorEjercicio, EditorPregunta } from './EditorEjercicio'
 
 const TIPOS_CAJA: TipoCaja[] = ['ejemplo', 'tip', 'nota']
 
@@ -87,7 +80,7 @@ export function SubtemaForm({
     setMeta(prev => ({ ...prev, [k]: v }))
 
   // Un solo helper para todas las listas del contenido: reemplazar el ítem i.
-  function editarLista<K extends keyof ContenidoBorrador>(
+  function editar<K extends keyof ContenidoBorrador>(
     clave: K,
     i: number,
     cambio: Partial<ContenidoBorrador[K][number]>,
@@ -100,11 +93,11 @@ export function SubtemaForm({
     }))
   }
 
-  function quitarDe(clave: keyof ContenidoBorrador, i: number) {
+  function quitar(clave: keyof ContenidoBorrador, i: number) {
     setC(prev => ({ ...prev, [clave]: (prev[clave] as unknown[]).filter((_, j) => j !== i) }))
   }
 
-  function agregarA(clave: keyof ContenidoBorrador, item: unknown) {
+  function agregar(clave: keyof ContenidoBorrador, item: unknown) {
     setC(prev => ({ ...prev, [clave]: [...(prev[clave] as unknown[]), item] }))
   }
 
@@ -155,67 +148,41 @@ export function SubtemaForm({
         </div>
       )}
 
-      <Seccion titulo="Ficha del tema">
+      <Seccion titulo="Ficha de la clase">
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo label="Título">
-            <Texto
-              value={meta.titulo}
-              onChange={v => campoMeta('titulo', v)}
-              placeholder="Múltiplos y divisores"
-            />
+            <Texto value={meta.titulo} onChange={v => campoMeta('titulo', v)} />
           </Campo>
-          <Campo label="Dirección web (slug)" ayuda="Minúsculas, sin tildes ni espacios. Va en la URL.">
-            <Texto
-              value={meta.slug}
-              onChange={v => campoMeta('slug', v)}
-              placeholder="multiplos-y-divisores"
-            />
+          <Campo label="Dirección web (slug)" ayuda="No se puede cambiar desde acá.">
+            <Texto value={meta.slug} onChange={() => {}} />
           </Campo>
           <Campo label="Unidad">
-            <Texto
-              value={meta.categoria}
-              onChange={v => campoMeta('categoria', v)}
-              placeholder="Vectores"
-            />
+            <Texto value={meta.categoria} onChange={v => campoMeta('categoria', v)} />
           </Campo>
-          <Campo label="Orden en el temario">
-            <Numero value={meta.orden} onChange={v => campoMeta('orden', v)} />
-          </Campo>
-          <Campo label="Duración del video" ayuda="Formato mm:ss. Si no hay video, poné 00:00.">
-            <Texto
-              value={meta.duracionLabel}
-              onChange={v => campoMeta('duracionLabel', v)}
-              placeholder="10:15"
-            />
-          </Campo>
-          <Campo label="Link del video" ayuda="Vacío: el tema no muestra el tab Lección.">
-            <Texto
-              value={meta.videoUrl ?? ''}
-              onChange={v => campoMeta('videoUrl', v)}
-              placeholder="https://..."
-            />
+          <Campo label="Duración total" ayuda="Formato mm:ss. Si no hay video, poné 00:00.">
+            <Texto value={meta.duracionLabel} onChange={v => campoMeta('duracionLabel', v)} />
           </Campo>
         </div>
+
         <Campo
           label="Descripción corta"
-          ayuda="Una línea. Aparece bajo el título de la clase y en la columna Contenido del temario."
+          ayuda="Una línea. Aparece bajo el título y en la columna Contenido del temario."
         >
           <TextoLargo
             value={meta.descripcion}
             onChange={v => campoMeta('descripcion', v)}
             rows={2}
-            placeholder="Aprendé a sumar vectores trabajando con sus componentes."
           />
         </Campo>
 
         <div className="flex flex-wrap gap-6 border-t border-slate-100 pt-3">
           <Casilla
-            label="Subtema gratis (visible sin comprar)"
+            label="Clase gratis (visible sin comprar)"
             checked={meta.gratis}
             onChange={v => campoMeta('gratis', v)}
           />
           <Casilla
-            label="Publicado"
+            label="Publicada"
             checked={meta.publicado}
             onChange={v => campoMeta('publicado', v)}
           />
@@ -230,40 +197,81 @@ export function SubtemaForm({
           items={c.objetivos}
           onChange={objetivos => setC(prev => ({ ...prev, objetivos }))}
           etiquetaAgregar="Agregar objetivo"
-          placeholder={() => 'Qué son los múltiplos y cómo encontrarlos.'}
         />
       </Seccion>
 
       <Seccion
-        titulo="Teoría"
-        ayuda="Tres secciones. Título en forma de pregunta, párrafo corto, y una caja opcional."
+        titulo="Videos"
+        ayuda="Los de la solapa Lección. Si no hay ninguno, esa solapa no aparece."
+      >
+        <div className="space-y-3">
+          {c.videos.map((v, i) => (
+            <Bloque key={i} titulo={`Video ${i + 1}`} onQuitar={() => quitar('videos', i)}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Campo label="Título">
+                  <Texto
+                    value={v.titulo}
+                    onChange={val => editar('videos', i, { titulo: val })}
+                    placeholder="Suma de vectores, parte 1"
+                  />
+                </Campo>
+                <Campo label="Subtítulo" ayuda="Opcional.">
+                  <Texto
+                    value={v.subtitulo}
+                    onChange={val => editar('videos', i, { subtitulo: val })}
+                    placeholder="Método analítico paso a paso"
+                  />
+                </Campo>
+                <Campo
+                  label="ID del video en Bunny"
+                  ayuda="El identificador que aparece en el panel de Bunny Stream."
+                >
+                  <Texto
+                    value={v.bunnyId}
+                    onChange={val => editar('videos', i, { bunnyId: val })}
+                    placeholder="8f2c1e9a-..."
+                  />
+                </Campo>
+                <Campo label="Duración" ayuda="Formato mm:ss. Opcional.">
+                  <Texto
+                    value={v.duracionLabel}
+                    onChange={val => editar('videos', i, { duracionLabel: val })}
+                    placeholder="12:40"
+                  />
+                </Campo>
+              </div>
+            </Bloque>
+          ))}
+          <BotonAgregar onClick={() => agregar('videos', videoVacio())}>Agregar video</BotonAgregar>
+        </div>
+      </Seccion>
+
+      <Seccion
+        titulo="Explicación escrita"
+        ayuda="Título en forma de pregunta, párrafo corto, y una caja opcional."
       >
         <div className="space-y-3">
           {c.explicacion.map((s, i) => (
             <Bloque
               key={i}
-              titulo={'Sección ' + (i + 1)}
+              titulo={`Sección ${i + 1}`}
               puedeQuitar={c.explicacion.length > 1}
-              onQuitar={() => quitarDe('explicacion', i)}
+              onQuitar={() => quitar('explicacion', i)}
             >
               <Campo label="Título">
-                <Texto
-                  value={s.titulo}
-                  onChange={v => editarLista('explicacion', i, { titulo: v })}
-                  placeholder="¿Qué son los múltiplos?"
-                />
+                <Texto value={s.titulo} onChange={v => editar('explicacion', i, { titulo: v })} />
               </Campo>
               <Campo label="Párrafo" ayuda="3 a 5 líneas, claras y sin dar por sabido el tema.">
                 <TextoLargo
                   value={s.parrafo}
-                  onChange={v => editarLista('explicacion', i, { parrafo: v })}
+                  onChange={v => editar('explicacion', i, { parrafo: v })}
                   rows={4}
                 />
               </Campo>
               <Casilla
                 label="Incluir caja destacada"
                 checked={s.conCaja}
-                onChange={v => editarLista('explicacion', i, { conCaja: v })}
+                onChange={v => editar('explicacion', i, { conCaja: v })}
               />
               {s.conCaja && (
                 <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
@@ -272,7 +280,7 @@ export function SubtemaForm({
                       className={claseSelect}
                       value={s.cajaTipo}
                       onChange={e =>
-                        editarLista('explicacion', i, { cajaTipo: e.target.value as TipoCaja })
+                        editar('explicacion', i, { cajaTipo: e.target.value as TipoCaja })
                       }
                     >
                       {TIPOS_CAJA.map(t => (
@@ -285,7 +293,7 @@ export function SubtemaForm({
                   <Campo label="Contenido de la caja">
                     <TextoLargo
                       value={s.cajaContenido}
-                      onChange={v => editarLista('explicacion', i, { cajaContenido: v })}
+                      onChange={v => editar('explicacion', i, { cajaContenido: v })}
                       rows={3}
                     />
                   </Campo>
@@ -293,7 +301,7 @@ export function SubtemaForm({
               )}
             </Bloque>
           ))}
-          <BotonAgregar onClick={() => agregarA('explicacion', seccionVacia())}>
+          <BotonAgregar onClick={() => agregar('explicacion', seccionVacia())}>
             Agregar sección
           </BotonAgregar>
         </div>
@@ -301,223 +309,186 @@ export function SubtemaForm({
 
       <Seccion
         titulo="Ejemplos resueltos"
-        ayuda="Tres. El alumno los lee antes de intentar los ejercicios: no puede haber saltos entre pasos."
+        ayuda="El alumno los lee antes de intentar los prácticos: no puede haber saltos entre pasos."
       >
         <div className="space-y-3">
           {c.ejemplos.map((e, i) => (
             <Bloque
               key={i}
-              titulo={'Ejemplo ' + (i + 1)}
+              titulo={`Ejemplo ${i + 1}`}
               puedeQuitar={c.ejemplos.length > 1}
-              onQuitar={() => quitarDe('ejemplos', i)}
+              onQuitar={() => quitar('ejemplos', i)}
             >
               <Campo label="Enunciado">
-                <Texto
-                  value={e.enunciado}
-                  onChange={v => editarLista('ejemplos', i, { enunciado: v })}
-                  placeholder="Escribir los 10 primeros múltiplos de 8."
-                />
+                <Texto value={e.enunciado} onChange={v => editar('ejemplos', i, { enunciado: v })} />
               </Campo>
+
+              {c.videos.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
+                  <Campo label="Se explica en el video" ayuda="Opcional.">
+                    <select
+                      className={claseSelect}
+                      value={e.videoIndice}
+                      onChange={ev =>
+                        editar('ejemplos', i, { videoIndice: Number(ev.target.value) })
+                      }
+                    >
+                      <option value={-1}>Ninguno</option>
+                      {c.videos.map((v, j) => (
+                        <option key={j} value={j}>
+                          {j + 1}. {v.titulo || 'Sin título'}
+                        </option>
+                      ))}
+                    </select>
+                  </Campo>
+                  {e.videoIndice >= 0 && (
+                    <Campo label="En el segundo" ayuda="4:15 son 255.">
+                      <Numero
+                        min={0}
+                        value={e.videoSegundo}
+                        onChange={v => editar('ejemplos', i, { videoSegundo: v || 0 })}
+                      />
+                    </Campo>
+                  )}
+                </div>
+              )}
+
               <Campo label="Pasos" ayuda="Estrategia, cuenta, resultado.">
                 <ListaDeTextos
                   items={e.pasos}
-                  onChange={pasos => editarLista('ejemplos', i, { pasos })}
+                  onChange={pasos => editar('ejemplos', i, { pasos })}
                   etiquetaAgregar="Agregar paso"
                   largo
                 />
               </Campo>
             </Bloque>
           ))}
-          <BotonAgregar onClick={() => agregarA('ejemplos', ejemploVacio())}>
+          <BotonAgregar onClick={() => agregar('ejemplos', ejemploVacio())}>
             Agregar ejemplo
           </BotonAgregar>
         </div>
       </Seccion>
 
       <Seccion
-        titulo="Ejercicios"
-        ayuda="Cinco. La computadora los corrige sola, así que la respuesta correcta tiene que ser exacta."
+        titulo="Trabajos prácticos"
+        ayuda="Cada TP se numera solo. La computadora corrige, así que la respuesta tiene que ser exacta."
       >
-        <div className="space-y-3">
-          {c.ejercicios.map((e, i) => {
-            const tipo = TIPOS_EJERCICIO.find(t => t.valor === e.tipo)
-            return (
-              <Bloque
-                key={i}
-                titulo={'Ejercicio ' + (i + 1)}
-                puedeQuitar={c.ejercicios.length > 1}
-                onQuitar={() => quitarDe('ejercicios', i)}
-              >
-                <div className="grid gap-3 sm:grid-cols-[1fr_7rem]">
-                  <Campo label="Tipo" ayuda={tipo?.ayuda}>
-                    <select
-                      className={claseSelect}
-                      value={e.tipo}
-                      onChange={ev =>
-                        editarLista('ejercicios', i, { tipo: ev.target.value as TipoEjercicio })
-                      }
-                    >
-                      {TIPOS_EJERCICIO.map(t => (
-                        <option key={t.valor} value={t.valor}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                  </Campo>
-                  <Campo label="Puntos">
-                    <Numero
-                      value={e.puntos}
-                      onChange={v => editarLista('ejercicios', i, { puntos: v })}
+        <div className="space-y-4">
+          {c.practicos.map((tp, iTp) => (
+            <div key={iTp} className="rounded-lg border border-slate-300 bg-slate-50/60 p-4">
+              <div className="mb-3 flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <Campo label={`Trabajo práctico ${iTp + 1} — título`} ayuda="Opcional.">
+                    <Texto
+                      value={tp.titulo}
+                      onChange={v => editar('practicos', iTp, { titulo: v })}
+                      placeholder="Componentes y resultante"
                     />
                   </Campo>
                 </div>
-
-                <Campo label="Enunciado">
-                  <TextoLargo
-                    value={e.enunciado}
-                    onChange={v => editarLista('ejercicios', i, { enunciado: v })}
-                    rows={2}
-                  />
-                </Campo>
-
-                {e.tipo === 'libre' && (
-                  <Campo
-                    label="Respuesta correcta"
-                    ayuda="Separada por comas: 0,7,14,21. No uses este tipo para respuestas en palabras."
-                  >
-                    <Texto
-                      value={e.respuestaLibre}
-                      onChange={v => editarLista('ejercicios', i, { respuestaLibre: v })}
-                    />
-                  </Campo>
-                )}
-
-                {e.tipo === 'multiple' && (
-                  <>
-                    <Campo label="Opciones">
-                      <ListaDeTextos
-                        items={e.opciones}
-                        minimo={2}
-                        onChange={opciones => editarLista('ejercicios', i, { opciones })}
-                        etiquetaAgregar="Agregar opción"
-                      />
-                    </Campo>
-                    <Campo label="Cuáles son correctas">
-                      <div className="flex flex-wrap gap-3">
-                        {e.opciones.filter(Boolean).map(op => (
-                          <Casilla
-                            key={op}
-                            label={op}
-                            checked={e.correctasMultiple.includes(op)}
-                            onChange={v =>
-                              editarLista('ejercicios', i, {
-                                correctasMultiple: v
-                                  ? [...e.correctasMultiple, op]
-                                  : e.correctasMultiple.filter(x => x !== op),
-                              })
-                            }
-                          />
-                        ))}
-                        {e.opciones.every(o => !o) && (
-                          <p className="text-sm text-slate-400">Escribí las opciones primero.</p>
-                        )}
-                      </div>
-                    </Campo>
-                  </>
-                )}
-
-                {e.tipo === 'si-no' && (
-                  <Campo label="Respuesta correcta">
-                    <select
-                      className={claseSelect}
-                      value={e.correctaSiNo}
-                      onChange={ev =>
-                        editarLista('ejercicios', i, {
-                          correctaSiNo: ev.target.value as 'Sí' | 'No',
-                        })
-                      }
-                    >
-                      <option value="Sí">Sí</option>
-                      <option value="No">No</option>
-                    </select>
-                  </Campo>
-                )}
-
-                <Campo
-                  label="Explicación"
-                  ayuda="Se le muestra al alumno cuando se equivoca. Decí por qué, no repitas la respuesta."
+                <button
+                  type="button"
+                  onClick={() => quitar('practicos', iTp)}
+                  className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
                 >
-                  <TextoLargo
-                    value={e.explicacion}
-                    onChange={v => editarLista('ejercicios', i, { explicacion: v })}
-                    rows={2}
+                  Quitar TP
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {tp.ejercicios.map((ej, iEj) => (
+                  <EditorEjercicio
+                    key={iEj}
+                    ejercicio={ej}
+                    indice={iEj}
+                    puedeQuitar={tp.ejercicios.length > 1}
+                    onCambiar={cambio =>
+                      editar('practicos', iTp, {
+                        ejercicios: tp.ejercicios.map((x, k) =>
+                          k === iEj ? { ...x, ...cambio } : x,
+                        ),
+                      })
+                    }
+                    onQuitar={() =>
+                      editar('practicos', iTp, {
+                        ejercicios: tp.ejercicios.filter((_, k) => k !== iEj),
+                      })
+                    }
                   />
-                </Campo>
-              </Bloque>
-            )
-          })}
-          <BotonAgregar onClick={() => agregarA('ejercicios', ejercicioVacio())}>
-            Agregar ejercicio
+                ))}
+                <BotonAgregar
+                  onClick={() =>
+                    editar('practicos', iTp, { ejercicios: [...tp.ejercicios, ejercicioVacio()] })
+                  }
+                >
+                  Agregar ejercicio al TP {iTp + 1}
+                </BotonAgregar>
+              </div>
+            </div>
+          ))}
+          <BotonAgregar onClick={() => agregar('practicos', practicoVacio())}>
+            Agregar trabajo práctico
           </BotonAgregar>
         </div>
       </Seccion>
 
       <Seccion
-        titulo="Autoevaluación"
-        ayuda="Diez preguntas, cuatro opciones, una sola correcta. Las incorrectas tienen que ser errores típicos, no relleno."
+        titulo="Evaluaciones"
+        ayuda="Cuatro opciones y una sola correcta. Las incorrectas tienen que ser errores típicos, no relleno."
       >
-        <div className="space-y-3">
-          {c.quiz.map((p, i) => (
-            <Bloque
-              key={i}
-              titulo={'Pregunta ' + (i + 1)}
-              puedeQuitar={c.quiz.length > 1}
-              onQuitar={() => quitarDe('quiz', i)}
-            >
-              <Campo label="Pregunta">
-                <TextoLargo
-                  value={p.pregunta}
-                  onChange={v => editarLista('quiz', i, { pregunta: v })}
-                  rows={2}
-                />
-              </Campo>
-              <Campo label="Opciones" ayuda="Marcá el punto de la que es correcta.">
-                <div className="space-y-2">
-                  {p.opciones.map((op, j) => (
-                    <div key={j} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={'correcta-' + i}
-                        className="h-4 w-4 shrink-0 accent-green-600"
-                        checked={p.respuestaCorrectaIndex === j}
-                        onChange={() => editarLista('quiz', i, { respuestaCorrectaIndex: j })}
-                        aria-label={'Marcar la opción ' + (j + 1) + ' como correcta'}
-                      />
-                      <div className="flex-1">
-                        <Texto
-                          value={op}
-                          onChange={v =>
-                            editarLista('quiz', i, {
-                              opciones: p.opciones.map((x, k) => (k === j ? v : x)),
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
+        <div className="space-y-4">
+          {c.evaluaciones.map((ev, iEv) => (
+            <div key={iEv} className="rounded-lg border border-slate-300 bg-slate-50/60 p-4">
+              <div className="mb-3 flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <Campo label={`Evaluación ${iEv + 1} — título`} ayuda="Opcional.">
+                    <Texto
+                      value={ev.titulo}
+                      onChange={v => editar('evaluaciones', iEv, { titulo: v })}
+                    />
+                  </Campo>
                 </div>
-              </Campo>
-              <Campo label="Explicación">
-                <TextoLargo
-                  value={p.explicacion}
-                  onChange={v => editarLista('quiz', i, { explicacion: v })}
-                  rows={2}
-                />
-              </Campo>
-            </Bloque>
+                <button
+                  type="button"
+                  onClick={() => quitar('evaluaciones', iEv)}
+                  className="rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
+                >
+                  Quitar evaluación
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {ev.preguntas.map((p, iP) => (
+                  <EditorPregunta
+                    key={iP}
+                    pregunta={p}
+                    indice={iP}
+                    nombreRadio={`correcta-${iEv}-${iP}`}
+                    puedeQuitar={ev.preguntas.length > 1}
+                    onCambiar={cambio =>
+                      editar('evaluaciones', iEv, {
+                        preguntas: ev.preguntas.map((x, k) => (k === iP ? { ...x, ...cambio } : x)),
+                      })
+                    }
+                    onQuitar={() =>
+                      editar('evaluaciones', iEv, {
+                        preguntas: ev.preguntas.filter((_, k) => k !== iP),
+                      })
+                    }
+                  />
+                ))}
+                <BotonAgregar
+                  onClick={() =>
+                    editar('evaluaciones', iEv, { preguntas: [...ev.preguntas, preguntaVacia()] })
+                  }
+                >
+                  Agregar pregunta a la evaluación {iEv + 1}
+                </BotonAgregar>
+              </div>
+            </div>
           ))}
-          <BotonAgregar onClick={() => agregarA('quiz', preguntaVacia())}>
-            Agregar pregunta
+          <BotonAgregar onClick={() => agregar('evaluaciones', evaluacionVacia())}>
+            Agregar evaluación
           </BotonAgregar>
         </div>
       </Seccion>
@@ -525,15 +496,15 @@ export function SubtemaForm({
       <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 p-3 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
           <p className="text-sm text-slate-500">
-            {c.explicacion.length} secciones · {c.ejemplos.length} ejemplos ·{' '}
-            {c.ejercicios.length} ejercicios · {c.quiz.length} preguntas
+            {c.videos.length} videos · {c.explicacion.length} secciones · {c.ejemplos.length}{' '}
+            ejemplos · {c.practicos.length} TP · {c.evaluaciones.length} evaluaciones
           </p>
           <button
             type="submit"
             disabled={guardando}
             className="flex items-center gap-2 rounded-md bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
           >
-            <Save size={16} /> {guardando ? 'Guardando...' : 'Guardar tema'}
+            <Save size={16} /> {guardando ? 'Guardando...' : 'Guardar clase'}
           </button>
         </div>
       </div>

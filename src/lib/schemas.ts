@@ -26,10 +26,32 @@ export const SeccionExplicacionSchema = z.object({
     .optional(),
 })
 
+/**
+ * Un video de la lección. `bunnyId` es el identificador que devuelve Bunny
+ * Stream al subirlo; la dirección del reproductor se arma con él y con la
+ * biblioteca configurada en las variables de entorno, así que si algún día se
+ * cambia de proveedor no hay que tocar el contenido ya cargado.
+ */
+export const VideoSchema = z.object({
+  id: z.number().int().positive(),
+  titulo: textoNoVacio,
+  subtitulo: z.string().trim().max(200).optional(),
+  bunnyId: textoNoVacio,
+  duracionLabel: z
+    .string()
+    .regex(/^\d{1,3}:\d{2}$/, 'Formato mm:ss')
+    .optional(),
+})
+
 export const EjemploSchema = z.object({
   id: z.number().int().positive(),
   enunciado: textoNoVacio,
   pasos: z.array(textoNoVacio).min(1, 'Al menos un paso'),
+  // Dónde se explica en video. El segundo permite saltar al momento exacto en
+  // vez de dejar al alumno buscando en un video de veinte minutos.
+  video: z
+    .object({ videoId: z.number().int().positive(), segundo: z.number().int().min(0) })
+    .optional(),
 })
 
 const camposComunesEjercicio = {
@@ -79,13 +101,33 @@ export const PreguntaQuizSchema = z
     path: ['respuestaCorrectaIndex'],
   })
 
-/** Lo que va a la columna `contenido jsonb` de la tabla `temas`. */
+/**
+ * Un trabajo práctico: un conjunto de ejercicios que se entregan juntos. Se
+ * numeran por posición (TP 1, TP 2), así nadie tiene que llevar la cuenta.
+ */
+export const TrabajoPracticoSchema = z.object({
+  titulo: z.string().trim().max(160).optional(),
+  ejercicios: z.array(EjercicioSchema).min(1, 'Al menos un ejercicio'),
+})
+
+/** Una evaluación: preguntas de opción múltiple que se rinden juntas. */
+export const EvaluacionSchema = z.object({
+  titulo: z.string().trim().max(160).optional(),
+  preguntas: z.array(PreguntaQuizSchema).min(1, 'Al menos una pregunta'),
+})
+
+/** Lo que va a la columna `contenido jsonb` de la tabla `clases`. */
+// Las tres listas son obligatorias aunque puedan estar vacías, y NO llevan
+// .default([]): con un default, un contenido viejo que todavía tuviera
+// `ejercicios` y `quiz` pasaría la validación con las listas nuevas en cero, o
+// sea perdiendo todo sin un solo error. Mejor que falle fuerte y se vea.
 export const TemaContenidoSchema = z.object({
   objetivos: z.array(textoNoVacio).min(1),
+  videos: z.array(VideoSchema),
   explicacion: z.array(SeccionExplicacionSchema).min(1),
   ejemplos: z.array(EjemploSchema).min(1),
-  ejercicios: z.array(EjercicioSchema).min(1),
-  quiz: z.array(PreguntaQuizSchema).min(1),
+  practicos: z.array(TrabajoPracticoSchema),
+  evaluaciones: z.array(EvaluacionSchema),
 })
 
 /** Los campos que en la base son columnas propias, no parte del jsonb. */
@@ -111,5 +153,8 @@ export type EjercicioLibre = Extract<Ejercicio, { tipo: 'libre' }>
 export type EjercicioMultiple = Extract<Ejercicio, { tipo: 'multiple' }>
 export type EjercicioSiNo = Extract<Ejercicio, { tipo: 'si-no' }>
 export type PreguntaQuiz = z.infer<typeof PreguntaQuizSchema>
+export type Video = z.infer<typeof VideoSchema>
+export type TrabajoPractico = z.infer<typeof TrabajoPracticoSchema>
+export type Evaluacion = z.infer<typeof EvaluacionSchema>
 export type TemaContenido = z.infer<typeof TemaContenidoSchema>
 export type TemaMeta = z.infer<typeof TemaMetaSchema>

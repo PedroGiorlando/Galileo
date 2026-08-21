@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { EjercicioSchema, PreguntaQuizSchema, TemaContenidoSchema, TemaMetaSchema } from './schemas'
 import { tema } from '@/data/topicData'
 
-describe('el contenido real del tema 7', () => {
+describe('el contenido real de la clase de arranque', () => {
   it('pasa la validación', () => {
     const resultado = TemaContenidoSchema.safeParse({
       objetivos: tema.objetivos,
       explicacion: tema.explicacion,
       ejemplos: tema.ejemplos,
-      ejercicios: tema.ejercicios,
-      quiz: tema.quiz,
+      videos: tema.videos,
+      practicos: tema.practicos,
+      evaluaciones: tema.evaluaciones,
     })
     expect(resultado.success).toBe(true)
   })

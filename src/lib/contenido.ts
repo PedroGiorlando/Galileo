@@ -255,7 +255,7 @@ export async function getClase(
   const { data, error } = await supabase
     .from('clases')
     .select(
-      'id, slug, titulo, descripcion, orden, gratis, duracion_label, video_url, contenido, modulo_id',
+      'id, slug, titulo, descripcion, orden, gratis, duracion_label, contenido, modulo_id',
     )
     .eq('materia_id', materia.id)
     .eq('slug', claseSlug)
@@ -292,7 +292,6 @@ export async function getClase(
         slug: data.slug,
         titulo: data.titulo,
         descripcion: data.descripcion,
-        videoUrl: data.video_url,
         duracionLabel: data.duracion_label ?? '',
         ...TemaContenidoSchema.parse(data.contenido),
       }

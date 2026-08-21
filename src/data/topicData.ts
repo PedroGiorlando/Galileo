@@ -1,8 +1,9 @@
 import type {
   Ejemplo,
-  Ejercicio,
-  PreguntaQuiz,
+  Evaluacion,
   SeccionExplicacion,
+  TrabajoPractico,
+  Video,
 } from '@/lib/schemas'
 
 // Los tipos del contenido viven en lib/schemas.ts, derivados del schema Zod que
@@ -14,9 +15,12 @@ export type {
   EjercicioLibre,
   EjercicioMultiple,
   EjercicioSiNo,
+  Evaluacion,
   PreguntaQuiz,
   SeccionExplicacion,
   TemaContenido,
+  TrabajoPractico,
+  Video,
 } from '@/lib/schemas'
 
 /**
@@ -30,12 +34,12 @@ export interface SubtemaCompleto {
   titulo: string
   descripcion: string | null
   duracionLabel: string
-  videoUrl: string | null
   objetivos: string[]
+  videos: Video[]
   explicacion: SeccionExplicacion[]
   ejemplos: Ejemplo[]
-  ejercicios: Ejercicio[]
-  quiz: PreguntaQuiz[]
+  practicos: TrabajoPractico[]
+  evaluaciones: Evaluacion[]
 }
 
 /**
@@ -53,13 +57,14 @@ export const tema: SubtemaCompleto = {
   descripcion:
     'Aprendé a sumar vectores trabajando con sus componentes, sin regla ni transportador.',
   duracionLabel: '12:40',
-  videoUrl: null,
   objetivos: [
     'Descomponer un vector en sus componentes rectangulares.',
     'Sumar varios vectores trabajando con sus componentes.',
     'Calcular el módulo y la dirección del vector resultante.',
     'Reconocer cuándo conviene el método analítico y cuándo el gráfico.',
   ],
+  // Todavía sin video: se cargan desde el panel cuando estén grabados.
+  videos: [],
   explicacion: [
     {
       titulo: '¿Por qué descomponer un vector?',
@@ -124,7 +129,10 @@ export const tema: SubtemaCompleto = {
       ],
     },
   ],
-  ejercicios: [
+  practicos: [
+    {
+      titulo: 'Componentes y resultante',
+      ejercicios: [
     {
       id: 1,
       tipo: 'libre',
@@ -190,9 +198,14 @@ export const tema: SubtemaCompleto = {
       explicacion:
         'El método analítico es más preciso pero más lento. Para una estimación rápida alcanza con dibujar los vectores y sumarlos gráficamente. En todos los otros casos el método por componentes es el que conviene.',
       puntos: 1,
+        },
+      ],
     },
   ],
-  quiz: [
+  evaluaciones: [
+    {
+      titulo: 'Vectores: componentes y suma',
+      preguntas: [
     {
       id: 1,
       pregunta: '¿Cuál es la componente en x de una fuerza de 40 N que forma 60° con el eje x?',
@@ -285,6 +298,8 @@ export const tema: SubtemaCompleto = {
       respuestaCorrectaIndex: 1,
       explicacion:
         'Son colineales y opuestas: Rx = −20 + 12 = −8 N. El signo negativo indica que apunta hacia la izquierda.',
+        },
+      ],
     },
   ],
 }
