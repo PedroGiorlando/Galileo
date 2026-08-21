@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowRight, UserRound } from 'lucide-react'
+import { ArrowRight, PencilLine, UserRound } from 'lucide-react'
 import { Header } from '@/components/Header'
-import { getResumenPorCurso, getUsuario } from '@/lib/progreso'
+import { esAdmin, getResumenPorCurso, getUsuario } from '@/lib/progreso'
 import { paletaDeMateria } from '@/lib/colores'
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default async function MiCuentaPage() {
   const usuario = await getUsuario()
   if (!usuario) redirect('/ingresar')
 
-  const resumen = await getResumenPorCurso()
+  const [resumen, admin] = await Promise.all([getResumenPorCurso(), esAdmin()])
   const totalHechas = resumen.reduce((n, r) => n + r.completadas, 0)
 
   return (
@@ -32,6 +32,26 @@ export default async function MiCuentaPage() {
             <p className="truncate text-tinta-suave">{usuario.email}</p>
           </div>
         </div>
+
+        {admin && (
+          <Link
+            href="/admin"
+            className="mb-8 flex items-center justify-between gap-3 rounded-2xl border border-linea bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-galileo/10">
+                <PencilLine size={18} className="text-galileo" />
+              </span>
+              <span>
+                <span className="block font-display font-semibold text-tinta">
+                  Panel de contenido
+                </span>
+                <span className="block text-sm text-tinta-suave">Cargar y editar clases</span>
+              </span>
+            </span>
+            <ArrowRight size={16} className="shrink-0 text-galileo" />
+          </Link>
+        )}
 
         <section>
           <h2 className="mb-1 font-display text-xl font-bold text-tinta">Tu avance</h2>
