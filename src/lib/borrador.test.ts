@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { aContenido, contenidoDesdeTema, ejercicioVacio } from './borrador'
-import { TemaContenidoSchema } from './schemas'
+import { aContenido, contenidoDesdeTema, ejercicioVacio, type ContenidoBorrador } from './borrador'
+import { TemaContenidoSchema, type TemaContenido } from './schemas'
 import { tema } from '@/data/topicData'
 
 describe('ida y vuelta entre tema guardado y borrador', () => {
@@ -22,6 +22,41 @@ describe('ida y vuelta entre tema guardado y borrador', () => {
       practicos: tema.practicos,
       evaluaciones: tema.evaluaciones,
     })
+  })
+})
+
+describe('videos', () => {
+  // El tema de ejemplo no tiene videos, así que la ida y vuelta de arriba no
+  // los prueba. Sin esto, la conversión enlace ↔ identificador podría estar
+  // invertida y todos los tests seguirían en verde.
+  const conVideos = (enlace: string) => ({
+    ...contenidoDesdeTema(tema),
+    videos: [{ titulo: 'Suma de vectores', subtitulo: '', enlace, duracionLabel: '12:40' }],
+  })
+
+  const videosDe = (b: ContenidoBorrador) =>
+    (aContenido(b) as { videos: { youtubeId: string }[] }).videos
+
+  it('guarda el identificador aunque se pegue la dirección completa', () => {
+    expect(videosDe(conVideos('https://www.youtube.com/watch?v=dQw4w9WgXcQ'))[0].youtubeId).toBe(
+      'dQw4w9WgXcQ',
+    )
+  })
+
+  it('editar y volver a guardar no cambia el video', () => {
+    const guardado = aContenido(conVideos('https://youtu.be/dQw4w9WgXcQ')) as TemaContenido
+    const reguardado = aContenido(
+      contenidoDesdeTema({ ...tema, videos: guardado.videos }),
+    ) as TemaContenido
+
+    expect(reguardado.videos).toEqual(guardado.videos)
+  })
+
+  it('un enlace que no es de YouTube no se guarda como válido', () => {
+    // Se manda tal cual para que Zod lo rechace con un mensaje, en vez de
+    // guardar un video vacío que nadie va a poder reproducir.
+    const r = TemaContenidoSchema.safeParse(aContenido(conVideos('https://vimeo.com/12345')))
+    expect(r.success).toBe(false)
   })
 })
 

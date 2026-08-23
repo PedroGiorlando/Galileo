@@ -32,7 +32,7 @@ Una sola app Next.js con el sitio del alumno y el panel adentro.
 
 ```
 Next.js 16 (App Router)  ──►  Supabase (Postgres + Auth)
-                         ──►  Bunny Stream (video)
+                         ──►  YouTube (video, no listado)
                          ──►  Mercado Pago (pendiente)
 ```
 
@@ -86,7 +86,7 @@ compitiendo entre sí.
 
 | Fase | Qué |
 |---|---|
-| **Video** | Subir a Bunny desde el panel; firmar las URLs para que venzan |
+| **Video** | Decidir si el video se protege o se regala (ver Limitaciones) |
 | **Fase 3** | Mercado Pago, muro de pago, corrección del lado del servidor |
 | **Fase 4** | Landing, sitemap, analytics, textos legales |
 | Panel | Crear cursos y carreras sin SQL |
@@ -146,5 +146,5 @@ robo, pero identifica quién filtró, y eso es lo que frena.
 ## Costos
 
 Vercel, Supabase y Mercado Pago tienen capa gratuita suficiente para lanzar.
-Bunny Stream ronda los USD 5 por mes más centavos por GB. El dominio `.com.ar`,
-unos ARS 5.000 al año.
+El video está en YouTube, así que no cuesta nada. El dominio `.com.ar`, unos
+ARS 5.000 al año.

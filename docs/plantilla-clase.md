@@ -37,13 +37,18 @@ Entre 3 y 5. Qué se lleva el alumno al terminar. Una línea cada uno.
 
 Opcional, y pueden ser varios. Si no hay ninguno, la solapa Lección no aparece.
 
-El **ID de Bunny** es el identificador que aparece en el panel de Bunny Stream
-después de subir el archivo.
+Los videos se suben a YouTube **como "no listados"**: no aparecen en búsquedas
+ni en el canal, pero cualquiera con el enlace los ve. No los pongas en privado,
+porque así no se pueden incrustar en la página.
+
+En el **enlace** va la dirección tal como la copiás de YouTube, en cualquiera de
+sus formas (`youtube.com/watch?v=...`, `youtu.be/...`, el botón Compartir). El
+panel se queda con el identificador.
 
 ### Video 1
 - **Título:**
 - **Subtítulo:** (opcional)
-- **ID de Bunny:**
+- **Enlace de YouTube:**
 - **Duración:** (mm:ss)
 
 ### Video 2

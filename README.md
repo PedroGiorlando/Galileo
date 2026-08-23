@@ -19,7 +19,7 @@ completalo; las claves salen de Supabase → Project Settings → API Keys.
 ## Stack
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase (Postgres + Auth)
-· Bunny Stream para video · Zod para validar contenido.
+· YouTube para video · Zod para validar contenido.
 
 ## Estructura
 
@@ -113,6 +113,10 @@ mismo.
 navegador se pueden leer. Es aceptable mientras el contenido sea gratuito; hay
 que corregir del lado del servidor antes de cobrar.
 
-**Las URLs de video no están firmadas.** Quien copie el enlace del reproductor
-puede compartirlo. Bunny permite URLs con token que vencen en minutos; falta
-activarlo.
+**Los videos no están protegidos.** Se suben a YouTube como "no listados",
+que no es lo mismo que privado: quien tenga el enlace lo ve, el identificador
+se lee del código fuente de la página y hay decenas de sitios que descargan un
+video de YouTube en un clic. Sirve mientras el contenido sea gratuito. Antes de
+cobrar hay que decidir entre pasar a un proveedor con URLs firmadas que venzan
+(Bunny Stream, Cloudflare Stream) o asumir que el video es la parte regalada y
+cobrar por los prácticos corregidos y el seguimiento.

@@ -1,4 +1,5 @@
 import type { SubtemaCompleto } from '@/data/topicData'
+import { idDeYouTube } from './video'
 
 /**
  * El "borrador" es la forma que tiene el contenido MIENTRAS se edita, que no es
@@ -57,7 +58,12 @@ export interface PreguntaBorrador {
 export interface VideoBorrador {
   titulo: string
   subtitulo: string
-  bunnyId: string
+  /**
+   * Lo que la persona pegó en el formulario: puede ser el enlace completo de
+   * YouTube en cualquiera de sus formas, o el identificador pelado. Se
+   * convierte a identificador recién al guardar.
+   */
+  enlace: string
   duracionLabel: string
 }
 
@@ -118,7 +124,7 @@ export const preguntaVacia = (): PreguntaBorrador => ({
 export const videoVacio = (): VideoBorrador => ({
   titulo: '',
   subtitulo: '',
-  bunnyId: '',
+  enlace: '',
   duracionLabel: '',
 })
 
@@ -153,7 +159,10 @@ export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
     videos: tema.videos.map(v => ({
       titulo: v.titulo,
       subtitulo: v.subtitulo ?? '',
-      bunnyId: v.bunnyId,
+      // Al editar se muestra el identificador guardado, no un enlace armado:
+      // es lo que efectivamente está en la base, y se puede volver a pegar un
+      // enlace completo encima sin problema.
+      enlace: v.youtubeId,
       duracionLabel: v.duracionLabel ?? '',
     })),
     ejemplos: tema.ejemplos.map(e => ({
@@ -217,7 +226,9 @@ export function aContenido(b: ContenidoBorrador): unknown {
   const videos = b.videos.map((v, i) => ({
     id: i + 1,
     titulo: v.titulo,
-    bunnyId: v.bunnyId,
+    // Si lo pegado no es un enlace de YouTube reconocible, se manda tal cual y
+    // Zod lo rechaza con un mensaje. Peor sería guardar algo vacío en silencio.
+    youtubeId: idDeYouTube(v.enlace) ?? v.enlace,
     ...(v.subtitulo ? { subtitulo: v.subtitulo } : {}),
     ...(v.duracionLabel ? { duracionLabel: v.duracionLabel } : {}),
   }))

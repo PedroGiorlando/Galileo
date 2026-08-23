@@ -31,6 +31,7 @@ import {
   TextoLargo,
 } from './campos'
 import { EditorEjercicio, EditorPregunta } from './EditorEjercicio'
+import { idDeYouTube } from '@/lib/video'
 
 const TIPOS_CAJA: TipoCaja[] = ['ejemplo', 'tip', 'nota']
 
@@ -223,13 +224,21 @@ export function SubtemaForm({
                   />
                 </Campo>
                 <Campo
-                  label="ID del video en Bunny"
-                  ayuda="El identificador que aparece en el panel de Bunny Stream."
+                  label="Enlace de YouTube"
+                  ayuda="Pegá la dirección del video tal como la copiaste."
+                  // El aviso sale mientras se escribe, no recién al guardar:
+                  // enterarse de que el enlace estaba mal después de cargar
+                  // veinte ejercicios es la forma más rápida de odiar el panel.
+                  error={
+                    v.enlace.trim() && !idDeYouTube(v.enlace)
+                      ? 'No se reconoce como un enlace de YouTube.'
+                      : undefined
+                  }
                 >
                   <Texto
-                    value={v.bunnyId}
-                    onChange={val => editar('videos', i, { bunnyId: val })}
-                    placeholder="8f2c1e9a-..."
+                    value={v.enlace}
+                    onChange={val => editar('videos', i, { enlace: val })}
+                    placeholder="https://www.youtube.com/watch?v=..."
                   />
                 </Campo>
                 <Campo label="Duración" ayuda="Formato mm:ss. Opcional.">

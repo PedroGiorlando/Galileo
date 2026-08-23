@@ -27,16 +27,22 @@ export const SeccionExplicacionSchema = z.object({
 })
 
 /**
- * Un video de la lección. `bunnyId` es el identificador que devuelve Bunny
- * Stream al subirlo; la dirección del reproductor se arma con él y con la
- * biblioteca configurada en las variables de entorno, así que si algún día se
- * cambia de proveedor no hay que tocar el contenido ya cargado.
+ * Un video de la lección.
+ *
+ * Se guarda el identificador de YouTube, no la dirección completa: el panel
+ * acepta que se pegue el enlace en cualquier forma y extrae el identificador,
+ * así el contenido no queda atado al formato de URL de hoy.
+ *
+ * ⚠ Un video no listado NO está protegido: quien tenga el enlace lo ve. Antes
+ * de cobrar hay que revisarlo.
  */
 export const VideoSchema = z.object({
   id: z.number().int().positive(),
   titulo: textoNoVacio,
   subtitulo: z.string().trim().max(200).optional(),
-  bunnyId: textoNoVacio,
+  youtubeId: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{11}$/, 'No parece un identificador de YouTube'),
   duracionLabel: z
     .string()
     .regex(/^\d{1,3}:\d{2}$/, 'Formato mm:ss')

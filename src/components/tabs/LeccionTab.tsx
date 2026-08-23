@@ -11,21 +11,23 @@ import { urlDeVideo } from '@/lib/video'
  * Solo se renderiza cuando hay al menos uno: SubtemaVista ni muestra la solapa
  * si la lista está vacía, así que acá no hay caso "sin video".
  *
- * Se carga un solo reproductor, el del video elegido. Poner N iframes de Bunny
- * en la misma página descargaría N reproductores para mirar uno.
+ * Se carga un solo reproductor, el del video elegido. Poner N iframes de
+ * YouTube en la misma página descargaría N reproductores para mirar uno.
  */
 export function LeccionTab({ subtema }: { subtema: SubtemaCompleto }) {
   const [actual, setActual] = useState(0)
   const video = subtema.videos[actual]
-  const url = video ? urlDeVideo(video.bunnyId) : ''
 
   return (
     <div className="space-y-4">
-      {url ? (
+      {video ? (
         <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-900">
           <iframe
-            key={video.bunnyId}
-            src={url}
+            // La `key` fuerza a React a crear un iframe nuevo al cambiar de
+            // video en vez de reusar el anterior: sin esto el reproductor
+            // puede quedarse mostrando el video viejo.
+            key={video.youtubeId}
+            src={urlDeVideo(video.youtubeId)}
             title={video.titulo}
             loading="lazy"
             allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -35,8 +37,7 @@ export function LeccionTab({ subtema }: { subtema: SubtemaCompleto }) {
         </div>
       ) : (
         <p className="rounded-xl border border-dashed border-linea p-8 text-center text-sm text-tinta-suave">
-          Falta configurar la biblioteca de video. Definí NEXT_PUBLIC_BUNNY_LIBRARY_ID en
-          .env.local.
+          Todavía no hay videos cargados en esta clase.
         </p>
       )}
 
