@@ -42,7 +42,6 @@ export default async function AdminClasePage({
     categoria: modulo.nombre,
     orden: fila.orden,
     duracionLabel: fila.duracion_label ?? '00:00',
-    videoUrl: fila.video_url ?? '',
     gratis: fila.gratis,
     publicado: fila.publicado,
   }

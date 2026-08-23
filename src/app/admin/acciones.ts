@@ -112,7 +112,6 @@ export async function guardarClase(materiaId: number, meta: unknown, contenido: 
       titulo: m.titulo,
       descripcion: m.descripcion || null,
       duracion_label: m.duracionLabel,
-      video_url: m.videoUrl || null,
       gratis: m.gratis,
       publicado: m.publicado,
       contenido: rContenido.data,

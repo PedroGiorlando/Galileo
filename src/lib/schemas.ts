@@ -130,7 +130,14 @@ export const TemaContenidoSchema = z.object({
   evaluaciones: z.array(EvaluacionSchema),
 })
 
-/** Los campos que en la base son columnas propias, no parte del jsonb. */
+/**
+ * Los campos que en la base son columnas propias, no parte del jsonb.
+ *
+ * Sin `videoUrl`: los videos viven dentro del contenido desde que una clase
+ * puede tener varios. Mientras ese campo sobrevivió acá, la acción de guardar
+ * intentaba escribir una columna que la migración 004 ya había borrado, y el
+ * primer guardado desde el panel habría fallado.
+ */
 export const TemaMetaSchema = z.object({
   slug: z
     .string()
@@ -141,7 +148,6 @@ export const TemaMetaSchema = z.object({
   categoria: textoNoVacio,
   orden: z.number().int().positive(),
   duracionLabel: z.string().regex(/^\d{1,2}:\d{2}$/, 'Formato mm:ss'),
-  videoUrl: z.union([z.literal(''), z.url()]).optional(),
   gratis: z.boolean(),
   publicado: z.boolean(),
 })

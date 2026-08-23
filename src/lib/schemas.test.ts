@@ -76,7 +76,6 @@ describe('metadatos del tema', () => {
     categoria: 'Vectores',
     orden: 5,
     duracionLabel: '12:40',
-    videoUrl: '',
     gratis: true,
     publicado: true,
   }
