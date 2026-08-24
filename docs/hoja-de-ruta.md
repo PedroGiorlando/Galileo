@@ -87,9 +87,9 @@ compitiendo entre sí.
 | Fase | Qué |
 |---|---|
 | **Video** | Decidir si el video se protege o se regala (ver Limitaciones) |
-| **Fase 3** | Mercado Pago, muro de pago, corrección del lado del servidor |
+| **Fase 3** | Mercado Pago y muro de pago |
 | **Fase 4** | Landing, sitemap, analytics, textos legales |
-| Panel | Crear cursos y carreras sin SQL |
+| Panel | Reordenar módulos y clases sin SQL |
 | Contenido | Los textos de Nosotros, Método, FAQ y el WhatsApp de Contacto |
 
 ### El cuello de botella real
