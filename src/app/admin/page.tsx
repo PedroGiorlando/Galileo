@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ArrowRight, BookOpen, Check, Layers } from 'lucide-react'
+import { ArrowRight, BookOpen, Check, Layers, Settings2 } from 'lucide-react'
 import { esAdmin, getUsuario } from '@/lib/progreso'
 import { supabaseAdmin } from '@/lib/supabase'
 import { paletaDeMateria } from '@/lib/colores'
@@ -71,10 +71,18 @@ export default async function AdminPage() {
 
       <main className="mx-auto max-w-4xl px-6 py-10">
         <h1 className="font-display text-3xl font-bold text-tinta">Panel de contenido</h1>
-        <p className="mt-1 mb-8 text-tinta-suave">
+        <p className="mt-1 text-tinta-suave">
           El contenido se escribe una vez por materia. Después, cada carrera elige qué módulos
           incluye.
         </p>
+
+        <Link
+          href="/admin/estructura"
+          className="mt-4 mb-8 inline-flex min-h-11 items-center gap-2 rounded-lg border border-linea bg-white px-4 text-sm font-medium text-tinta-suave hover:bg-slate-50"
+        >
+          <Settings2 size={15} />
+          Materias, carreras y programas
+        </Link>
 
         <ul className="space-y-3">
           {(materias ?? []).map(materia => {

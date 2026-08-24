@@ -4,35 +4,21 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
 import { TemaContenidoSchema, TemaMetaSchema } from '@/lib/schemas'
-import { esAdmin } from '@/lib/progreso'
-
-/** 'Trabajo y energía' → 'trabajo-y-energia'. Mismo criterio que el generador del currículum. */
-function aSlug(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[°º]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+import { aSlug, rechazarSiNoEsAdmin } from '@/lib/admin'
 
 /**
  * 'use server' hace que estas funciones corran SIEMPRE en el servidor, aunque
  * se las llame desde un Client Component. Por eso pueden usar la clave secreta
  * sin que llegue al navegador.
  *
- * Y por eso mismo cada una verifica el permiso: una Server Action es un
- * endpoint HTTP y se puede llamar sin pasar por ninguna pantalla. Proteger la
- * página /admin no protege la acción.
+ * Y por eso mismo cada una verifica el permiso con `rechazarSiNoEsAdmin`: una
+ * Server Action es un endpoint HTTP y se puede llamar sin pasar por ninguna
+ * pantalla. Proteger la página /admin no protege la acción.
+ *
+ * La estructura del catálogo (programas, carreras, materias) está en
+ * acciones-estructura.ts. Acá vive lo que se toca todos los días: módulos,
+ * clases y su contenido.
  */
-
-async function rechazarSiNoEsAdmin() {
-  if (!(await esAdmin())) {
-    return { ok: false as const, error: 'Tu cuenta no tiene permiso para editar contenido.' }
-  }
-  return null
-}
 
 /** Incluir o sacar un módulo de una carrera. */
 export async function asignarModulo(moduloId: number, cursoId: number, incluir: boolean) {
