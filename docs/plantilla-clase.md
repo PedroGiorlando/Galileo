@@ -107,6 +107,23 @@ Los tipos de ejercicio son:
   sin espacios: `0,7,14,21`. El orden y los espacios no importan al corregir,
   pero **el conjunto tiene que ser exacto**. No usar para respuestas en
   palabras: hay mil formas de escribir lo mismo.
+
+  ⚠️ **CUIDADO CON LOS DECIMALES.** La coma separa los valores de la lista, así
+  que también separa `86,6` en dos: `86` y `6`. Un alumno que escribe el número
+  como se escribe acá —y como lo escribe la explicación del propio ejercicio—
+  recibe "incorrecta" habiendo resuelto bien. Es la forma más rápida de que
+  alguien abandone el TP convencido de que no entiende.
+
+  Mientras la coma sea el separador de la lista, hay dos maneras de evitarlo:
+
+  - **Pedir un solo número por ejercicio.** Es lo mejor: el ejercicio de dos
+    componentes se parte en dos ejercicios, y de paso se ve cuál de las dos
+    falló.
+  - Si tiene que ir más de un valor, **decir el formato en el enunciado** y
+    escribirlo igual en la explicación: "usá punto decimal: `86.6,50.0`".
+
+  Es un problema de contenido, no del programa: `86,6,50,0` es genuinamente
+  ambiguo y ninguna computadora puede adivinar si son dos números o cuatro.
 - `multiple` — el alumno tilda varias opciones de una lista que vos das.
 - `si-no` — la respuesta es `Sí` o `No`.
 

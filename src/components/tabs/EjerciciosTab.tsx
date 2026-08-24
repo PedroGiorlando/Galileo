@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, XCircle } from 'lucide-react'
-import type { SubtemaCompleto } from '../../data/topicData'
-import { esCorrecta, type Respuesta } from '@/lib/correccion'
-import type { Ejercicio } from '@/lib/schemas'
+import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import type { Respuesta } from '@/lib/correccion'
+import type { EjercicioPublico, SubtemaPublico } from '@/lib/publico'
+import { corregirEjercicio } from '@/app/acciones-correccion'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
-type Resultado = { respuesta: Respuesta; correcto: boolean }
+type Resultado = { respuesta: Respuesta; correcto: boolean; explicacion: string }
 type Resultados = Record<string, Resultado>
 
 /**
@@ -17,20 +17,34 @@ type Resultados = Record<string, Resultado>
  * cursada. Se numeran por posición, así nadie tiene que llevar la cuenta al
  * cargarlos.
  *
- * La corrección es la misma de siempre, pero no hay archivo que bajar: eso es
- * a la vez mejor para el alumno, que sabe al instante si le fue bien, y la
- * única protección real contra que el TP termine en un grupo de WhatsApp.
+ * No hay archivo que bajar: eso es a la vez mejor para el alumno, que sabe al
+ * instante si le fue bien, y la única protección real contra que el TP termine
+ * en un grupo de WhatsApp.
+ *
+ * LA CORRECCIÓN PASA EN EL SERVIDOR. Antes se comparaba acá, lo que obligaba a
+ * mandarle al navegador la respuesta correcta de cada ejercicio: estaban en el
+ * HTML, legibles con Ctrl+U. Ahora este componente no las conoce — ni la
+ * respuesta ni la explicación llegan hasta que el alumno responde. El precio es
+ * una ida y vuelta por ejercicio, de ahí el estado "corrigiendo".
  *
  * La clave del resultado combina el número de TP con el id del ejercicio: dos
  * TPs distintos pueden tener un ejercicio con el mismo id.
  */
-export function EjerciciosTab({ subtema }: { subtema: SubtemaCompleto }) {
+export function EjerciciosTab({
+  subtema,
+  materiaSlug,
+}: {
+  subtema: SubtemaPublico
+  materiaSlug: string
+}) {
   const [tpActivo, setTpActivo] = useState(0)
   const [resultados, setResultados] = useLocalStorage<Resultados>(
     `galileo:practicos:${subtema.slug}`,
     {},
   )
   const [borrador, setBorrador] = useState<Record<string, Respuesta>>({})
+  const [corrigiendo, setCorrigiendo] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   if (subtema.practicos.length === 0) {
     return (
@@ -41,12 +55,32 @@ export function EjerciciosTab({ subtema }: { subtema: SubtemaCompleto }) {
   }
 
   const practico = subtema.practicos[tpActivo]
-  const clave = (ej: Ejercicio) => `${tpActivo}:${ej.id}`
+  const clave = (ej: EjercicioPublico) => `${tpActivo}:${ej.id}`
 
-  function verificar(ej: Ejercicio) {
+  async function verificar(ej: EjercicioPublico) {
     const k = clave(ej)
     const respuesta = borrador[k] ?? (ej.tipo === 'multiple' ? [] : '')
-    setResultados(prev => ({ ...prev, [k]: { respuesta, correcto: esCorrecta(ej, respuesta) } }))
+
+    setCorrigiendo(k)
+    setError(null)
+    try {
+      const r = await corregirEjercicio(materiaSlug, subtema.slug, tpActivo, ej.id, respuesta)
+      if (!r.ok) {
+        setError(r.error)
+        return
+      }
+      setResultados(prev => ({
+        ...prev,
+        [k]: { respuesta, correcto: r.correcta, explicacion: r.explicacion },
+      }))
+    } catch {
+      // Si se cortó internet, decirlo. Antes esto no podía fallar porque se
+      // corregía en la misma máquina; ahora sí, y quedarse sin respuesta y sin
+      // aviso es la peor versión.
+      setError('No pudimos corregir. Revisá tu conexión y probá de nuevo.')
+    } finally {
+      setCorrigiendo(null)
+    }
   }
 
   const hechos = practico.ejercicios.filter(ej => resultados[clave(ej)]).length
@@ -83,6 +117,12 @@ export function EjerciciosTab({ subtema }: { subtema: SubtemaCompleto }) {
           {hechos > 0 && ` · ${bien} bien`}
         </span>
       </div>
+
+      {error && (
+        <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+          {error}
+        </p>
+      )}
 
       <ol className="space-y-4">
         {practico.ejercicios.map((ej, i) => {
@@ -157,9 +197,11 @@ export function EjerciciosTab({ subtema }: { subtema: SubtemaCompleto }) {
                   <button
                     type="button"
                     onClick={() => verificar(ej)}
-                    className="mt-3 rounded-lg border border-linea px-3 py-1.5 text-sm font-medium text-tinta-suave hover:bg-slate-50"
+                    disabled={corrigiendo === k}
+                    className="mt-3 flex min-h-11 items-center gap-2 rounded-lg border border-linea px-3 text-sm font-medium text-tinta-suave hover:bg-slate-50 disabled:opacity-60"
                   >
-                    Verificar respuesta
+                    {corrigiendo === k && <Loader2 size={14} className="animate-spin" />}
+                    {corrigiendo === k ? 'Corrigiendo…' : 'Verificar respuesta'}
                   </button>
 
                   {resultado && (
@@ -177,7 +219,7 @@ export function EjerciciosTab({ subtema }: { subtema: SubtemaCompleto }) {
                       )}
                       <span>
                         <strong>{resultado.correcto ? 'Correcta.' : 'Todavía no.'}</strong>{' '}
-                        {ej.explicacion}
+                        {resultado.explicacion}
                       </span>
                     </div>
                   )}

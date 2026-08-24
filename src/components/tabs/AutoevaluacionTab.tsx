@@ -1,11 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, RotateCcw, XCircle } from 'lucide-react'
-import type { SubtemaCompleto } from '../../data/topicData'
+import { CheckCircle2, Loader2, RotateCcw, XCircle } from 'lucide-react'
+import type { SubtemaPublico } from '@/lib/publico'
+import { corregirPregunta } from '@/app/acciones-correccion'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
 const PORCENTAJE_APROBACION = 70
+
+/** Lo que el servidor devuelve de una pregunta ya respondida. */
+type Corregida = {
+  elegida: number
+  correcta: boolean
+  correctaIndex: number
+  explicacion: string
+}
 
 /**
  * Evaluaciones.
@@ -16,11 +25,24 @@ const PORCENTAJE_APROBACION = 70
  * Solo se guarda el mejor puntaje de cada una, no un historial de intentos:
  * lo que el alumno quiere saber es si ya la aprobó, y guardar cada intento
  * sería una tabla más para responder la misma pregunta.
+ *
+ * LA CORRECCIÓN PASA EN EL SERVIDOR. Antes la página traía el
+ * `respuestaCorrectaIndex` de las diez preguntas, así que el examen venía
+ * resuelto en el HTML. Ahora este componente no sabe cuál es la correcta hasta
+ * que el alumno elige una y el servidor contesta.
  */
-export function AutoevaluacionTab({ subtema }: { subtema: SubtemaCompleto }) {
+export function AutoevaluacionTab({
+  subtema,
+  materiaSlug,
+}: {
+  subtema: SubtemaPublico
+  materiaSlug: string
+}) {
   const [evalActiva, setEvalActiva] = useState(0)
   const [indice, setIndice] = useState(0)
-  const [respuestas, setRespuestas] = useState<Record<number, number>>({})
+  const [respuestas, setRespuestas] = useState<Record<number, Corregida>>({})
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [terminado, setTerminado] = useState(false)
   const [mejores, setMejores] = useLocalStorage<Record<string, number>>(
     `galileo:evaluaciones:${subtema.slug}`,
@@ -38,17 +60,41 @@ export function AutoevaluacionTab({ subtema }: { subtema: SubtemaCompleto }) {
   const evaluacion = subtema.evaluaciones[evalActiva]
   const total = evaluacion.preguntas.length
   const pregunta = evaluacion.preguntas[indice]
-  const seleccion = respuestas[pregunta.id]
-  const respondida = seleccion !== undefined
-  const puntaje = evaluacion.preguntas.filter(
-    q => respuestas[q.id] === q.respuestaCorrectaIndex,
-  ).length
+  const corregida = respuestas[pregunta.id]
+  const respondida = corregida !== undefined
+  const puntaje = evaluacion.preguntas.filter(q => respuestas[q.id]?.correcta).length
 
   function reiniciar(nuevaEval = evalActiva) {
     setEvalActiva(nuevaEval)
     setIndice(0)
     setRespuestas({})
     setTerminado(false)
+    setError(null)
+  }
+
+  async function responder(elegida: number) {
+    setEnviando(true)
+    setError(null)
+    try {
+      const r = await corregirPregunta(materiaSlug, subtema.slug, evalActiva, pregunta.id, elegida)
+      if (!r.ok) {
+        setError(r.error)
+        return
+      }
+      setRespuestas(p => ({
+        ...p,
+        [pregunta.id]: {
+          elegida,
+          correcta: r.correcta,
+          correctaIndex: r.correctaIndex,
+          explicacion: r.explicacion,
+        },
+      }))
+    } catch {
+      setError('No pudimos corregir. Revisá tu conexión y probá de nuevo.')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   function terminar() {
@@ -145,17 +191,17 @@ export function AutoevaluacionTab({ subtema }: { subtema: SubtemaCompleto }) {
 
         <div className="mt-4 space-y-2">
           {pregunta.opciones.map((opcion, i) => {
-            const elegida = seleccion === i
-            const esCorrecta = i === pregunta.respuestaCorrectaIndex
+            const elegida = corregida?.elegida === i
+            const esCorrecta = corregida?.correctaIndex === i
             const mostrar = respondida && (elegida || esCorrecta)
 
             return (
               <button
                 key={i}
                 type="button"
-                disabled={respondida}
-                onClick={() => setRespuestas(p => ({ ...p, [pregunta.id]: i }))}
-                className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors ${
+                disabled={respondida || enviando}
+                onClick={() => responder(i)}
+                className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors disabled:cursor-default ${
                   mostrar && esCorrecta
                     ? 'border-green-300 bg-green-50 text-green-900'
                     : mostrar && elegida
@@ -180,9 +226,21 @@ export function AutoevaluacionTab({ subtema }: { subtema: SubtemaCompleto }) {
           })}
         </div>
 
+        {enviando && (
+          <p className="mt-4 flex items-center gap-2 text-sm text-tinta-suave">
+            <Loader2 size={14} className="animate-spin" /> Corrigiendo…
+          </p>
+        )}
+
+        {error && (
+          <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900" role="alert">
+            {error}
+          </p>
+        )}
+
         {respondida && (
           <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-tinta-suave">
-            {pregunta.explicacion}
+            {corregida.explicacion}
           </p>
         )}
       </div>

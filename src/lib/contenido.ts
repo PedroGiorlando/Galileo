@@ -1,6 +1,6 @@
 import { supabaseAdmin, supabasePublico } from './supabase'
-import { TemaContenidoSchema } from './schemas'
-import type { SubtemaCompleto } from '@/data/topicData'
+import { TemaContenidoSchema, type TemaContenido } from './schemas'
+import { sinRespuestas, type SubtemaPublico } from './publico'
 
 /**
  * Capa de datos: lo único que sabe que existe una base.
@@ -237,7 +237,7 @@ export async function getMateria(slug: string): Promise<Materia | null> {
 export interface ClasePagina {
   materia: Materia
   modulo: { id: number; slug: string; nombre: string }
-  clase: SubtemaCompleto | null
+  clase: SubtemaPublico | null
   resumen: ClaseResumen
   /** Todas las clases de la materia, agrupadas por módulo, para navegar. */
   temario: ModuloConClases[]
@@ -286,15 +286,19 @@ export async function getClase(
   // Sin contenido no hay página completa: la ruta responde "Próximamente". Con
   // contenido, se valida antes de renderizar — lo guardado pudo cargarse con
   // una versión vieja del schema, y es mejor romper que mostrar algo a medias.
-  const clase: SubtemaCompleto | null = data.contenido
-    ? {
+  //
+  // `sinRespuestas` es el único lugar donde se decide qué llega al navegador.
+  // Está acá, en la lectura, y no en cada componente: una página que se olvide
+  // de filtrar publica el examen resuelto, y de eso nadie se entera.
+  const clase: SubtemaPublico | null = data.contenido
+    ? sinRespuestas({
         id: data.orden,
         slug: data.slug,
         titulo: data.titulo,
         descripcion: data.descripcion,
         duracionLabel: data.duracion_label ?? '',
         ...TemaContenidoSchema.parse(data.contenido),
-      }
+      })
     : null
 
   return { materia, modulo, clase, resumen, temario: await getTemarioDeMateria(materia.id) }
@@ -402,6 +406,36 @@ export async function getRutasDeClases(): Promise<{ materia: string; clase: stri
 // --- Panel -------------------------------------------------------------------
 
 /** Lee con la clave secreta: ve también lo que no está publicado. */
+/**
+ * El contenido de una clase CON las respuestas.
+ *
+ * Lo usa únicamente la corrección del lado del servidor. No tiene que llegar
+ * nunca a un componente de cliente: para eso está `getClase`, que filtra.
+ *
+ * Usa el cliente público a propósito, no el de administrador: así respeta las
+ * políticas de la base y solo corrige clases publicadas. Con la clave de
+ * servicio se podrían sondear las respuestas de una clase todavía en borrador.
+ */
+export async function getContenidoParaCorregir(
+  materiaSlug: string,
+  claseSlug: string,
+): Promise<TemaContenido | null> {
+  const materia = await getMateria(materiaSlug)
+  if (!materia) return null
+
+  const { data, error } = await supabasePublico()
+    .from('clases')
+    .select('contenido')
+    .eq('materia_id', materia.id)
+    .eq('slug', claseSlug)
+    .maybeSingle()
+
+  if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
+  if (!data?.contenido) return null
+
+  return TemaContenidoSchema.parse(data.contenido)
+}
+
 export async function getClaseParaAdmin(materiaId: number, claseSlug: string) {
   const { data, error } = await supabaseAdmin()
     .from('clases')

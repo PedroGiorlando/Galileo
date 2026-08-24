@@ -1,7 +1,7 @@
 'use client'
 
 import { PlayCircle } from 'lucide-react'
-import type { SubtemaCompleto } from '../../data/topicData'
+import type { SubtemaPublico } from '@/lib/publico'
 import { comoMinutos } from '@/lib/video'
 
 /**
@@ -14,7 +14,7 @@ export function EjemplosTab({
   subtema,
   onIrAlVideo,
 }: {
-  subtema: SubtemaCompleto
+  subtema: SubtemaPublico
   onIrAlVideo?: (videoId: number, segundo: number) => void
 }) {
   return (

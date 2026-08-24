@@ -1,5 +1,5 @@
 import { CheckCircle2, Lightbulb, Sparkles, Star } from 'lucide-react'
-import type { SubtemaCompleto } from '../../data/topicData'
+import type { SubtemaPublico } from '@/lib/publico'
 
 /**
  * Cada tipo de caja se ve distinto a propósito: el alumno aprende a reconocer
@@ -30,7 +30,7 @@ const ESTILOS_CAJA = {
   },
 } as const
 
-export function ExplicacionTab({ subtema }: { subtema: SubtemaCompleto }) {
+export function ExplicacionTab({ subtema }: { subtema: SubtemaPublico }) {
   return (
     <div className="space-y-8">
       {/* Los objetivos viven acá y no en la solapa Lección: esa solapa solo

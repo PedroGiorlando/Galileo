@@ -1,0 +1,121 @@
+import { describe, expect, it } from 'vitest'
+import { sinRespuestas } from './publico'
+import { tema } from '@/data/topicData'
+
+/**
+ * Que ninguna respuesta llegue al navegador.
+ *
+ * Esto no es una preferencia de estilo: la página servía el contenido entero,
+ * así que `curl` sobre una clase publicada devolvía `respuestaCorrecta":"86.6`
+ * y un `respuestaCorrectaIndex` por pregunta. Cualquiera con Ctrl+U tenía el
+ * examen resuelto.
+ *
+ * Se revisa por clave Y por valor. Solo por clave no alcanza: alguien podría
+ * renombrar el campo y seguir mandándolo. Solo por valor tampoco: un índice
+ * numérico no se puede buscar como texto.
+ *
+ * DOS COSAS QUE ESTA PRUEBA ENSEÑÓ AL ESCRIBIRLA:
+ *
+ * 1. `explicacion` son dos campos distintos con el mismo nombre: la teoría
+ *    escrita de la clase (pública) y la devolución de un ejercicio (secreta).
+ *    Por eso se revisa por clave DENTRO de los ejercicios y las preguntas, no
+ *    en todo el objeto. Y por eso el filtrado es una lista blanca y no un
+ *    `delete obj.explicacion` recursivo, que borraría la teoría.
+ *
+ * 2. La respuesta correcta de un multiple choice ES una de las opciones, así
+ *    que su texto viaja siempre: hay que mostrarla. Lo secreto no es el texto
+ *    sino CUÁL de las opciones es, y eso lo cubre la prueba por clave.
+ */
+
+/** Todas las claves que existen en cualquier nivel del objeto. */
+function clavesDe(valor: unknown, acumulado = new Set<string>()): Set<string> {
+  if (Array.isArray(valor)) {
+    valor.forEach(v => clavesDe(v, acumulado))
+  } else if (valor && typeof valor === 'object') {
+    for (const [k, v] of Object.entries(valor)) {
+      acumulado.add(k)
+      clavesDe(v, acumulado)
+    }
+  }
+  return acumulado
+}
+
+describe('el contenido que se manda al navegador', () => {
+  const publico = sinRespuestas(tema)
+  const serializado = JSON.stringify(publico)
+
+  it('ningún ejercicio ni pregunta lleva su respuesta', () => {
+    const claves = new Set([
+      ...clavesDe(publico.practicos),
+      ...clavesDe(publico.evaluaciones),
+    ])
+
+    for (const prohibida of ['respuestaCorrecta', 'respuestaCorrectaIndex', 'explicacion']) {
+      expect(claves, `la clave "${prohibida}" no debería salir del servidor`).not.toContain(
+        prohibida,
+      )
+    }
+  })
+
+  it('no contiene el texto de ninguna respuesta ni devolución', () => {
+    const secretos: string[] = []
+
+    for (const p of tema.practicos) {
+      for (const e of p.ejercicios) {
+        secretos.push(e.explicacion)
+        // Los de opción múltiple no: su respuesta correcta es una de las
+        // opciones que hay que mostrar sí o sí. Lo secreto ahí es cuál, no qué.
+        if (e.tipo !== 'multiple') secretos.push(e.respuestaCorrecta)
+      }
+    }
+    for (const ev of tema.evaluaciones) {
+      for (const q of ev.preguntas) secretos.push(q.explicacion)
+    }
+
+    // Se ignoran los muy cortos ("Sí", "100"): aparecen legítimamente dentro de
+    // un enunciado y darían un falso positivo. Los cubre la prueba por clave.
+    const largos = secretos.filter(s => s.length >= 8)
+    expect(
+      largos.length,
+      'el tema de ejemplo debería tener respuestas largas que revisar',
+    ).toBeGreaterThan(0)
+
+    for (const secreto of largos) {
+      expect(serializado, `se filtró: "${secreto.slice(0, 40)}…"`).not.toContain(secreto)
+    }
+  })
+
+  it('conserva todo lo que el alumno sí necesita ver', () => {
+    // El error opuesto y más silencioso: filtrar de más y servir ejercicios
+    // vacíos. Todo pasaría en verde y la clase quedaría inservible.
+    expect(publico.practicos.length).toBe(tema.practicos.length)
+    expect(publico.evaluaciones.length).toBe(tema.evaluaciones.length)
+
+    tema.practicos.forEach((p, i) => {
+      expect(publico.practicos[i].ejercicios.length).toBe(p.ejercicios.length)
+      p.ejercicios.forEach((e, j) => {
+        const pub = publico.practicos[i].ejercicios[j]
+        expect(pub.enunciado).toBe(e.enunciado)
+        expect(pub.tipo).toBe(e.tipo)
+        // Sin las opciones, un multiple choice no se puede ni responder.
+        if (e.tipo === 'multiple') {
+          expect(pub.tipo === 'multiple' && pub.opciones).toEqual(e.opciones)
+        }
+      })
+    })
+
+    tema.evaluaciones.forEach((ev, i) => {
+      expect(publico.evaluaciones[i].preguntas.length).toBe(ev.preguntas.length)
+      ev.preguntas.forEach((q, j) => {
+        const pub = publico.evaluaciones[i].preguntas[j]
+        expect(pub.pregunta).toBe(q.pregunta)
+        expect(pub.opciones).toEqual(q.opciones)
+      })
+    })
+
+    // Lo que no toca la corrección viaja igual que antes.
+    expect(publico.explicacion).toEqual(tema.explicacion)
+    expect(publico.ejemplos).toEqual(tema.ejemplos)
+    expect(publico.videos).toEqual(tema.videos)
+  })
+})

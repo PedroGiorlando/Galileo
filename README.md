@@ -109,9 +109,11 @@ mismo.
 
 ## Limitaciones conocidas
 
-**Las respuestas correctas viajan al navegador.** Con las herramientas del
-navegador se pueden leer. Es aceptable mientras el contenido sea gratuito; hay
-que corregir del lado del servidor antes de cobrar.
+**Las respuestas se pueden sondear.** Ya no viajan en el HTML: la corrección
+pasa en el servidor. Pero las acciones que corrigen son públicas, así que
+probando opciones se puede sacar una respuesta por intento, y en un multiple
+choice de cuatro son cuatro intentos. La protección de verdad para contenido
+pago es no servirle el contenido a quien no compró.
 
 **Los videos no están protegidos.** Se suben a YouTube como "no listados",
 que no es lo mismo que privado: quien tenga el enlace lo ve, el identificador

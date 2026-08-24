@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide-react'
-import type { SubtemaCompleto } from '@/data/topicData'
+import type { SubtemaPublico } from '@/lib/publico'
 import type { Materia, ModuloConClases } from '@/lib/contenido'
 import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeMateria } from '@/lib/colores'
@@ -34,7 +34,7 @@ export function SubtemaVista({
   moduloNombre,
   temario,
 }: {
-  subtema: SubtemaCompleto
+  subtema: SubtemaPublico
   subtemaId: number
   materia: Materia
   moduloNombre: string
@@ -60,7 +60,10 @@ export function SubtemaVista({
   const total = temario.reduce((n, t) => n + t.clases.length, 0) || 1
   const paleta = paletaDeMateria(materia.slug)
 
-  const tabProps = { subtema }
+  // Las dos solapas que corrigen necesitan la materia además de la clase: la
+  // acción del servidor vuelve a leer el contenido para saber la respuesta, y
+  // una clase se identifica por (materia, clase).
+  const tabProps = { subtema, materiaSlug: materia.slug }
 
   return (
     // pb-28 en celular deja lugar para el botón flotante del temario, que si no

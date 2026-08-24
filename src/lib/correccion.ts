@@ -17,10 +17,18 @@ export function normalizarLista(valor: string): string[] {
 }
 
 /**
- * ponytail: hoy corre en el navegador, así que las respuestas correctas viajan
- * en el bundle y se pueden leer con F12. Está aislada acá justamente para que
- * mover la corrección a una Server Action, cuando el contenido sea pago, no
- * requiera tocar la UI.
+ * Corre SOLO en el servidor, llamada desde src/app/acciones-correccion.ts.
+ *
+ * No importar esto desde un componente de cliente: arrastraría las respuestas
+ * al bundle, que es justamente lo que se sacó de ahí. Estaba aislada acá desde
+ * el principio para que mover la corrección no obligara a tocar la interfaz, y
+ * efectivamente no hubo que tocarla.
+ *
+ * ⚠️ La coma separa los valores de la lista, así que `86,6` se lee como dos
+ * números. Un alumno que escribe el decimal a la argentina recibe "incorrecta"
+ * habiendo resuelto bien. No se arregla acá: `86,6,50,0` es genuinamente
+ * ambiguo. Se arregla escribiendo los ejercicios con un solo número por
+ * respuesta, como explica docs/plantilla-clase.md.
  */
 export function esCorrecta(ejercicio: Ejercicio, respuesta: Respuesta): boolean {
   switch (ejercicio.tipo) {

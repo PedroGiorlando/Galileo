@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { CheckCircle2, PlayCircle } from 'lucide-react'
-import type { SubtemaCompleto } from '../../data/topicData'
+import type { SubtemaPublico } from '@/lib/publico'
 import { urlDeVideo } from '@/lib/video'
 
 /**
@@ -14,7 +14,7 @@ import { urlDeVideo } from '@/lib/video'
  * Se carga un solo reproductor, el del video elegido. Poner N iframes de
  * YouTube en la misma página descargaría N reproductores para mirar uno.
  */
-export function LeccionTab({ subtema }: { subtema: SubtemaCompleto }) {
+export function LeccionTab({ subtema }: { subtema: SubtemaPublico }) {
   const [actual, setActual] = useState(0)
   const video = subtema.videos[actual]
 
