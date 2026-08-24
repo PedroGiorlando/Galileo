@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { getClase, getRutasDeClases } from '@/lib/contenido'
+import { IMAGEN_OG } from '@/lib/sitio'
 import { Header } from '@/components/Header'
 import { SubtemaVista } from '@/components/SubtemaVista'
 import { NavegacionClases } from '@/components/NavegacionClases'
@@ -40,11 +41,32 @@ export async function generateMetadata({
     }
   }
 
+  // La descripción sale de los objetivos porque es lo que responde "¿qué me
+  // llevo si entro acá?", que es lo que decide el clic en Google. Se corta a
+  // 160 caracteres: más que eso, el buscador lo trunca con puntos suspensivos.
+  const descripcion = recortar(datos.clase.objetivos.join(' '), 160)
+
   return {
     title: `${datos.clase.titulo} — ${datos.materia.nombre}`,
-    description: datos.clase.objetivos.join(' '),
+    description: descripcion,
     alternates: { canonical },
+    // Una clase es lo que alguien pega en un grupo de WhatsApp. `type: article`
+    // en vez de `website` porque es una pieza de contenido, no una portada.
+    openGraph: {
+      type: 'article',
+      title: `${datos.clase.titulo} — ${datos.materia.nombre}`,
+      description: descripcion,
+      url: canonical,
+      images: [IMAGEN_OG],
+    },
   }
+}
+
+/** Corta en el último espacio antes del límite, así no parte una palabra. */
+function recortar(texto: string, maximo: number): string {
+  if (texto.length <= maximo) return texto
+  const corte = texto.lastIndexOf(' ', maximo - 1)
+  return `${texto.slice(0, corte > 0 ? corte : maximo - 1)}…`
 }
 
 export default async function ClasePage({ params }: { params: Promise<Params> }) {

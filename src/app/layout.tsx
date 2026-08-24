@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { DESCRIPCION, INDEXABLE, NOMBRE, URL_SITIO } from '@/lib/sitio'
 import './globals.css'
 
 /*
@@ -39,28 +40,30 @@ const mono = IBM_Plex_Mono({
   display: 'swap',
 })
 
-/**
- * Mientras el sitio esté en construcción, ninguna página se indexa.
- *
- * Un sitio con tres clases cargadas indexado como si estuviera terminado es
- * contenido pobre, y Google castiga el dominio entero — justo lo que estamos
- * cuidando. Se abre poniendo NEXT_PUBLIC_INDEXABLE=true, el día que haya
- * contenido suficiente.
- *
- * Es `noindex` en los metadatos y no un robots.txt a propósito: robots.txt
- * pide que no rastreen, pero una página enlazada desde afuera puede terminar
- * indexada igual. El metadato es el que de verdad lo impide.
- */
-const INDEXABLE = process.env.NEXT_PUBLIC_INDEXABLE === 'true'
-
 export const metadata: Metadata = {
+  // Sin metadataBase, Next no puede convertir las direcciones relativas de los
+  // canonical y de Open Graph en absolutas, y las etiquetas quedan inservibles:
+  // og:url y og:image NO admiten rutas relativas.
+  metadataBase: new URL(URL_SITIO),
   ...(INDEXABLE ? {} : { robots: { index: false, follow: false } }),
   title: {
-    default: 'Academia Galileo',
-    template: '%s | Academia Galileo',
+    default: NOMBRE,
+    template: `%s | ${NOMBRE}`,
   },
-  description:
-    'Preparación para el ingreso universitario con explicaciones, ejemplos resueltos, ejercicios que se corrigen solos y exámenes reales.',
+  description: DESCRIPCION,
+  // Lo que se ve al pegar un link en WhatsApp, que en Argentina es por donde
+  // va a circular el sitio. Sin esto aparece un rectángulo vacío con la
+  // dirección, y nadie lo abre. Cada página completa su propio título y
+  // descripción; acá van los valores comunes.
+  openGraph: {
+    type: 'website',
+    locale: 'es_AR',
+    siteName: NOMBRE,
+    title: NOMBRE,
+    description: DESCRIPCION,
+    url: '/',
+  },
+  twitter: { card: 'summary_large_image' },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

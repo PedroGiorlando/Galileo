@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, BookOpen, Layers } from 'lucide-react'
 import { getCurso, getRutasDeCursos, getTemario } from '@/lib/contenido'
+import { IMAGEN_OG } from '@/lib/sitio'
 import { paletaDeMateria, paletaDeUnidad } from '@/lib/colores'
 import { Header } from '@/components/Header'
 import { TemarioTabla } from '@/components/curso/TemarioTabla'
@@ -23,10 +24,18 @@ export async function generateMetadata({
   const curso = await getCurso(programa, carrera, materia)
   if (!curso) return {}
 
+  const canonical = `/preuniversitario/${programa}/${carrera}/${materia}`
+
   return {
     title: curso.titulo,
     description: curso.descripcion ?? undefined,
-    alternates: { canonical: `/preuniversitario/${programa}/${carrera}/${materia}` },
+    alternates: { canonical },
+    openGraph: {
+      title: `${curso.titulo} — ${curso.carrera.nombre}, ${curso.programa.nombre}`,
+      description: curso.descripcion ?? undefined,
+      url: canonical,
+      images: [IMAGEN_OG],
+    },
   }
 }
 
