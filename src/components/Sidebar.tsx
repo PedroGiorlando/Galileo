@@ -9,6 +9,11 @@ interface SidebarProps {
   temario: ModuloConClases[]
   slugActual: string
   completados: string[]
+  /**
+   * Ancho y comportamiento del contenedor. En escritorio es una columna fija;
+   * dentro del panel deslizable del celular ocupa todo el ancho disponible.
+   */
+  className?: string
 }
 
 /**
@@ -23,6 +28,7 @@ export function Sidebar({
   temario,
   slugActual,
   completados,
+  className = 'w-72 shrink-0',
 }: SidebarProps) {
   const temaActual = temario.find(t => t.clases.some(s => s.slug === slugActual))
   const hermanos = temaActual?.clases ?? []
@@ -30,11 +36,11 @@ export function Sidebar({
   const totalDelCurso = temario.reduce((n, t) => n + t.clases.length, 0)
 
   return (
-    <aside className="w-72 shrink-0 space-y-4">
+    <aside className={`space-y-4 ${className}`}>
       <div className="rounded-lg border border-slate-200 bg-white p-4">
         <Link
           href="/preuniversitario"
-          className="mb-3 flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
+          className="mb-2 flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
         >
           <ArrowLeft size={14} /> Volver a {materiaNombre}
         </Link>
@@ -63,7 +69,10 @@ export function Sidebar({
               <li key={s.id}>
                 <Link
                   href={`/clase/${materiaSlug}/${s.slug}`}
-                  className={`flex items-center gap-2 rounded-md px-2 py-2 text-sm ${
+                  // min-h-11 son 44px: el mínimo que Apple y Google dan por
+                  // tocable con el dedo. En escritorio no cambia nada porque el
+                  // contenido ya llegaba a esa altura.
+                  className={`flex min-h-11 items-center gap-2 rounded-md px-2 py-2 text-sm ${
                     actual
                       ? 'bg-orange-50 font-medium text-orange-800'
                       : 'text-slate-600 hover:bg-slate-50'
@@ -90,7 +99,7 @@ export function Sidebar({
 
         <Link
           href="/preuniversitario"
-          className="mt-4 block rounded-md border border-slate-200 py-2 text-center text-sm text-slate-600 hover:bg-slate-50"
+          className="mt-4 flex min-h-11 items-center justify-center rounded-md border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
         >
           Ver las {totalDelCurso} clases
         </Link>
@@ -104,7 +113,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={() => alert('El soporte todavía no está conectado.')}
-          className="mt-2 w-full rounded-md bg-white py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md bg-white text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100"
         >
           Contactar soporte
         </button>

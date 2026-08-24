@@ -10,7 +10,7 @@ export function CompletarButton({ completado, onClick }: CompletarButtonProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium ${
+      className={`flex min-h-11 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
         completado
           ? 'border-green-600 bg-green-50 text-green-700'
           : 'border-slate-300 text-slate-600'

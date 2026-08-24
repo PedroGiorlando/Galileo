@@ -61,6 +61,22 @@ body {
   background-size: 28px 28px;
 }
 
+/*
+ * ponytail: el panel del temario aparece sin animación de entrada. A propósito.
+ *
+ * Estaba escrito para deslizarse desde el borde izquierdo, primero con
+ * @keyframes y después con transition + @starting-style. Las dos versiones
+ * dejaban el panel varado fuera de la pantalla cuando el reloj de animación no
+ * avanzaba, y sin forma de volver: el temario desaparecía del celular.
+ *
+ * La regla que queda: una animación puede cambiar cómo aparece algo, nunca SI
+ * aparece. En cuanto el estado inicial de la animación es "invisible" o "fuera
+ * de pantalla", cualquier cuadro perdido se convierte en contenido perdido.
+ *
+ * Para volver a intentarlo hace falta poder mirarlo en un navegador de verdad,
+ * y que el estado sin animación siga siendo el visible.
+ */
+
 /* Foco visible en todo lo que se puede tabular. El anillo del navegador
    desaparece sobre fondos claros; este no. */
 :focus-visible {

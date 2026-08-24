@@ -7,6 +7,7 @@ import type { Materia, ModuloConClases } from '@/lib/contenido'
 import { useProgreso } from '@/hooks/useProgreso'
 import { paletaDeMateria } from '@/lib/colores'
 import { Sidebar } from './Sidebar'
+import { TemarioMovil } from './TemarioMovil'
 import { RightPanel } from './RightPanel'
 import { CompletarButton } from './CompletarButton'
 import { LeccionTab } from './tabs/LeccionTab'
@@ -62,8 +63,24 @@ export function SubtemaVista({
   const tabProps = { subtema }
 
   return (
-    <main className="mx-auto flex max-w-7xl flex-col items-start gap-6 p-6 lg:flex-row">
+    // pb-28 en celular deja lugar para el botón flotante del temario, que si no
+    // tapa el final del último bloque.
+    <main className="mx-auto flex max-w-7xl flex-col items-start gap-6 p-4 pb-28 sm:p-6 lg:flex-row lg:pb-6">
+      {/* El temario aparece de dos formas según el ancho, y nunca las dos a la
+          vez. En escritorio, columna fija al costado. En celular, un botón
+          flotante que abre un panel: apilado arriba del contenido obligaba a
+          scrollear 700px de índice antes de llegar a la clase. */}
       <Sidebar
+        materiaSlug={materia.slug}
+        materiaNombre={materia.nombre}
+        moduloNombre={moduloNombre}
+        temario={temario}
+        slugActual={subtema.slug}
+        completados={completados}
+        className="hidden w-72 shrink-0 lg:block"
+      />
+
+      <TemarioMovil
         materiaSlug={materia.slug}
         materiaNombre={materia.nombre}
         moduloNombre={moduloNombre}
@@ -77,13 +94,13 @@ export function SubtemaVista({
             <h1>, así que la página tenía cinco (cuatro ocultos): Google espera
             uno solo y un lector de pantalla anunciaba cinco títulos distintos
             para la misma página. */}
-        <header className={`rounded-2xl border border-linea p-6 ${paleta.fondo}`}>
+        <header className={`rounded-2xl border border-linea p-5 sm:p-6 ${paleta.fondo}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <p className={`font-mono text-xs uppercase tracking-widest ${paleta.texto}`}>
                 {moduloNombre}
               </p>
-              <h1 className="mt-1 font-display text-3xl font-bold text-tinta">
+              <h1 className="mt-1 font-display text-2xl font-bold text-tinta sm:text-3xl">
                 {subtema.titulo}
               </h1>
               {subtema.descripcion && (
@@ -108,7 +125,7 @@ export function SubtemaVista({
               role="tab"
               aria-selected={tabActivo === tab.id}
               onClick={() => setTabActivo(tab.id)}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                 tabActivo === tab.id
                   ? `${paleta.solido} text-white shadow-sm`
                   : 'text-tinta-suave hover:bg-slate-50'
@@ -120,7 +137,7 @@ export function SubtemaVista({
           ))}
         </div>
 
-        <div className="rounded-2xl border border-linea bg-white p-6">
+        <div className="rounded-2xl border border-linea bg-white p-4 sm:p-6">
           {hayVideo && (
             <div className={tabActivo === 'leccion' ? '' : 'hidden'}>
               <LeccionTab {...tabProps} />

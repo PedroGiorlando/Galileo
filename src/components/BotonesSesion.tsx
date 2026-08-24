@@ -44,7 +44,7 @@ export function BotonesSesion() {
   if (!listo) {
     // Espacio reservado del alto de los botones: sin esto la cabecera salta
     // cuando aparecen.
-    return <div className="h-9 w-40" aria-hidden="true" />
+    return <div className="h-11 w-40" aria-hidden="true" />
   }
 
   if (!correo) {
@@ -52,13 +52,13 @@ export function BotonesSesion() {
       <div className="flex items-center gap-2">
         <Link
           href="/ingresar"
-          className="rounded-md border border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-800"
+          className="flex min-h-11 items-center rounded-md border border-slate-600 px-3 text-sm hover:bg-slate-800"
         >
           Iniciar sesión
         </Link>
         <Link
           href="/registrarse"
-          className="rounded-md bg-galileo px-3 py-1.5 text-sm font-medium hover:bg-galileo-oscuro"
+          className="flex min-h-11 items-center rounded-md bg-galileo px-3 text-sm font-medium hover:bg-galileo-oscuro"
         >
           Registrate
         </Link>
@@ -70,7 +70,7 @@ export function BotonesSesion() {
     <div className="flex items-center gap-2">
       <Link
         href="/mi-cuenta"
-        className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+        className="flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm text-slate-200 hover:bg-slate-800"
       >
         <UserRound size={16} />
         <span className="hidden max-w-40 truncate sm:inline">{correo}</span>
@@ -80,7 +80,7 @@ export function BotonesSesion() {
       <form action={salir}>
         <button
           type="submit"
-          className="rounded-md border border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-800"
+          className="flex min-h-11 items-center rounded-md border border-slate-600 px-3 text-sm hover:bg-slate-800"
         >
           Salir
         </button>
