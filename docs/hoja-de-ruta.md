@@ -88,7 +88,7 @@ compitiendo entre sí.
 |---|---|
 | **Video** | Decidir si el video se protege o se regala (ver Limitaciones) |
 | **Fase 3** | Mercado Pago y muro de pago |
-| **Fase 4** | Landing, analytics, textos legales |
+| **Fase 4** | Landing (y volver a poner `/` en el sitemap), analytics, textos legales |
 | Panel | Reordenar módulos y clases sin SQL |
 | Contenido | Los textos de Nosotros, Método, FAQ y el WhatsApp de Contacto |
 

@@ -32,8 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const url = (ruta: string) => `${URL_SITIO}${ruta}`
 
   return [
-    { url: url('/'), changeFrequency: 'monthly', priority: 1 },
-    { url: url('/preuniversitario'), changeFrequency: 'weekly', priority: 0.9 },
+    // Falta `/` a propósito: hoy no es una página, es un redirect a
+    // /preuniversitario mientras no exista la landing. Listar una dirección que
+    // rebota es pedirle a Google que visite algo que no está ahí, y lo reporta
+    // como "Página con redirección". Cuando la Fase 4 escriba la landing de
+    // verdad, hay que volver a agregarla acá con prioridad 1.
+    { url: url('/preuniversitario'), changeFrequency: 'weekly', priority: 1 },
 
     ...carreras.map(c => ({
       url: url(`/preuniversitario/${c.programa}/${c.carrera}`),
