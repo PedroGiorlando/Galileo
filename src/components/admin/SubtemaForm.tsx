@@ -12,6 +12,7 @@ import {
   seccionVacia,
   videoVacio,
   type ContenidoBorrador,
+  type Dificultad,
   type TipoCaja,
 } from '@/lib/borrador'
 import {
@@ -31,9 +32,11 @@ import {
   TextoLargo,
 } from './campos'
 import { EditorEjercicio, EditorPregunta } from './EditorEjercicio'
+import { EditorMedios } from './EditorMedios'
 import { idDeYouTube } from '@/lib/video'
 
 const TIPOS_CAJA: TipoCaja[] = ['ejemplo', 'tip', 'nota']
+const DIFICULTADES: Dificultad[] = ['Básico', 'Intermedio', 'Avanzado']
 
 const claseSelect =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500'
@@ -64,10 +67,12 @@ function rutaLegible(path: PropertyKey[]): string {
 }
 
 export function SubtemaForm({
+  materiaSlug,
   metaInicial,
   contenidoInicial,
   onGuardar,
 }: {
+  materiaSlug: string
   metaInicial: TemaMeta
   contenidoInicial: ContenidoBorrador
   onGuardar: (meta: TemaMeta, contenido: TemaContenido) => void | Promise<void>
@@ -79,6 +84,11 @@ export function SubtemaForm({
 
   const campoMeta = <K extends keyof TemaMeta>(k: K, v: TemaMeta[K]) =>
     setMeta(prev => ({ ...prev, [k]: v }))
+
+  // Adónde van las imágenes que se suban: se guardan en el bucket bajo
+  // materia/clase, así el depósito se puede mirar desde Supabase y se entiende
+  // qué es cada archivo.
+  const ubicacion = { materiaSlug, claseSlug: meta.slug }
 
   // Un solo helper para todas las listas del contenido: reemplazar el ítem i.
   function editar<K extends keyof ContenidoBorrador>(
@@ -277,6 +287,14 @@ export function SubtemaForm({
                   rows={4}
                 />
               </Campo>
+              <EditorMedios
+                etiqueta="Imágenes y videos de esta sección"
+                ayuda="Van debajo del párrafo. En Física, el gráfico suele explicar más que el texto."
+                medios={s.medios}
+                onChange={medios => editar('explicacion', i, { medios })}
+                {...ubicacion}
+              />
+
               <Casilla
                 label="Incluir caja destacada"
                 checked={s.conCaja}
@@ -411,6 +429,7 @@ export function SubtemaForm({
                     ejercicio={ej}
                     indice={iEj}
                     puedeQuitar={tp.ejercicios.length > 1}
+                    ubicacion={ubicacion}
                     onCambiar={cambio =>
                       editar('practicos', iTp, {
                         ejercicios: tp.ejercicios.map((x, k) =>
@@ -466,6 +485,48 @@ export function SubtemaForm({
                 </button>
               </div>
 
+              {/* Lo que el alumno ve ANTES de empezar, para saber a qué se
+                  mete. Los tres en cero o vacío significan "sin límite". */}
+              <div className="mb-3 grid gap-3 sm:grid-cols-3">
+                <Campo label="Dificultad" ayuda="Opcional. Se muestra antes de empezar.">
+                  <select
+                    className={claseSelect}
+                    value={ev.dificultad}
+                    onChange={e =>
+                      editar('evaluaciones', iEv, {
+                        dificultad: e.target.value as Dificultad | '',
+                      })
+                    }
+                  >
+                    <option value="">Sin indicar</option>
+                    {DIFICULTADES.map(d => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </Campo>
+
+                <Campo
+                  label="Tiempo límite (minutos)"
+                  ayuda="0 = sin reloj. Por ahora es orientativo: falta que el servidor lo controle."
+                >
+                  <Numero
+                    min={0}
+                    value={ev.tiempoLimiteMinutos}
+                    onChange={v => editar('evaluaciones', iEv, { tiempoLimiteMinutos: v })}
+                  />
+                </Campo>
+
+                <Campo label="Intentos permitidos" ayuda="0 = las veces que quiera.">
+                  <Numero
+                    min={0}
+                    value={ev.intentos}
+                    onChange={v => editar('evaluaciones', iEv, { intentos: v })}
+                  />
+                </Campo>
+              </div>
+
               <div className="space-y-3">
                 {ev.preguntas.map((p, iP) => (
                   <EditorPregunta
@@ -474,6 +535,7 @@ export function SubtemaForm({
                     indice={iP}
                     nombreRadio={`correcta-${iEv}-${iP}`}
                     puedeQuitar={ev.preguntas.length > 1}
+                    ubicacion={ubicacion}
                     onCambiar={cambio =>
                       editar('evaluaciones', iEv, {
                         preguntas: ev.preguntas.map((x, k) => (k === iP ? { ...x, ...cambio } : x)),

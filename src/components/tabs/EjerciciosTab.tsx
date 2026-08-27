@@ -4,10 +4,18 @@ import { useState } from 'react'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import type { Respuesta } from '@/lib/correccion'
 import type { EjercicioPublico, SubtemaPublico } from '@/lib/publico'
+import type { Medio } from '@/lib/schemas'
+import { Medios } from '../Medios'
 import { corregirEjercicio } from '@/app/acciones-correccion'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
-type Resultado = { respuesta: Respuesta; correcto: boolean; explicacion: string }
+type Resultado = {
+  respuesta: Respuesta
+  correcto: boolean
+  explicacion: string
+  /** Imágenes de la devolución: llegan del servidor junto con la corrección. */
+  medios?: Medio[]
+}
 type Resultados = Record<string, Resultado>
 
 /**
@@ -71,7 +79,12 @@ export function EjerciciosTab({
       }
       setResultados(prev => ({
         ...prev,
-        [k]: { respuesta, correcto: r.correcta, explicacion: r.explicacion },
+        [k]: {
+          respuesta,
+          correcto: r.correcta,
+          explicacion: r.explicacion,
+          ...(r.medios ? { medios: r.medios } : {}),
+        },
       }))
     } catch {
       // Si se cortó internet, decirlo. Antes esto no podía fallar porque se
@@ -138,6 +151,8 @@ export function EjerciciosTab({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="whitespace-pre-wrap text-tinta">{ej.enunciado}</p>
+
+                  <Medios medios={ej.medios} className="mt-3" />
 
                   <div className="mt-3">
                     {ej.tipo === 'libre' && (
@@ -206,21 +221,27 @@ export function EjerciciosTab({
 
                   {resultado && (
                     <div
-                      className={`mt-3 flex items-start gap-2 rounded-lg p-3 text-sm ${
+                      className={`mt-3 rounded-lg p-3 text-sm ${
                         resultado.correcto
                           ? 'bg-green-50 text-green-900'
                           : 'bg-amber-50 text-amber-900'
                       }`}
                     >
-                      {resultado.correcto ? (
-                        <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600" />
-                      ) : (
-                        <XCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
-                      )}
-                      <span>
-                        <strong>{resultado.correcto ? 'Correcta.' : 'Todavía no.'}</strong>{' '}
-                        {resultado.explicacion}
-                      </span>
+                      <div className="flex items-start gap-2">
+                        {resultado.correcto ? (
+                          <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-green-600" />
+                        ) : (
+                          <XCircle size={16} className="mt-0.5 shrink-0 text-amber-600" />
+                        )}
+                        <span>
+                          <strong>{resultado.correcto ? 'Correcta.' : 'Todavía no.'}</strong>{' '}
+                          {resultado.explicacion}
+                        </span>
+                      </div>
+
+                      {/* La resolución dibujada. No estaba en la página hasta
+                          este momento: vino del servidor con la corrección. */}
+                      <Medios medios={resultado.medios} className="mt-3" />
                     </div>
                   )}
                 </div>

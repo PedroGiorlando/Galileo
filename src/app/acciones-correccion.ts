@@ -3,6 +3,7 @@
 import { z } from 'zod'
 import { getContenidoParaCorregir } from '@/lib/contenido'
 import { esCorrecta, type Respuesta } from '@/lib/correccion'
+import type { Medio } from '@/lib/schemas'
 
 /**
  * Corrección del lado del servidor.
@@ -40,7 +41,9 @@ export async function corregirEjercicio(
   tpIndice: number,
   ejercicioId: number,
   respuesta: Respuesta,
-): Promise<{ ok: true; correcta: boolean; explicacion: string } | Fallo> {
+): Promise<
+  { ok: true; correcta: boolean; explicacion: string; medios?: Medio[] } | Fallo
+> {
   const entrada = z
     .object({
       materiaSlug: slug,
@@ -69,7 +72,10 @@ export async function corregirEjercicio(
   return {
     ok: true,
     correcta: esCorrecta(ejercicio, entrada.data.respuesta),
+    // La devolución y sus imágenes salen del servidor recién ahora, cuando el
+    // alumno ya respondió. Antes de este momento no existen para el navegador.
     explicacion: ejercicio.explicacion,
+    ...(ejercicio.mediosExplicacion?.length ? { medios: ejercicio.mediosExplicacion } : {}),
   }
 }
 
@@ -89,7 +95,8 @@ export async function corregirPregunta(
   preguntaId: number,
   elegida: number,
 ): Promise<
-  { ok: true; correcta: boolean; correctaIndex: number; explicacion: string } | Fallo
+  | { ok: true; correcta: boolean; correctaIndex: number; explicacion: string; medios?: Medio[] }
+  | Fallo
 > {
   const entrada = z
     .object({
@@ -115,5 +122,6 @@ export async function corregirPregunta(
     correcta: entrada.data.elegida === pregunta.respuestaCorrectaIndex,
     correctaIndex: pregunta.respuestaCorrectaIndex,
     explicacion: pregunta.explicacion,
+    ...(pregunta.mediosExplicacion?.length ? { medios: pregunta.mediosExplicacion } : {}),
   }
 }

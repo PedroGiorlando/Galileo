@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { CheckCircle2, Loader2, RotateCcw, XCircle } from 'lucide-react'
 import type { SubtemaPublico } from '@/lib/publico'
+import type { Medio } from '@/lib/schemas'
+import { Medios } from '../Medios'
 import { corregirPregunta } from '@/app/acciones-correccion'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
@@ -14,6 +16,8 @@ type Corregida = {
   correcta: boolean
   correctaIndex: number
   explicacion: string
+  /** Imágenes de la devolución: no existían en la página hasta responder. */
+  medios?: Medio[]
 }
 
 /**
@@ -88,6 +92,7 @@ export function AutoevaluacionTab({
           correcta: r.correcta,
           correctaIndex: r.correctaIndex,
           explicacion: r.explicacion,
+          ...(r.medios ? { medios: r.medios } : {}),
         },
       }))
     } catch {
@@ -189,6 +194,8 @@ export function AutoevaluacionTab({
       <div className="rounded-xl border border-linea bg-white p-5">
         <p className="font-medium text-tinta">{pregunta.pregunta}</p>
 
+        <Medios medios={pregunta.medios} className="mt-3" />
+
         <div className="mt-4 space-y-2">
           {pregunta.opciones.map((opcion, i) => {
             const elegida = corregida?.elegida === i
@@ -239,9 +246,10 @@ export function AutoevaluacionTab({
         )}
 
         {respondida && (
-          <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-tinta-suave">
-            {corregida.explicacion}
-          </p>
+          <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-tinta-suave">
+            <p>{corregida.explicacion}</p>
+            <Medios medios={corregida.medios} className="mt-3" />
+          </div>
         )}
       </div>
 

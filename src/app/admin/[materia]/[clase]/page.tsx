@@ -75,6 +75,7 @@ export default async function AdminClasePage({
         <h1 className="mt-1 mb-6 font-display text-3xl font-bold text-tinta">{fila.titulo}</h1>
         <EditorSubtema
           materiaId={materia.id}
+          materiaSlug={materia.slug}
           rutaClase={`/clase/${materia.slug}`}
           metaInicial={meta}
           contenidoInicial={contenido}

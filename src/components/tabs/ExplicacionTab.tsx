@@ -1,5 +1,6 @@
 import { CheckCircle2, Lightbulb, Sparkles, Star } from 'lucide-react'
 import type { SubtemaPublico } from '@/lib/publico'
+import { Medios } from '../Medios'
 
 /**
  * Cada tipo de caja se ve distinto a propósito: el alumno aprende a reconocer
@@ -55,6 +56,8 @@ export function ExplicacionTab({ subtema }: { subtema: SubtemaPublico }) {
           <section key={i}>
             <h2 className="mb-2 text-lg font-bold text-slate-900">{seccion.titulo}</h2>
             <p className="mb-3 leading-relaxed text-slate-600">{seccion.parrafo}</p>
+
+            <Medios medios={seccion.medios} className="mb-3" />
 
             {seccion.caja && estilo && (
               <div className={`rounded-lg border p-4 ${estilo.caja}`}>

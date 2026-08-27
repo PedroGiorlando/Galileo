@@ -54,10 +54,39 @@ panel se queda con el identificador.
 ### Video 2
 (repetir si hace falta)
 
+## Imágenes y videos
+
+Se pueden agregar en la teoría, en el enunciado de un ejercicio, en una
+pregunta de evaluación y en las explicaciones. En Física el dibujo no es
+decoración: un ejercicio de diagrama de cuerpo libre sin el diagrama no es un
+ejercicio.
+
+**Las imágenes se suben desde el panel.** JPG, PNG, WebP o GIF, hasta 2 MB. Si
+pesa más, achicala antes: un diagrama de 5 MB no se ve mejor, solo tarda más en
+un celular con mala señal.
+
+**Los videos son enlaces de YouTube**, igual que los de la lección: pegás la
+dirección tal como la copiaste.
+
+⚠️ **Cada imagen pide una descripción, y es obligatoria.** Es una línea que dice
+qué se ve: *"Bloque sobre un plano inclinado con tres fuerzas marcadas"*. La lee
+en voz alta el lector de pantalla de un alumno que no ve el dibujo. Cuando la
+imagen ES el enunciado, no describirla es directamente no darle el enunciado.
+
+**Ojo con dónde ponés cada cosa.** Hay dos lugares y no son intercambiables:
+
+| Dónde | Cuándo se ve |
+|---|---|
+| Imágenes del **enunciado** / de la **pregunta** | Siempre, antes de responder |
+| Imágenes de la **explicación** | Recién después de que el alumno responde |
+
+La resolución dibujada va en la segunda. Si la ponés en la primera, el alumno ve
+la respuesta al lado de la pregunta.
+
 ## Teoría
 
 Tres secciones. Cada una: un título en forma de pregunta, un párrafo corto
-(3-5 líneas) y una caja opcional.
+(3-5 líneas) y una caja opcional. Puede llevar imágenes o videos.
 
 Los tipos de caja son `ejemplo`, `tip` o `nota`, y cada uno se ve distinto para
 que el alumno reconozca de un vistazo qué está leyendo. Si no hace falta caja,
@@ -138,9 +167,11 @@ Los **puntos** son 1, 2 o 3 según la dificultad.
 #### Ejercicio 1
 - **Tipo:**
 - **Enunciado:**
+- **Imágenes o videos del enunciado:** (opcional)
 - **Opciones (solo si es `multiple`):**
 - **Respuesta correcta:**
 - **Explicación:**
+- **Imágenes o videos de la explicación:** (opcional)
 - **Puntos:**
 
 #### Ejercicio 2, 3...
@@ -165,15 +196,26 @@ Reglas para que no sea adivinable:
 
 ### Evaluación 1
 - **Título:** (opcional)
+- **Dificultad:** Básico / Intermedio / Avanzado, o vacío
+- **Tiempo límite (minutos):** 0 si no lleva reloj
+- **Intentos permitidos:** 0 si puede rendir las veces que quiera
+
+⚠️ **El tiempo límite todavía es orientativo.** Se muestra y corre un reloj,
+pero el servidor no lo verifica: quien sepa cómo, lo pausa. Para que sea un
+límite de verdad hace falta que el servidor registre cuándo empezó cada
+intento, y eso está pendiente. Cargalo igual — así el dato ya está el día que
+se controle de verdad, y no hay que volver a abrir cada evaluación.
 
 #### Pregunta 1
 - **Pregunta:**
+- **Imágenes o videos de la pregunta:** (opcional)
 - **Opción A:**
 - **Opción B:**
 - **Opción C:**
 - **Opción D:**
 - **Correcta (A/B/C/D):**
 - **Explicación:**
+- **Imágenes o videos de la explicación:** (opcional)
 
 #### Pregunta 2, 3...
 (repetir el bloque)

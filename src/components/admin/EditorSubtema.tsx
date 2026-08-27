@@ -10,12 +10,15 @@ import type { TemaMeta } from '@/lib/schemas'
 
 export function EditorSubtema({
   materiaId,
+  materiaSlug,
   rutaClase,
   metaInicial,
   contenidoInicial,
   desdeLaBase,
 }: {
   materiaId: number
+  /** Para armar la carpeta donde se guardan las imágenes que se suban. */
+  materiaSlug: string
   rutaClase: string
   metaInicial: TemaMeta
   contenidoInicial: ContenidoBorrador
@@ -60,6 +63,7 @@ export function EditorSubtema({
       )}
 
       <SubtemaForm
+        materiaSlug={materiaSlug}
         metaInicial={metaInicial}
         contenidoInicial={contenidoInicial}
         onGuardar={async (meta, contenido) => {

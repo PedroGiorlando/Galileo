@@ -2,6 +2,7 @@
 
 import type { EjercicioBorrador, PreguntaBorrador, TipoEjercicio } from '@/lib/borrador'
 import { Bloque, Campo, Casilla, ListaDeTextos, Numero, Texto, TextoLargo } from './campos'
+import { EditorMedios } from './EditorMedios'
 
 /**
  * Un ejercicio y una pregunta, sacados del formulario grande.
@@ -24,16 +25,24 @@ const TIPOS: { valor: TipoEjercicio; label: string; ayuda: string }[] = [
 const claseSelect =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500'
 
+/** Dónde guardar las imágenes que se suban desde este editor. */
+export interface Ubicacion {
+  materiaSlug: string
+  claseSlug: string
+}
+
 export function EditorEjercicio({
   ejercicio: e,
   indice,
   puedeQuitar,
+  ubicacion,
   onCambiar,
   onQuitar,
 }: {
   ejercicio: EjercicioBorrador
   indice: number
   puedeQuitar: boolean
+  ubicacion: Ubicacion
   onCambiar: (cambio: Partial<EjercicioBorrador>) => void
   onQuitar: () => void
 }) {
@@ -63,6 +72,14 @@ export function EditorEjercicio({
       <Campo label="Enunciado">
         <TextoLargo value={e.enunciado} onChange={v => onCambiar({ enunciado: v })} rows={2} />
       </Campo>
+
+      <EditorMedios
+        etiqueta="Imágenes y videos del enunciado"
+        ayuda="Se ven junto al enunciado, antes de responder. Acá va el diagrama del problema."
+        medios={e.medios}
+        onChange={medios => onCambiar({ medios })}
+        {...ubicacion}
+      />
 
       {e.tipo === 'libre' && (
         <Campo
@@ -126,6 +143,14 @@ export function EditorEjercicio({
       >
         <TextoLargo value={e.explicacion} onChange={v => onCambiar({ explicacion: v })} rows={2} />
       </Campo>
+
+      <EditorMedios
+        etiqueta="Imágenes y videos de la explicación"
+        ayuda="Se ven RECIÉN DESPUÉS de responder. Acá va la resolución dibujada, que junto al enunciado sería regalar la respuesta."
+        medios={e.mediosExplicacion}
+        onChange={mediosExplicacion => onCambiar({ mediosExplicacion })}
+        {...ubicacion}
+      />
     </Bloque>
   )
 }
@@ -135,6 +160,7 @@ export function EditorPregunta({
   indice,
   nombreRadio,
   puedeQuitar,
+  ubicacion,
   onCambiar,
   onQuitar,
 }: {
@@ -142,6 +168,7 @@ export function EditorPregunta({
   indice: number
   nombreRadio: string
   puedeQuitar: boolean
+  ubicacion: Ubicacion
   onCambiar: (cambio: Partial<PreguntaBorrador>) => void
   onQuitar: () => void
 }) {
@@ -150,6 +177,14 @@ export function EditorPregunta({
       <Campo label="Pregunta">
         <TextoLargo value={p.pregunta} onChange={v => onCambiar({ pregunta: v })} rows={2} />
       </Campo>
+
+      <EditorMedios
+        etiqueta="Imágenes y videos de la pregunta"
+        ayuda="Se ven junto a la pregunta, antes de responder."
+        medios={p.medios}
+        onChange={medios => onCambiar({ medios })}
+        {...ubicacion}
+      />
 
       <Campo label="Opciones" ayuda="Marcá el punto de la que es correcta.">
         <div className="space-y-2">
@@ -179,6 +214,14 @@ export function EditorPregunta({
       <Campo label="Explicación">
         <TextoLargo value={p.explicacion} onChange={v => onCambiar({ explicacion: v })} rows={2} />
       </Campo>
+
+      <EditorMedios
+        etiqueta="Imágenes y videos de la explicación"
+        ayuda="Se ven RECIÉN DESPUÉS de que el alumno elige una opción."
+        medios={p.mediosExplicacion}
+        onChange={mediosExplicacion => onCambiar({ mediosExplicacion })}
+        {...ubicacion}
+      />
     </Bloque>
   )
 }
