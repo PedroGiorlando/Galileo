@@ -85,6 +85,58 @@ describe('el contenido que se manda al navegador', () => {
     }
   })
 
+  it('manda las imágenes del enunciado y retiene las de la devolución', () => {
+    // El tema de ejemplo no tiene medios, así que las pruebas de arriba no
+    // dicen nada sobre ellos. Sin este caso, `mediosExplicacion` podría estar
+    // viajando entero y los tres tests seguirían en verde — que es exactamente
+    // como se nos escaparon antes los videos vacíos.
+    const DIAGRAMA = 'https://ejemplo.test/diagrama-del-enunciado.png'
+    const RESOLUCION = 'https://ejemplo.test/la-resolucion-dibujada.png'
+
+    const conMedios = {
+      ...tema,
+      practicos: [
+        {
+          ...tema.practicos[0],
+          ejercicios: [
+            {
+              ...tema.practicos[0].ejercicios[0],
+              medios: [{ tipo: 'imagen' as const, url: DIAGRAMA, alt: 'Diagrama' }],
+              mediosExplicacion: [
+                { tipo: 'imagen' as const, url: RESOLUCION, alt: 'Resolución' },
+              ],
+            },
+            ...tema.practicos[0].ejercicios.slice(1),
+          ],
+        },
+      ],
+      evaluaciones: [
+        {
+          ...tema.evaluaciones[0],
+          preguntas: [
+            {
+              ...tema.evaluaciones[0].preguntas[0],
+              medios: [{ tipo: 'video' as const, youtubeId: 'dQw4w9WgXcQ' }],
+              mediosExplicacion: [
+                { tipo: 'imagen' as const, url: RESOLUCION, alt: 'Resolución' },
+              ],
+            },
+            ...tema.evaluaciones[0].preguntas.slice(1),
+          ],
+        },
+      ],
+    }
+
+    const salida = JSON.stringify(sinRespuestas(conMedios))
+
+    expect(salida, 'el diagrama del enunciado tiene que llegar').toContain(DIAGRAMA)
+    expect(salida, 'el video de la pregunta tiene que llegar').toContain('dQw4w9WgXcQ')
+    expect(salida, 'la resolución dibujada NO puede viajar antes de responder').not.toContain(
+      RESOLUCION,
+    )
+    expect(clavesDe(sinRespuestas(conMedios))).not.toContain('mediosExplicacion')
+  })
+
   it('conserva todo lo que el alumno sí necesita ver', () => {
     // El error opuesto y más silencioso: filtrar de más y servir ejercicios
     // vacíos. Todo pasaría en verde y la clase quedaría inservible.

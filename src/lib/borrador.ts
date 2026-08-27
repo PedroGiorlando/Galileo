@@ -1,4 +1,5 @@
 import type { SubtemaCompleto } from '@/data/topicData'
+import type { Medio } from './schemas'
 import { idDeYouTube } from './video'
 
 /**
@@ -19,10 +20,26 @@ import { idDeYouTube } from './video'
 
 export type TipoEjercicio = 'libre' | 'multiple' | 'si-no'
 export type TipoCaja = 'ejemplo' | 'tip' | 'nota'
+export type Dificultad = 'Básico' | 'Intermedio' | 'Avanzado'
+
+/**
+ * Una imagen o un video mientras se edita.
+ *
+ * El video guarda `enlace` y no `youtubeId` por lo mismo que los de la
+ * lección: quien carga pega la dirección tal como la copió, y el
+ * identificador se extrae al guardar.
+ */
+export type MedioBorrador =
+  | { tipo: 'imagen'; url: string; alt: string }
+  | { tipo: 'video'; enlace: string; segundo: number }
+
+export const imagenVacia = (url: string): MedioBorrador => ({ tipo: 'imagen', url, alt: '' })
+export const videoMedioVacio = (): MedioBorrador => ({ tipo: 'video', enlace: '', segundo: 0 })
 
 export interface SeccionBorrador {
   titulo: string
   parrafo: string
+  medios: MedioBorrador[]
   conCaja: boolean
   cajaTipo: TipoCaja
   cajaContenido: string
@@ -40,7 +57,11 @@ export interface EjemploBorrador {
 export interface EjercicioBorrador {
   tipo: TipoEjercicio
   enunciado: string
+  /** Acompañan al enunciado. */
+  medios: MedioBorrador[]
   explicacion: string
+  /** Acompañan a la devolución: no llegan al alumno hasta que responde. */
+  mediosExplicacion: MedioBorrador[]
   puntos: number
   respuestaLibre: string
   opciones: string[]
@@ -50,9 +71,11 @@ export interface EjercicioBorrador {
 
 export interface PreguntaBorrador {
   pregunta: string
+  medios: MedioBorrador[]
   opciones: string[]
   respuestaCorrectaIndex: number
   explicacion: string
+  mediosExplicacion: MedioBorrador[]
 }
 
 export interface VideoBorrador {
@@ -74,6 +97,18 @@ export interface PracticoBorrador {
 
 export interface EvaluacionBorrador {
   titulo: string
+  /** Cadena vacía = sin etiqueta de dificultad. */
+  dificultad: Dificultad | ''
+  /**
+   * 0 = sin reloj, y 0 = intentos ilimitados.
+   *
+   * Se usa el 0 como "no puesto" en vez de dejar el campo vacío porque el
+   * formulario trabaja con números y un `undefined` volvería a poner el input
+   * en modo no controlado a mitad de la edición. Mismo criterio que el -1 de
+   * `videoIndice`. Al guardar, el 0 se convierte en ausencia del campo.
+   */
+  tiempoLimiteMinutos: number
+  intentos: number
   preguntas: PreguntaBorrador[]
 }
 
@@ -91,6 +126,7 @@ export interface ContenidoBorrador {
 export const seccionVacia = (): SeccionBorrador => ({
   titulo: '',
   parrafo: '',
+  medios: [],
   conCaja: false,
   cajaTipo: 'ejemplo',
   cajaContenido: '',
@@ -106,7 +142,9 @@ export const ejemploVacio = (): EjemploBorrador => ({
 export const ejercicioVacio = (): EjercicioBorrador => ({
   tipo: 'libre',
   enunciado: '',
+  medios: [],
   explicacion: '',
+  mediosExplicacion: [],
   puntos: 1,
   respuestaLibre: '',
   opciones: ['', ''],
@@ -116,9 +154,11 @@ export const ejercicioVacio = (): EjercicioBorrador => ({
 
 export const preguntaVacia = (): PreguntaBorrador => ({
   pregunta: '',
+  medios: [],
   opciones: ['', '', '', ''],
   respuestaCorrectaIndex: 0,
   explicacion: '',
+  mediosExplicacion: [],
 })
 
 export const videoVacio = (): VideoBorrador => ({
@@ -132,6 +172,9 @@ export const practicoVacio = (): PracticoBorrador => ({ titulo: '', ejercicios: 
 
 export const evaluacionVacia = (): EvaluacionBorrador => ({
   titulo: '',
+  dificultad: '',
+  tiempoLimiteMinutos: 0,
+  intentos: 0,
   preguntas: [preguntaVacia()],
 })
 
@@ -144,6 +187,40 @@ export const contenidoVacio = (): ContenidoBorrador => ({
   evaluaciones: [],
 })
 
+// --- Medios: guardado ↔ borrador ---------------------------------------------
+//
+// No se filtran las filas incompletas. Si alguien agrega una imagen y no le
+// pone descripción, o un video sin enlace, Zod lo rechaza al guardar con un
+// mensaje que dice qué falta. Es el mismo criterio que ya usan los objetivos y
+// las opciones: descartar en silencio lo que está a medias es cómo se pierde
+// trabajo sin que nadie se entere.
+
+function medioABorrador(m: Medio): MedioBorrador {
+  return m.tipo === 'imagen'
+    ? { tipo: 'imagen', url: m.url, alt: m.alt }
+    : { tipo: 'video', enlace: m.youtubeId, segundo: m.segundo ?? 0 }
+}
+
+function medioAGuardar(m: MedioBorrador) {
+  if (m.tipo === 'imagen') return { tipo: 'imagen', url: m.url, alt: m.alt }
+  return {
+    tipo: 'video',
+    youtubeId: idDeYouTube(m.enlace) ?? m.enlace,
+    ...(m.segundo > 0 ? { segundo: m.segundo } : {}),
+  }
+}
+
+/** Los medios son opcionales en el contenido: vacío significa no escribirlos. */
+function mediosAGuardar(lista: MedioBorrador[]) {
+  return lista.length > 0 ? { medios: lista.map(medioAGuardar) } : {}
+}
+
+function mediosExplicacionAGuardar(lista: MedioBorrador[]) {
+  return lista.length > 0 ? { mediosExplicacion: lista.map(medioAGuardar) } : {}
+}
+
+const desdeMedios = (lista: Medio[] | undefined) => (lista ?? []).map(medioABorrador)
+
 // --- Subtema guardado → borrador ------------------------------------------------
 
 export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
@@ -152,6 +229,7 @@ export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
     explicacion: tema.explicacion.map(s => ({
       titulo: s.titulo,
       parrafo: s.parrafo,
+      medios: desdeMedios(s.medios),
       conCaja: Boolean(s.caja),
       cajaTipo: s.caja?.tipo ?? 'ejemplo',
       cajaContenido: s.caja?.contenido ?? '',
@@ -176,23 +254,32 @@ export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
     practicos: tema.practicos.map(p => ({
       titulo: p.titulo ?? '',
       ejercicios: p.ejercicios.map(e => ({
-      tipo: e.tipo,
-      enunciado: e.enunciado,
-      explicacion: e.explicacion,
-      puntos: e.puntos,
-      respuestaLibre: e.tipo === 'libre' ? e.respuestaCorrecta : '',
-      opciones: e.tipo === 'multiple' ? [...e.opciones] : ['', ''],
-      correctasMultiple: e.tipo === 'multiple' ? [...e.respuestaCorrecta] : [],
-      correctaSiNo: e.tipo === 'si-no' ? e.respuestaCorrecta : 'Sí',
+        tipo: e.tipo,
+        enunciado: e.enunciado,
+        medios: desdeMedios(e.medios),
+        explicacion: e.explicacion,
+        mediosExplicacion: desdeMedios(e.mediosExplicacion),
+        puntos: e.puntos,
+        respuestaLibre: e.tipo === 'libre' ? e.respuestaCorrecta : '',
+        opciones: e.tipo === 'multiple' ? [...e.opciones] : ['', ''],
+        correctasMultiple: e.tipo === 'multiple' ? [...e.respuestaCorrecta] : [],
+        correctaSiNo: e.tipo === 'si-no' ? e.respuestaCorrecta : 'Sí',
       })),
     })),
     evaluaciones: tema.evaluaciones.map(ev => ({
       titulo: ev.titulo ?? '',
+      dificultad: ev.dificultad ?? '',
+      // Ausente en el contenido significa "sin reloj" / "ilimitados", y en el
+      // formulario eso se representa con 0.
+      tiempoLimiteMinutos: ev.tiempoLimiteMinutos ?? 0,
+      intentos: ev.intentos ?? 0,
       preguntas: ev.preguntas.map(p => ({
         pregunta: p.pregunta,
+        medios: desdeMedios(p.medios),
         opciones: [...p.opciones],
         respuestaCorrectaIndex: p.respuestaCorrectaIndex,
         explicacion: p.explicacion,
+        mediosExplicacion: desdeMedios(p.mediosExplicacion),
       })),
     })),
   }
@@ -201,7 +288,14 @@ export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
 // --- Borrador → contenido para guardar ---------------------------------------
 
 function ejercicioAGuardar(e: EjercicioBorrador, id: number) {
-  const comun = { id, enunciado: e.enunciado, explicacion: e.explicacion, puntos: e.puntos }
+  const comun = {
+    id,
+    enunciado: e.enunciado,
+    ...mediosAGuardar(e.medios),
+    explicacion: e.explicacion,
+    ...mediosExplicacionAGuardar(e.mediosExplicacion),
+    puntos: e.puntos,
+  }
   switch (e.tipo) {
     case 'libre':
       return { ...comun, tipo: 'libre', respuestaCorrecta: e.respuestaLibre }
@@ -239,6 +333,7 @@ export function aContenido(b: ContenidoBorrador): unknown {
     explicacion: b.explicacion.map(s => ({
       titulo: s.titulo,
       parrafo: s.parrafo,
+      ...mediosAGuardar(s.medios),
       ...(s.conCaja ? { caja: { tipo: s.cajaTipo, contenido: s.cajaContenido } } : {}),
     })),
     ejemplos: b.ejemplos.map((e, i) => ({
@@ -257,12 +352,20 @@ export function aContenido(b: ContenidoBorrador): unknown {
     })),
     evaluaciones: b.evaluaciones.map(ev => ({
       ...(ev.titulo ? { titulo: ev.titulo } : {}),
+      ...(ev.dificultad ? { dificultad: ev.dificultad } : {}),
+      // El 0 del formulario significa "no puesto", y en el contenido eso se
+      // representa con la ausencia del campo, no con un cero guardado: un
+      // "tiempo límite: 0 minutos" sería un examen imposible.
+      ...(ev.tiempoLimiteMinutos > 0 ? { tiempoLimiteMinutos: ev.tiempoLimiteMinutos } : {}),
+      ...(ev.intentos > 0 ? { intentos: ev.intentos } : {}),
       preguntas: ev.preguntas.map((p, i) => ({
         id: i + 1,
         pregunta: p.pregunta,
+        ...mediosAGuardar(p.medios),
         opciones: p.opciones,
         respuestaCorrectaIndex: p.respuestaCorrectaIndex,
         explicacion: p.explicacion,
+        ...mediosExplicacionAGuardar(p.mediosExplicacion),
       })),
     })),
   }

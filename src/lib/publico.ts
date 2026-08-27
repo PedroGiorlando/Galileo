@@ -1,5 +1,5 @@
 import type { SubtemaCompleto } from '@/data/topicData'
-import type { Ejercicio, PreguntaQuiz } from './schemas'
+import type { Ejercicio, Medio, PreguntaQuiz } from './schemas'
 
 /**
  * La versión de una clase que puede ver el navegador.
@@ -23,12 +23,19 @@ import type { Ejercicio, PreguntaQuiz } from './schemas'
  * cuando el alumno ya respondió.
  */
 
-export type EjercicioPublico =
-  | { id: number; enunciado: string; puntos: number; tipo: 'libre' }
-  | { id: number; enunciado: string; puntos: number; tipo: 'si-no' }
-  | { id: number; enunciado: string; puntos: number; tipo: 'multiple'; opciones: string[] }
+type Comun = { id: number; enunciado: string; puntos: number; medios?: Medio[] }
 
-export type PreguntaPublica = { id: number; pregunta: string; opciones: string[] }
+export type EjercicioPublico =
+  | (Comun & { tipo: 'libre' })
+  | (Comun & { tipo: 'si-no' })
+  | (Comun & { tipo: 'multiple'; opciones: string[] })
+
+export type PreguntaPublica = {
+  id: number
+  pregunta: string
+  opciones: string[]
+  medios?: Medio[]
+}
 
 export type TrabajoPracticoPublico = { titulo?: string; ejercicios: EjercicioPublico[] }
 export type EvaluacionPublica = { titulo?: string; preguntas: PreguntaPublica[] }
@@ -39,14 +46,23 @@ export type SubtemaPublico = Omit<SubtemaCompleto, 'practicos' | 'evaluaciones'>
 }
 
 function ejercicioPublico(e: Ejercicio): EjercicioPublico {
-  const base = { id: e.id, enunciado: e.enunciado, puntos: e.puntos }
+  // `medios` sí (es el dibujo del enunciado, sin él no se puede resolver).
+  // `mediosExplicacion` NO: es parte de la devolución y vuelve del servidor
+  // recién cuando el alumno ya respondió. Un croquis con la resolución al lado
+  // del enunciado es la respuesta servida en bandeja.
+  const base = { id: e.id, enunciado: e.enunciado, puntos: e.puntos, ...soloSiHay(e.medios) }
   return e.tipo === 'multiple'
     ? { ...base, tipo: 'multiple', opciones: e.opciones }
     : { ...base, tipo: e.tipo }
 }
 
 function preguntaPublica(p: PreguntaQuiz): PreguntaPublica {
-  return { id: p.id, pregunta: p.pregunta, opciones: p.opciones }
+  return { id: p.id, pregunta: p.pregunta, opciones: p.opciones, ...soloSiHay(p.medios) }
+}
+
+/** Evita escribir `medios: undefined`, que al serializar ensucia el JSON. */
+function soloSiHay(m: Medio[] | undefined) {
+  return m && m.length > 0 ? { medios: m } : {}
 }
 
 /** Saca todo lo que no debería llegar al navegador. */

@@ -15,9 +15,50 @@ import { z } from 'zod'
 
 const textoNoVacio = z.string().trim().min(1, 'No puede estar vacío')
 
+/**
+ * Una imagen o un video que acompaña a un texto.
+ *
+ * En Física el dibujo no es un adorno: un ejercicio de diagrama de cuerpo libre
+ * sin el diagrama no es un ejercicio.
+ *
+ * Las imágenes se suben al bucket `contenido` de Supabase y se guarda su
+ * dirección. Los videos reusan lo de la lección: se guarda el identificador de
+ * YouTube, no el enlace.
+ *
+ * `alt` es OBLIGATORIO. Es una línea que cuesta escribir y es la diferencia
+ * entre que un alumno con lector de pantalla pueda resolver el ejercicio o no
+ * pueda. Cuando la imagen ES el enunciado, no describirla es no dar el
+ * enunciado.
+ */
+export const MedioSchema = z.discriminatedUnion('tipo', [
+  z.object({
+    tipo: z.literal('imagen'),
+    url: z.string().url('Tiene que ser una dirección completa'),
+    alt: z.string().trim().min(1, 'Describí qué se ve en la imagen').max(300),
+  }),
+  z.object({
+    tipo: z.literal('video'),
+    youtubeId: z.string().regex(/^[A-Za-z0-9_-]{11}$/, 'No parece un identificador de YouTube'),
+    segundo: z.number().int().min(0).optional(),
+  }),
+])
+
+/**
+ * Los medios van como campo OPCIONAL, no con `.default([])`.
+ *
+ * Parece contradecir la regla de más abajo —donde los defaults escondían
+ * pérdida de datos— pero es al revés. Ahí el default tapaba un campo que ANTES
+ * tenía contenido: una clase vieja pasaba la validación con la lista en cero y
+ * el trabajo se perdía sin un solo error. Acá el campo no existió nunca, así
+ * que ausente significa exactamente "esta clase no tiene imágenes", que es la
+ * verdad. No hay nada que perder porque no había nada.
+ */
+const medios = z.array(MedioSchema).max(6, 'Como mucho 6 por bloque').optional()
+
 export const SeccionExplicacionSchema = z.object({
   titulo: textoNoVacio,
   parrafo: textoNoVacio,
+  medios,
   caja: z
     .object({
       tipo: z.enum(['ejemplo', 'tip', 'nota']),
@@ -63,7 +104,18 @@ export const EjemploSchema = z.object({
 const camposComunesEjercicio = {
   id: z.number().int().positive(),
   enunciado: textoNoVacio,
+  /** Acompañan al enunciado: el diagrama del problema, por ejemplo. */
+  medios,
   explicacion: textoNoVacio,
+  /**
+   * Acompañan a la devolución, que se muestra recién después de responder.
+   *
+   * Van en un campo aparte y no mezclados con los del enunciado porque el
+   * filtro de `publico.ts` los trata distinto: estos NO pueden viajar al
+   * navegador antes de tiempo. Un dibujo con la resolución al lado del
+   * enunciado sería la respuesta servida en bandeja.
+   */
+  mediosExplicacion: medios,
   puntos: z.number().int().min(1).max(3),
 }
 
@@ -98,9 +150,11 @@ export const PreguntaQuizSchema = z
   .object({
     id: z.number().int().positive(),
     pregunta: textoNoVacio,
+    medios,
     opciones: z.array(textoNoVacio).min(2, 'Al menos dos opciones'),
     respuestaCorrectaIndex: z.number().int().min(0),
     explicacion: textoNoVacio,
+    mediosExplicacion: medios,
   })
   .refine(p => p.respuestaCorrectaIndex < p.opciones.length, {
     message: 'El índice de la respuesta correcta apunta fuera de las opciones',
@@ -116,9 +170,30 @@ export const TrabajoPracticoSchema = z.object({
   ejercicios: z.array(EjercicioSchema).min(1, 'Al menos un ejercicio'),
 })
 
-/** Una evaluación: preguntas de opción múltiple que se rinden juntas. */
+/**
+ * Una evaluación: preguntas de opción múltiple que se rinden juntas.
+ *
+ * Los tres campos nuevos son lo que el alumno ve ANTES de empezar, para que
+ * sepa a qué se está metiendo, y lo que define las reglas del intento.
+ *
+ * Todos opcionales, y su ausencia significa algo concreto y sensato:
+ *
+ *   sin dificultad            no se muestra la etiqueta
+ *   sin tiempoLimiteMinutos   se rinde sin reloj
+ *   sin intentos              se puede rendir las veces que se quiera
+ *
+ * OJO: el tiempo límite acá es solo el dato. Un reloj en el navegador se pausa
+ * con las herramientas de desarrollo y se reinicia recargando la página; para
+ * que sea un límite de verdad, el servidor tiene que registrar cuándo empezó el
+ * intento y verificarlo al entregar. Eso es la tabla de intentos, que todavía
+ * no existe. Hasta entonces el reloj es orientativo, y así hay que decírselo al
+ * alumno.
+ */
 export const EvaluacionSchema = z.object({
   titulo: z.string().trim().max(160).optional(),
+  dificultad: z.enum(['Básico', 'Intermedio', 'Avanzado']).optional(),
+  tiempoLimiteMinutos: z.number().int().min(1).max(300).optional(),
+  intentos: z.number().int().min(1).max(20).optional(),
   preguntas: z.array(PreguntaQuizSchema).min(1, 'Al menos una pregunta'),
 })
 
@@ -164,6 +239,7 @@ export type Ejercicio = z.infer<typeof EjercicioSchema>
 export type EjercicioLibre = Extract<Ejercicio, { tipo: 'libre' }>
 export type EjercicioMultiple = Extract<Ejercicio, { tipo: 'multiple' }>
 export type EjercicioSiNo = Extract<Ejercicio, { tipo: 'si-no' }>
+export type Medio = z.infer<typeof MedioSchema>
 export type PreguntaQuiz = z.infer<typeof PreguntaQuizSchema>
 export type Video = z.infer<typeof VideoSchema>
 export type TrabajoPractico = z.infer<typeof TrabajoPracticoSchema>
