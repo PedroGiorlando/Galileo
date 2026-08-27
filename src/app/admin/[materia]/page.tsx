@@ -100,7 +100,8 @@ export default async function AdminMateriaPage({
 
         <h1 className="font-display text-3xl font-bold text-tinta">{materia.nombre}</h1>
         <p className="mt-1 mb-8 text-tinta-suave">
-          Cada módulo se escribe una vez. Las casillas deciden en qué carreras aparece.
+          Cada módulo se escribe una vez y se dicta en las carreras que elijas. Cinemática puede
+          estar en UNCuyo y no en la UTN sin duplicar el contenido.
         </p>
 
         <div className="space-y-6">

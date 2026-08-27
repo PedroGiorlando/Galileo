@@ -29,8 +29,9 @@ export function AsignarModulo({
 
   if (opciones.length === 0) {
     return (
-      <p className="mt-3 text-xs text-tinta-suave">
-        Esta materia todavía no está ofrecida en ninguna carrera.
+      <p className="mt-3 rounded-xl border border-dashed border-linea p-3 text-sm text-tinta-suave">
+        Esta materia todavía no se dicta en ninguna carrera, así que este módulo no lo va a ver
+        nadie. Se arregla desde <strong className="font-medium">Panel → Estructura</strong>.
       </p>
     )
   }
@@ -53,27 +54,32 @@ export function AsignarModulo({
   }
 
   return (
-    <div className="mt-3">
-      <p className="mb-2 flex items-center gap-2 text-xs font-medium text-tinta-suave">
-        Aparece en:
-        {guardando && <Loader2 size={12} className="animate-spin" />}
-      </p>
+    // Caja propia con título. Antes esto era una línea de "Aparece en:" en
+    // letra chica con casillas de 14px, apretada entre el nombre del módulo y
+    // la lista de clases: la primera persona que usó el panel no la vio, y vino
+    // a pedir como funcionalidad nueva algo que ya estaba acá. Un control que
+    // parece decoración es un control que no existe.
+    <fieldset className="mt-3 rounded-xl border border-linea bg-slate-50/60 p-3">
+      <legend className="flex items-center gap-2 px-1 text-sm font-medium text-tinta">
+        ¿En qué carreras se dicta este módulo?
+        {guardando && <Loader2 size={13} className="animate-spin text-tinta-suave" />}
+      </legend>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="mt-1 flex flex-wrap gap-2">
         {opciones.map(o => {
           const incluido = marcados.includes(o.cursoId)
           return (
             <label
               key={o.cursoId}
-              className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm transition-colors ${
                 incluido
-                  ? 'border-galileo bg-galileo/10 font-medium text-galileo'
-                  : 'border-linea text-tinta-suave hover:bg-slate-50'
+                  ? 'border-galileo bg-galileo/10 font-medium text-galileo-oscuro'
+                  : 'border-linea bg-white text-tinta-suave hover:bg-slate-50'
               }`}
             >
               <input
                 type="checkbox"
-                className="h-3.5 w-3.5 accent-galileo"
+                className="h-4 w-4 accent-galileo"
                 checked={incluido}
                 onChange={e => alternar(o.cursoId, e.target.checked)}
               />
@@ -84,16 +90,16 @@ export function AsignarModulo({
       </div>
 
       {error && (
-        <p role="alert" className="mt-2 text-xs font-medium text-red-600">
+        <p role="alert" className="mt-2 text-sm font-medium text-red-600">
           {error}
         </p>
       )}
 
       {marcados.length === 0 && (
-        <p className="mt-2 text-xs text-amber-700">
-          {moduloNombre} no aparece en ninguna carrera: ningún alumno lo va a ver.
+        <p className="mt-2 text-sm text-amber-700">
+          Ninguna: {moduloNombre} no lo va a ver ningún alumno.
         </p>
       )}
-    </div>
+    </fieldset>
   )
 }
