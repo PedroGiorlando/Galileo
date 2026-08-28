@@ -24,7 +24,12 @@ export function EditorSubtema({
   contenidoInicial: ContenidoBorrador
   desdeLaBase: boolean
 }) {
-  const [estado, setEstado] = useState<{ ok: boolean; mensaje: string; slug?: string } | null>(null)
+  const [estado, setEstado] = useState<{
+    ok: boolean
+    mensaje: string
+    slug?: string
+    publicado?: boolean
+  } | null>(null)
 
   return (
     <div className="space-y-5">
@@ -50,13 +55,30 @@ export function EditorSubtema({
           )}
           <div className="space-y-1">
             <p className="font-semibold">{estado.mensaje}</p>
+
+            {/* El enlace tiene que decir la verdad. Antes decía siempre "Ver la
+                clase publicada", también con la casilla destildada: se hacía
+                clic y salía un 404, que parece un sitio roto y no un borrador
+                funcionando como corresponde. */}
             {estado.ok && estado.slug && (
               <Link
-                href={`${rutaClase}/${estado.slug}`}
+                href={
+                  estado.publicado
+                    ? `${rutaClase}/${estado.slug}`
+                    : `/admin/${materiaSlug}/${estado.slug}/vista`
+                }
                 className="inline-flex items-center gap-1 font-medium underline"
               >
-                Ver la clase publicada <ExternalLink size={12} />
+                {estado.publicado ? 'Ver la clase publicada' : 'Ver la vista previa'}
+                <ExternalLink size={12} />
               </Link>
+            )}
+
+            {estado.ok && !estado.publicado && (
+              <p className="text-sm opacity-90">
+                Guardada como borrador: no la ve nadie más que vos. Para publicarla, tildá{' '}
+                <strong className="font-medium">Publicada</strong> y guardá de nuevo.
+              </p>
             )}
           </div>
         </div>
@@ -70,7 +92,12 @@ export function EditorSubtema({
           const r = await guardarClase(materiaId, meta, contenido)
           setEstado(
             r.ok
-              ? { ok: true, mensaje: 'Clase guardada.', slug: meta.slug }
+              ? {
+                  ok: true,
+                  mensaje: meta.publicado ? 'Clase publicada.' : 'Borrador guardado.',
+                  slug: meta.slug,
+                  publicado: meta.publicado,
+                }
               : { ok: false, mensaje: r.error },
           )
           window.scrollTo({ top: 0, behavior: 'smooth' })
