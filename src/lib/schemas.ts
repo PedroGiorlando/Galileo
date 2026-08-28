@@ -233,6 +233,52 @@ export const TemaMetaSchema = z.object({
   publicado: z.boolean(),
 })
 
+/*
+ * --- Guardar sin publicar ----------------------------------------------------
+ *
+ * Escribir una clase lleva horas y no se hace de una sentada. Si guardar
+ * exigiera todo completo, la única forma de no perder lo escrito sería
+ * terminarlo entero de un tirón, o inventar objetivos y ejemplos de relleno
+ * para que el formulario deje pasar — que es peor, porque después ese relleno
+ * se publica.
+ *
+ * Entonces: sin publicar se guarda lo que haya. Al publicar se exige todo.
+ * La validación estricta no desaparece, se mueve al momento en que importa.
+ *
+ * Lo que NO se relaja nunca es el `slug`: es la dirección de la página y la
+ * clave por la que se busca la clase para actualizarla.
+ */
+
+/** La ficha de una clase que todavía no se publica. */
+export const TemaMetaBorradorSchema = TemaMetaSchema.extend({
+  titulo: z.string(),
+  categoria: z.string(),
+  // El caso concreto que motivó todo esto: no se sabe cuánto dura la clase
+  // hasta que están todos los videos, y sin esto no se podía guardar nada.
+  duracionLabel: z.string(),
+})
+
+/**
+ * El contenido de un borrador: solo se revisa la FORMA, no lo que hay adentro.
+ *
+ * Las seis listas tienen que existir y ser listas. Lo de adentro se revisa
+ * recién al publicar, con TemaContenidoSchema.
+ *
+ * No es "no validar nada": esta acción es un endpoint HTTP, y sin esto se
+ * podría dejar cualquier cosa guardada en la columna. El tope de elementos
+ * está por lo mismo, para que nadie deje un bloque de cincuenta megas.
+ */
+const listaLibre = z.array(z.unknown()).max(200).default([])
+
+export const TemaContenidoBorradorSchema = z.object({
+  objetivos: listaLibre,
+  videos: listaLibre,
+  explicacion: listaLibre,
+  ejemplos: listaLibre,
+  practicos: listaLibre,
+  evaluaciones: listaLibre,
+})
+
 export type SeccionExplicacion = z.infer<typeof SeccionExplicacionSchema>
 export type Ejemplo = z.infer<typeof EjemploSchema>
 export type Ejercicio = z.infer<typeof EjercicioSchema>

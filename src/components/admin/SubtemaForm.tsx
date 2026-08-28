@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, Save } from 'lucide-react'
+import { AlertCircle, ListChecks, Save } from 'lucide-react'
 import {
   aContenido,
   ejemploVacio,
@@ -16,9 +16,10 @@ import {
   type TipoCaja,
 } from '@/lib/borrador'
 import {
+  TemaContenidoBorradorSchema,
   TemaContenidoSchema,
+  TemaMetaBorradorSchema,
   TemaMetaSchema,
-  type TemaContenido,
   type TemaMeta,
 } from '@/lib/schemas'
 import {
@@ -75,7 +76,12 @@ export function SubtemaForm({
   materiaSlug: string
   metaInicial: TemaMeta
   contenidoInicial: ContenidoBorrador
-  onGuardar: (meta: TemaMeta, contenido: TemaContenido) => void | Promise<void>
+  /**
+   * El contenido va como `unknown`: un borrador no es un TemaContenido válido
+   * todavía, y ese es justamente el punto. El servidor lo revisa con el rigor
+   * que corresponda según se publique o no.
+   */
+  onGuardar: (meta: TemaMeta, contenido: unknown) => void | Promise<void>
 }) {
   const [meta, setMeta] = useState<TemaMeta>(metaInicial)
   const [c, setC] = useState<ContenidoBorrador>(contenidoInicial)
@@ -112,15 +118,21 @@ export function SubtemaForm({
     setC(prev => ({ ...prev, [clave]: [...(prev[clave] as unknown[]), item] }))
   }
 
-  async function guardar(e: React.FormEvent) {
-    e.preventDefault()
+  const contenidoArmado = aContenido(c)
 
-    // Se valida contra el mismo schema que protege la base: lo que no pase acá,
-    // tampoco se habría podido guardar.
+  /**
+   * Todo lo que falta para que esta clase se pueda publicar.
+   *
+   * Se calcula en cada render, no solo al guardar: mientras la clase esté sin
+   * publicar la lista se muestra como pendientes, no como errores. Escribir una
+   * clase lleva horas y no se hace de una sentada; que el formulario no deje
+   * guardar hasta tener todo obliga a terminarlo de un tirón o a inventar
+   * relleno para que pase, y ese relleno después se publica.
+   */
+  const faltaParaPublicar = (() => {
     const rMeta = TemaMetaSchema.safeParse(meta)
-    const rContenido = TemaContenidoSchema.safeParse(aContenido(c))
-
-    const problemas = [
+    const rContenido = TemaContenidoSchema.safeParse(contenidoArmado)
+    return [
       ...(rMeta.success
         ? []
         : rMeta.error.issues.map(i => 'Ficha → ' + rutaLegible(i.path) + ': ' + i.message)),
@@ -128,16 +140,34 @@ export function SubtemaForm({
         ? []
         : rContenido.error.issues.map(i => rutaLegible(i.path) + ': ' + i.message)),
     ]
+  })()
 
-    setErrores(problemas)
-    if (!rMeta.success || !rContenido.success) {
+  async function guardar(e: React.FormEvent) {
+    e.preventDefault()
+
+    // Publicar exige todo. Guardar sin publicar solo exige que la forma sea
+    // sana, con las mismas reglas que aplica el servidor: si algo se cuela acá,
+    // allá se rechaza igual.
+    const bloqueantes = meta.publicado
+      ? faltaParaPublicar
+      : [
+          ...(TemaMetaBorradorSchema.safeParse(meta).error?.issues ?? []).map(
+            i => 'Ficha → ' + rutaLegible(i.path) + ': ' + i.message,
+          ),
+          ...(TemaContenidoBorradorSchema.safeParse(contenidoArmado).error?.issues ?? []).map(
+            i => rutaLegible(i.path) + ': ' + i.message,
+          ),
+        ]
+
+    setErrores(bloqueantes)
+    if (bloqueantes.length > 0) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
     setGuardando(true)
     try {
-      await onGuardar(rMeta.data, rContenido.data)
+      await onGuardar(meta, contenidoArmado)
     } finally {
       setGuardando(false)
     }
@@ -156,6 +186,30 @@ export function SubtemaForm({
               <li key={i}>{e}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Sin publicar, lo que falta es información y no un error: se puede
+          guardar igual. Se muestra para que nadie descubra recién al querer
+          publicar que le faltan seis cosas de hace tres semanas. */}
+      {!meta.publicado && faltaParaPublicar.length > 0 && (
+        <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+            <ListChecks size={16} />
+            Guardás como borrador. Falta{faltaParaPublicar.length === 1 ? '' : 'n'}{' '}
+            {faltaParaPublicar.length}{' '}
+            {faltaParaPublicar.length === 1 ? 'cosa' : 'cosas'} para poder publicarla
+          </p>
+          <ul className="ml-6 list-disc space-y-1 text-sm text-amber-800">
+            {faltaParaPublicar.slice(0, 10).map((e, i) => (
+              <li key={i}>{e}</li>
+            ))}
+          </ul>
+          {faltaParaPublicar.length > 10 && (
+            <p className="ml-6 text-sm text-amber-700">
+              …y {faltaParaPublicar.length - 10} más.
+            </p>
+          )}
         </div>
       )}
 
@@ -570,12 +624,19 @@ export function SubtemaForm({
             {c.videos.length} videos · {c.explicacion.length} secciones · {c.ejemplos.length}{' '}
             ejemplos · {c.practicos.length} TP · {c.evaluaciones.length} evaluaciones
           </p>
+          {/* El botón dice qué va a pasar. "Guardar clase" con la casilla
+              destildada no aclara que eso NO la deja visible para nadie. */}
           <button
             type="submit"
             disabled={guardando}
-            className="flex items-center gap-2 rounded-md bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            className="flex min-h-11 items-center gap-2 rounded-md bg-green-600 px-5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
           >
-            <Save size={16} /> {guardando ? 'Guardando...' : 'Guardar clase'}
+            <Save size={16} />
+            {guardando
+              ? 'Guardando…'
+              : meta.publicado
+                ? 'Guardar y publicar'
+                : 'Guardar borrador'}
           </button>
         </div>
       </div>

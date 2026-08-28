@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { supabaseAdmin } from '@/lib/supabase'
-import { TemaContenidoSchema, TemaMetaSchema } from '@/lib/schemas'
+import {
+  TemaContenidoBorradorSchema,
+  TemaContenidoSchema,
+  TemaMetaBorradorSchema,
+  TemaMetaSchema,
+} from '@/lib/schemas'
 import { aSlug, rechazarSiNoEsAdmin } from '@/lib/admin'
 
 /**
@@ -76,15 +81,29 @@ export async function guardarClase(materiaId: number, meta: unknown, contenido: 
   const negado = await rechazarSiNoEsAdmin()
   if (negado) return negado
 
-  const rMeta = TemaMetaSchema.safeParse(meta)
-  const rContenido = TemaContenidoSchema.safeParse(contenido)
+  // Primero la ficha con las reglas laxas, solo para saber si se está
+  // publicando. Recién con eso se decide con qué rigor se revisa todo lo demás.
+  const base = TemaMetaBorradorSchema.safeParse(meta)
+  if (!base.success) {
+    return { ok: false as const, error: `Ficha inválida: ${base.error.issues[0]?.message ?? ''}` }
+  }
+
+  const publicando = base.data.publicado
+
+  const rMeta = publicando ? TemaMetaSchema.safeParse(meta) : base
+  const rContenido = publicando
+    ? TemaContenidoSchema.safeParse(contenido)
+    : TemaContenidoBorradorSchema.safeParse(contenido)
 
   if (!rMeta.success || !rContenido.success) {
     const problemas = [
       ...(rMeta.success ? [] : rMeta.error.issues),
       ...(rContenido.success ? [] : rContenido.error.issues),
     ]
-    return { ok: false as const, error: `Contenido inválido: ${problemas[0]?.message ?? ''}` }
+    // Se aclara de dónde sale la exigencia: un mensaje de "falta el enunciado"
+    // sin decir que es por publicar suena a que el borrador está roto.
+    const motivo = publicando ? 'No se puede publicar' : 'No se pudo guardar'
+    return { ok: false as const, error: `${motivo}: ${problemas[0]?.message ?? ''}` }
   }
 
   const m = rMeta.data

@@ -1,5 +1,4 @@
-import type { SubtemaCompleto } from '@/data/topicData'
-import type { Medio } from './schemas'
+import type { Medio, TemaContenido } from './schemas'
 import { idDeYouTube } from './video'
 
 /**
@@ -223,7 +222,30 @@ const desdeMedios = (lista: Medio[] | undefined) => (lista ?? []).map(medioABorr
 
 // --- Subtema guardado → borrador ------------------------------------------------
 
-export function contenidoDesdeTema(tema: SubtemaCompleto): ContenidoBorrador {
+/**
+ * Lo que se puede leer de la base para editar. Va como `Partial` a propósito.
+ *
+ * Una clase sin publicar se guarda a medias —ese es el punto de un borrador— y
+ * el panel tiene que poder abrir CUALQUIER cosa que él mismo haya escrito. Si
+ * esto exigiera el contenido completo, guardar un borrador incompleto lo
+ * dejaría imposible de reabrir: error 500 al entrar, y el trabajo adentro sin
+ * forma de recuperarlo. El panel es la herramienta para arreglar contenido
+ * roto; no puede ser lo primero que se rompa con él.
+ */
+export type ContenidoGuardado = Partial<TemaContenido>
+
+export function contenidoDesdeTema(guardado: ContenidoGuardado): ContenidoBorrador {
+  // Las seis listas se resuelven una sola vez: más abajo los ejemplos buscan
+  // dentro de los videos, y necesitan la lista ya normalizada.
+  const tema = {
+    objetivos: guardado.objetivos ?? [],
+    videos: guardado.videos ?? [],
+    explicacion: guardado.explicacion ?? [],
+    ejemplos: guardado.ejemplos ?? [],
+    practicos: guardado.practicos ?? [],
+    evaluaciones: guardado.evaluaciones ?? [],
+  }
+
   return {
     objetivos: [...tema.objetivos],
     explicacion: tema.explicacion.map(s => ({

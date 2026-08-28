@@ -6,7 +6,13 @@ import {
   seccionVacia,
   type ContenidoBorrador,
 } from './borrador'
-import { TemaContenidoSchema, type TemaContenido } from './schemas'
+import {
+  TemaContenidoBorradorSchema,
+  TemaContenidoSchema,
+  TemaMetaBorradorSchema,
+  TemaMetaSchema,
+  type TemaContenido,
+} from './schemas'
 import { tema, type SubtemaCompleto } from '@/data/topicData'
 
 describe('ida y vuelta entre tema guardado y borrador', () => {
@@ -161,6 +167,112 @@ describe('medios y ajustes de la evaluación', () => {
     expect(Object.keys(ev)).not.toContain('tiempoLimiteMinutos')
     expect(Object.keys(ev)).not.toContain('intentos')
     expect(Object.keys(ev)).not.toContain('dificultad')
+  })
+})
+
+describe('clase sin publicar', () => {
+  /**
+   * Escribir una clase lleva horas y no se hace de una sentada, así que sin
+   * publicar se guarda lo que haya.
+   *
+   * EL PELIGRO DE ESTO, y el motivo de estas pruebas: si el panel exigiera el
+   * contenido completo para ABRIR una clase, guardar un borrador incompleto lo
+   * dejaría imposible de reabrir. Error 500 al entrar, el trabajo adentro sin
+   * forma de llegar a él, y la única herramienta para arreglarlo rota
+   * justamente por lo que hay que arreglar.
+   */
+
+  it('se puede abrir una clase de la que no se guardó nada', () => {
+    const b = contenidoDesdeTema({})
+
+    expect(b.objetivos).toEqual([])
+    expect(b.explicacion).toEqual([])
+    expect(b.videos).toEqual([])
+    expect(b.ejemplos).toEqual([])
+    expect(b.practicos).toEqual([])
+    expect(b.evaluaciones).toEqual([])
+  })
+
+  it('se puede abrir una clase a medio escribir sin perder lo que sí tiene', () => {
+    // El caso real: escribió los objetivos y una sección de teoría, y se fue.
+    const aMedias = {
+      objetivos: ['Descomponer un vector'],
+      explicacion: [{ titulo: '¿Por qué descomponer?', parrafo: 'Porque sí.' }],
+    }
+
+    const b = contenidoDesdeTema(aMedias)
+
+    expect(b.objetivos).toEqual(['Descomponer un vector'])
+    expect(b.explicacion).toHaveLength(1)
+    expect(b.explicacion[0].titulo).toBe('¿Por qué descomponer?')
+    // Y lo que no escribió todavía no lo inventa.
+    expect(b.practicos).toEqual([])
+    expect(b.evaluaciones).toEqual([])
+  })
+
+  it('guardar y volver a abrir un borrador no cambia nada', () => {
+    const aMedias = { objetivos: ['Uno'], explicacion: [{ titulo: 'T', parrafo: 'P' }] }
+
+    const unaVuelta = aContenido(contenidoDesdeTema(aMedias))
+    const dosVueltas = aContenido(contenidoDesdeTema(unaVuelta as TemaContenido))
+
+    expect(dosVueltas).toEqual(unaVuelta)
+  })
+
+  it('el schema de borrador acepta lo que el estricto rechaza', () => {
+    const aMedias = aContenido(
+      contenidoDesdeTema({ objetivos: ['Uno'], explicacion: [{ titulo: 'T', parrafo: 'P' }] }),
+    )
+
+    expect(TemaContenidoBorradorSchema.safeParse(aMedias).success).toBe(true)
+    // Y el estricto lo sigue rechazando: publicar exige todo. Si esto pasara,
+    // se podría publicar una clase sin ejemplos ni ejercicios.
+    expect(TemaContenidoSchema.safeParse(aMedias).success).toBe(false)
+  })
+
+  it('el borrador NO acepta cualquier cosa: la forma se sigue revisando', () => {
+    // No es "no validar nada". Guardar es un endpoint HTTP, y sin esto se
+    // podría dejar cualquier bloque en la columna de contenido.
+    expect(TemaContenidoBorradorSchema.safeParse({ objetivos: 'no es una lista' }).success).toBe(
+      false,
+    )
+    expect(TemaContenidoBorradorSchema.safeParse('un texto suelto').success).toBe(false)
+  })
+
+  it('la ficha en borrador tolera la duración vacía, la publicada no', () => {
+    // El caso concreto que motivó todo: no se sabe cuánto dura la clase hasta
+    // tener los videos, y sin esto no se podía guardar nada.
+    const ficha = {
+      slug: 'cinematica-basica',
+      titulo: 'Cinemática',
+      descripcion: '',
+      categoria: 'Cinemática',
+      orden: 1,
+      duracionLabel: '',
+      gratis: false,
+      publicado: false,
+    }
+
+    expect(TemaMetaBorradorSchema.safeParse(ficha).success).toBe(true)
+    expect(TemaMetaSchema.safeParse(ficha).success).toBe(false)
+  })
+
+  it('el slug no se relaja nunca', () => {
+    // Es la dirección de la página y la clave por la que se busca la clase
+    // para actualizarla. Un slug roto no es contenido a medias, es una fila
+    // que no se encuentra más.
+    const ficha = {
+      slug: 'Con Mayúsculas Y Espacios',
+      titulo: 'x',
+      descripcion: '',
+      categoria: 'x',
+      orden: 1,
+      duracionLabel: '',
+      gratis: false,
+      publicado: false,
+    }
+
+    expect(TemaMetaBorradorSchema.safeParse(ficha).success).toBe(false)
   })
 })
 

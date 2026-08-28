@@ -2,7 +2,12 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { esAdmin, getUsuario } from '@/lib/progreso'
 import { getClaseParaAdmin, getMateria } from '@/lib/contenido'
-import { contenidoDesdeTema, contenidoVacio, type ContenidoBorrador } from '@/lib/borrador'
+import {
+  contenidoDesdeTema,
+  contenidoVacio,
+  type ContenidoBorrador,
+  type ContenidoGuardado,
+} from '@/lib/borrador'
 import { TemaContenidoSchema, type TemaMeta } from '@/lib/schemas'
 import { Header } from '@/components/Header'
 import { EditorSubtema } from '@/components/admin/EditorSubtema'
@@ -14,6 +19,24 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Lee el contenido guardado para editarlo, sin exigir que esté completo.
+ *
+ * Acá NO se puede usar `.parse()`, que lanza excepción. Una clase sin publicar
+ * se guarda a medias a propósito, y con un parse estricto el panel devolvería
+ * error 500 al intentar abrirla: el trabajo quedaría adentro sin forma de
+ * llegar a él, con la única herramienta para arreglarlo rota justamente por lo
+ * que hay que arreglar.
+ *
+ * El contenido completo igual pasa por el schema, así se normaliza. Lo que está
+ * a medias pasa tal cual, y las listas que falten las completa
+ * `contenidoDesdeTema` con vacías.
+ */
+function leerGuardado(bruto: unknown): ContenidoGuardado {
+  const r = TemaContenidoSchema.safeParse(bruto)
+  return r.success ? r.data : ((bruto ?? {}) as ContenidoGuardado)
+}
 
 export default async function AdminClasePage({
   params,
@@ -52,10 +75,7 @@ export default async function AdminClasePage({
   const esLaDeArranque = fila.slug === contenidoDeArranque.slug
 
   const contenido: ContenidoBorrador = tieneContenido
-    ? contenidoDesdeTema({
-        ...contenidoDeArranque,
-        ...TemaContenidoSchema.parse(fila.contenido),
-      })
+    ? contenidoDesdeTema(leerGuardado(fila.contenido))
     : esLaDeArranque
       ? contenidoDesdeTema(contenidoDeArranque)
       : contenidoVacio()
