@@ -38,7 +38,22 @@ export type PreguntaPublica = {
 }
 
 export type TrabajoPracticoPublico = { titulo?: string; ejercicios: EjercicioPublico[] }
-export type EvaluacionPublica = { titulo?: string; preguntas: PreguntaPublica[] }
+
+/**
+ * Las reglas del examen SÍ viajan: son exactamente lo que el alumno tiene que
+ * saber antes de apretar Comenzar. Cuánto dura, qué dificultad tiene y cuántos
+ * intentos le quedan no es información secreta, es el trato.
+ *
+ * El tiempo igual lo controla el servidor: esto es lo que se muestra, no lo
+ * que se verifica.
+ */
+export type EvaluacionPublica = {
+  titulo?: string
+  dificultad?: 'Básico' | 'Intermedio' | 'Avanzado'
+  tiempoLimiteMinutos?: number
+  intentos?: number
+  preguntas: PreguntaPublica[]
+}
 
 export type SubtemaPublico = Omit<SubtemaCompleto, 'practicos' | 'evaluaciones'> & {
   practicos: TrabajoPracticoPublico[]
@@ -75,6 +90,9 @@ export function sinRespuestas(clase: SubtemaCompleto): SubtemaPublico {
     })),
     evaluaciones: clase.evaluaciones.map(ev => ({
       ...(ev.titulo ? { titulo: ev.titulo } : {}),
+      ...(ev.dificultad ? { dificultad: ev.dificultad } : {}),
+      ...(ev.tiempoLimiteMinutos ? { tiempoLimiteMinutos: ev.tiempoLimiteMinutos } : {}),
+      ...(ev.intentos ? { intentos: ev.intentos } : {}),
       preguntas: ev.preguntas.map(preguntaPublica),
     })),
   }

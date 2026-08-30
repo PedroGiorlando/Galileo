@@ -5,6 +5,7 @@ import { CheckCircle2, Loader2, RotateCcw, XCircle } from 'lucide-react'
 import type { SubtemaPublico } from '@/lib/publico'
 import type { Medio } from '@/lib/schemas'
 import { Medios } from '../Medios'
+import { ExamenEvaluacion } from './ExamenEvaluacion'
 import { corregirPregunta } from '@/app/acciones-correccion'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 
@@ -132,6 +133,28 @@ export function AutoevaluacionTab({
       ))}
     </div>
   )
+
+  // Una evaluación con tiempo o con intentos contados es un EXAMEN: se rinde
+  // con cuenta, el servidor lleva el reloj y la devolución va al final.
+  //
+  // Sin ninguna de las dos cosas sigue siendo práctica libre, igual que hasta
+  // ahora: sin cuenta, sin reloj y corrigiendo pregunta por pregunta. Las
+  // evaluaciones ya cargadas caen en este caso, así que no cambia nada para
+  // ellas hasta que alguien les ponga una regla.
+  if (evaluacion.tiempoLimiteMinutos || evaluacion.intentos) {
+    return (
+      <div className="space-y-5">
+        {selector}
+        <ExamenEvaluacion
+          key={evalActiva}
+          evaluacion={evaluacion}
+          materiaSlug={materiaSlug}
+          claseSlug={subtema.slug}
+          evalIndice={evalActiva}
+        />
+      </div>
+    )
+  }
 
   if (terminado) {
     const porcentaje = Math.round((puntaje / total) * 100)

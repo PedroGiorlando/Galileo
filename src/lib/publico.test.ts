@@ -137,6 +137,32 @@ describe('el contenido que se manda al navegador', () => {
     expect(clavesDe(sinRespuestas(conMedios))).not.toContain('mediosExplicacion')
   })
 
+  it('las reglas del examen viajan: son el trato, no un secreto', () => {
+    // Cuánto dura, qué dificultad tiene y cuántos intentos quedan es
+    // exactamente lo que el alumno necesita ANTES de apretar Comenzar. El
+    // tema de ejemplo no las tiene, así que sin este caso podrían no estar
+    // llegando y todo seguiría en verde.
+    const conReglas = {
+      ...tema,
+      evaluaciones: [
+        {
+          ...tema.evaluaciones[0],
+          dificultad: 'Avanzado' as const,
+          tiempoLimiteMinutos: 45,
+          intentos: 3,
+        },
+      ],
+    }
+
+    const ev = sinRespuestas(conReglas).evaluaciones[0]
+
+    expect(ev.dificultad).toBe('Avanzado')
+    expect(ev.tiempoLimiteMinutos).toBe(45)
+    expect(ev.intentos).toBe(3)
+    // Y lo que sí es secreto sigue sin viajar.
+    expect(JSON.stringify(ev)).not.toContain('respuestaCorrectaIndex')
+  })
+
   it('conserva todo lo que el alumno sí necesita ver', () => {
     // El error opuesto y más silencioso: filtrar de más y servir ejercicios
     // vacíos. Todo pasaría en verde y la clase quedaría inservible.

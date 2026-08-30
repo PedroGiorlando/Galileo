@@ -416,18 +416,49 @@ export async function getRutasDeClases(): Promise<{ materia: string; clase: stri
  * políticas de la base y solo corrige clases publicadas. Con la clave de
  * servicio se podrían sondear las respuestas de una clase todavía en borrador.
  */
-export async function getContenidoParaCorregir(
+export async function getClaseConRespuestas(
   materiaSlug: string,
   claseSlug: string,
-): Promise<TemaContenido | null> {
+): Promise<{ id: number; contenido: TemaContenido } | null> {
   const materia = await getMateria(materiaSlug)
   if (!materia) return null
 
   const { data, error } = await supabasePublico()
     .from('clases')
-    .select('contenido')
+    .select('id, contenido')
     .eq('materia_id', materia.id)
     .eq('slug', claseSlug)
+    .maybeSingle()
+
+  if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
+  if (!data?.contenido) return null
+
+  return { id: data.id, contenido: TemaContenidoSchema.parse(data.contenido) }
+}
+
+export async function getContenidoParaCorregir(
+  materiaSlug: string,
+  claseSlug: string,
+): Promise<TemaContenido | null> {
+  return (await getClaseConRespuestas(materiaSlug, claseSlug))?.contenido ?? null
+}
+
+/**
+ * El contenido de una clase por su id.
+ *
+ * Lo usa el examen: un intento guarda `clase_id`, no la dirección, así que
+ * para calificarlo hay que poder llegar al contenido desde el número.
+ *
+ * Cliente público a propósito, igual que las otras dos: respeta las políticas
+ * de la base, así que solo devuelve clases publicadas. Un intento sobre una
+ * clase que se despublicó a mitad de camino deja de poder calificarse, que es
+ * lo correcto — no existe más para el alumno.
+ */
+export async function getContenidoPorId(claseId: number): Promise<TemaContenido | null> {
+  const { data, error } = await supabasePublico()
+    .from('clases')
+    .select('contenido')
+    .eq('id', claseId)
     .maybeSingle()
 
   if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
