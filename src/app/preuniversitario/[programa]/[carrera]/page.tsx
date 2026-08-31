@@ -62,7 +62,7 @@ export default async function CarreraPage({ params }: { params: Promise<Params> 
 
       <div className="border-b border-linea bg-white/70">
         <div className="mx-auto max-w-5xl px-6 py-8">
-          <p className="font-mono text-xs uppercase tracking-widest text-galileo">
+          <p className="text-xs uppercase tracking-widest text-galileo">
             {programa.nombre}
           </p>
           <h1 className="mt-1 font-display text-4xl font-bold text-tinta sm:text-5xl">
@@ -119,11 +119,11 @@ export default async function CarreraPage({ params }: { params: Promise<Params> 
                     <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-tinta-suave">
                       <span className="flex items-center gap-1.5">
                         <Layers size={15} className={paleta.texto} />
-                        <span className="font-mono">{modulos.length}</span> módulos
+                        <span>{modulos.length}</span> módulos
                       </span>
                       <span className="flex items-center gap-1.5">
                         <BookOpen size={15} className={paleta.texto} />
-                        <span className="font-mono">{clases}</span> clases
+                        <span>{clases}</span> clases
                       </span>
                       {listas > 0 && (
                         <span className={`font-medium ${paleta.texto}`}>{listas} listas</span>

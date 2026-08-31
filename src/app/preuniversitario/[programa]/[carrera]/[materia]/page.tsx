@@ -81,7 +81,7 @@ export default async function CursoPage({ params }: { params: Promise<Params> })
 
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div className="min-w-0">
-              <p className={`font-mono text-xs uppercase tracking-widest ${paleta.texto}`}>
+              <p className={`text-xs uppercase tracking-widest ${paleta.texto}`}>
                 Materia
               </p>
               <h1 className="mt-1 font-display text-4xl font-bold text-tinta sm:text-5xl">
@@ -92,11 +92,11 @@ export default async function CursoPage({ params }: { params: Promise<Params> })
               <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-tinta">
                 <span className="flex items-center gap-2">
                   <BookOpen size={17} className={paleta.texto} />
-                  <span className="font-mono">{total}</span> clases
+                  <span>{total}</span> clases
                 </span>
                 <span className="flex items-center gap-2">
                   <Layers size={17} className={paleta.texto} />
-                  <span className="font-mono">{temario.length}</span> módulos
+                  <span>{temario.length}</span> módulos
                 </span>
                 <span className="text-tinta-suave">
                   {listas > 0 ? `${listas} ya disponibles` : 'En preparación'}

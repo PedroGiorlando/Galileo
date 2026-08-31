@@ -125,7 +125,7 @@ export function EjerciciosTab({
           Trabajo práctico {tpActivo + 1}
           {practico.titulo && <span className="text-tinta-suave"> · {practico.titulo}</span>}
         </h2>
-        <span className="font-mono text-xs text-tinta-suave">
+        <span className="text-xs text-tinta-suave">
           {hechos}/{practico.ejercicios.length} resueltos
           {hechos > 0 && ` · ${bien} bien`}
         </span>
@@ -146,7 +146,7 @@ export function EjerciciosTab({
           return (
             <li key={ej.id} className="rounded-xl border border-linea bg-white p-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 font-mono text-xs text-slate-600">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">

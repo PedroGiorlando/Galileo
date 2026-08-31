@@ -43,14 +43,14 @@ export function TemarioTabla({
           <section key={unidad.id} id={unidad.slug} className="scroll-mt-6">
             <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-mono text-sm font-medium text-white ${paleta.solido}`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-medium text-white ${paleta.solido}`}
               >
                 {unidad.orden}
               </span>
               <h2 className="font-display text-xl font-bold text-tinta">
                 {unidad.nombre}
               </h2>
-              <span className="font-mono text-xs text-tinta-suave">
+              <span className="text-xs text-tinta-suave">
                 {hechas}/{unidad.clases.length}
               </span>
 
@@ -70,7 +70,7 @@ export function TemarioTabla({
                 const contenido = (
                   <>
                     <span
-                      className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-xs font-medium ring-4 ring-papel ${
+                      className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-medium ring-4 ring-papel ${
                         completa
                           ? 'bg-galileo text-white'
                           : clase.tieneContenido
@@ -89,7 +89,7 @@ export function TemarioTabla({
                         </span>
                       )}
                       {clase.duracionLabel && (
-                        <span className="mt-1 flex items-center gap-1 font-mono text-xs text-tinta-suave">
+                        <span className="mt-1 flex items-center gap-1 text-xs text-tinta-suave">
                           <Clock size={12} />
                           {clase.duracionLabel}
                         </span>

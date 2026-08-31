@@ -287,7 +287,7 @@ export function ExamenEvaluacion({
     return (
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-linea bg-white p-3">
-          <span className="font-mono text-sm text-tinta-suave">
+          <span className="text-sm text-tinta-suave">
             Pregunta {indice + 1} de {total} · {respondidas} respondidas
           </span>
           {segundos !== null && <Reloj segundos={segundos} />}
@@ -317,7 +317,7 @@ export function ExamenEvaluacion({
                 }`}
               >
                 <span
-                  className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border font-mono text-[10px] ${
+                  className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] ${
                     elegida === i
                       ? 'border-galileo bg-galileo text-white'
                       : 'border-slate-300 text-slate-500'
@@ -427,7 +427,7 @@ export function ExamenEvaluacion({
       )}
 
       {estado?.mejor !== null && estado?.mejor !== undefined && (
-        <p className="mt-3 font-mono text-sm text-tinta-suave">
+        <p className="mt-3 text-sm text-tinta-suave">
           Tu mejor resultado: {estado.mejor}/{total}
         </p>
       )}
@@ -494,7 +494,10 @@ function Reloj({ segundos }: { segundos: number }) {
       // aria-live para que un lector de pantalla avise, pero "polite" para que
       // no interrumpa la lectura de la pregunta cada segundo.
       aria-live={poco ? 'polite' : 'off'}
-      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-sm font-medium ${
+      // font-mono acá NO es estético: en una tipografía normal el 1 es más
+      // angosto que el 8, así que el contador se movería solo al pasar de
+      // 1:00 a 0:59. Es el único lugar del examen donde hace falta.
+      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-sm font-medium tabular-nums ${
         poco ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-tinta-suave'
       }`}
     >
@@ -547,7 +550,7 @@ function Resultado({
 
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-tinta">
-                    <span className="font-mono text-xs text-tinta-suave">{i + 1}. </span>
+                    <span className="text-xs text-tinta-suave">{i + 1}. </span>
                     {d.pregunta}
                   </p>
                   <Medios medios={d.medios} className="mt-3" />
@@ -609,7 +612,7 @@ function Resultado({
           </p>
         )}
 
-        <p className="font-mono text-4xl font-medium text-tinta">
+        <p className="text-4xl font-medium text-tinta">
           {resultado.puntaje}
           <span className="text-tinta-suave">/{resultado.total}</span>
         </p>
@@ -623,7 +626,7 @@ function Resultado({
         <p className="mt-1 text-sm text-tinta-suave">
           Sacaste {porcentaje}%. Se aprueba con 70%.
         </p>
-        <p className="mt-1 flex items-center justify-center gap-1.5 font-mono text-xs text-tinta-suave">
+        <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-tinta-suave">
           <Clock size={12} /> Tardaste {comoMinutos(resultado.segundos)}
         </p>
 

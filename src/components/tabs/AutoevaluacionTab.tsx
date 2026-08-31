@@ -127,7 +127,7 @@ export function AutoevaluacionTab({
         >
           Evaluación {i + 1}
           {mejores[String(i)] !== undefined && (
-            <span className="ml-1.5 font-mono text-xs opacity-80">{mejores[String(i)]}%</span>
+            <span className="ml-1.5 text-xs opacity-80">{mejores[String(i)]}%</span>
           )}
         </button>
       ))}
@@ -168,7 +168,7 @@ export function AutoevaluacionTab({
             aprobado ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'
           }`}
         >
-          <p className="font-mono text-4xl font-medium text-tinta">
+          <p className="text-4xl font-medium text-tinta">
             {puntaje}
             <span className="text-tinta-suave">/{total}</span>
           </p>
@@ -178,7 +178,7 @@ export function AutoevaluacionTab({
           <p className="mt-1 text-sm text-tinta-suave">
             Necesitás {PORCENTAJE_APROBACION}% para aprobar. Sacaste {porcentaje}%.
           </p>
-          <p className="mt-1 font-mono text-xs text-tinta-suave">
+          <p className="mt-1 text-xs text-tinta-suave">
             Tu mejor puntaje: {mejores[String(evalActiva)] ?? porcentaje}%
           </p>
           <button
@@ -202,7 +202,7 @@ export function AutoevaluacionTab({
           Evaluación {evalActiva + 1}
           {evaluacion.titulo && <span className="text-tinta-suave"> · {evaluacion.titulo}</span>}
         </h2>
-        <span className="font-mono text-xs text-tinta-suave">
+        <span className="text-xs text-tinta-suave">
           Pregunta {indice + 1}/{total} · {puntaje} bien
         </span>
       </div>
@@ -245,7 +245,7 @@ export function AutoevaluacionTab({
                   ) : mostrar && elegida ? (
                     <XCircle size={16} className="text-amber-600" />
                   ) : (
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 font-mono text-[10px] text-slate-500">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[10px] text-slate-500">
                       {String.fromCharCode(65 + i)}
                     </span>
                   )}

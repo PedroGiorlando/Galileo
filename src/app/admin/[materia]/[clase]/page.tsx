@@ -73,7 +73,7 @@ export default async function AdminClasePage({
         ]}
       />
       <div className="mx-auto max-w-4xl px-6 py-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-galileo">{modulo.nombre}</p>
+        <p className="text-xs uppercase tracking-widest text-galileo">{modulo.nombre}</p>
         <h1 className="mt-1 mb-6 font-display text-3xl font-bold text-tinta">{fila.titulo}</h1>
         <EditorSubtema
           materiaId={materia.id}

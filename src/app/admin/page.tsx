@@ -98,7 +98,7 @@ export default async function AdminPage() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="font-display text-xl font-bold text-tinta">{materia.nombre}</h2>
-                    <span className="flex items-center gap-2 font-mono text-sm text-tinta-suave">
+                    <span className="flex items-center gap-2 text-sm text-tinta-suave">
                       {cuenta.listas}/{cuenta.total} escritas
                       <ArrowRight size={15} className={paleta.texto} />
                     </span>

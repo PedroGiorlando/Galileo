@@ -280,7 +280,7 @@ export function PanelEstructura({ datos }: { datos: DatosEstructura }) {
               >
                 <div className="min-w-0">
                   <p className="font-medium text-tinta">{m.nombre}</p>
-                  <p className="font-mono text-xs text-tinta-suave">
+                  <p className="text-xs text-tinta-suave">
                     /{m.slug} · {m.modulos} módulos · {m.clases} clases · se dicta en {dictadaEn}{' '}
                     {dictadaEn === 1 ? 'carrera' : 'carreras'}
                   </p>

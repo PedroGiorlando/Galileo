@@ -116,7 +116,7 @@ export default async function AdminMateriaPage({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="font-display text-lg font-bold text-tinta">{modulo.nombre}</h2>
-                  <span className="flex items-center gap-2 font-mono text-xs text-tinta-suave">
+                  <span className="flex items-center gap-2 text-xs text-tinta-suave">
                     {escritas}/{suyas.length} escritas
                     <BorrarModulo moduloId={modulo.id} />
                   </span>
@@ -137,7 +137,7 @@ export default async function AdminMateriaPage({
                         className="flex flex-1 items-center gap-3 py-2.5 text-sm hover:bg-slate-50"
                       >
                         <span
-                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-xs ${
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
                             clase.contenido != null
                               ? 'bg-galileo text-white'
                               : 'bg-slate-100 text-slate-400'

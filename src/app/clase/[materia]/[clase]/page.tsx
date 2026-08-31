@@ -90,7 +90,7 @@ export default async function ClasePage({ params }: { params: Promise<Params> })
           <span className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
             <Clock size={28} className="text-slate-400" />
           </span>
-          <p className="font-mono text-xs uppercase tracking-widest text-galileo">
+          <p className="text-xs uppercase tracking-widest text-galileo">
             {datos.modulo.nombre}
           </p>
           <h1 className="mt-1 font-display text-3xl font-bold text-tinta">

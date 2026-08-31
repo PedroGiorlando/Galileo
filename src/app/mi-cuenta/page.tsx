@@ -73,7 +73,7 @@ export default async function MiCuentaPage() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-display font-semibold text-tinta">{r.materiaNombre}</span>
-                      <span className="flex items-center gap-2 font-mono text-sm text-tinta-suave">
+                      <span className="flex items-center gap-2 text-sm text-tinta-suave">
                         {r.completadas}/{r.total}
                         <ArrowRight size={14} className={paleta.texto} />
                       </span>

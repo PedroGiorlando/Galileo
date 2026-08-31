@@ -100,7 +100,7 @@ export function SubtemaVista({
         <header className={`rounded-2xl border border-linea p-5 sm:p-6 ${paleta.fondo}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className={`font-mono text-xs uppercase tracking-widest ${paleta.texto}`}>
+              <p className={`text-xs uppercase tracking-widest ${paleta.texto}`}>
                 {moduloNombre}
               </p>
               <h1 className="mt-1 font-display text-2xl font-bold text-tinta sm:text-3xl">

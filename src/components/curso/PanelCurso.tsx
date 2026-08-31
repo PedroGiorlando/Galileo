@@ -31,7 +31,7 @@ export function PanelCurso({
     <div className="rounded-2xl border border-linea bg-white/80 p-4 backdrop-blur">
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <p className="font-display text-sm font-semibold text-tinta">Tu avance</p>
-        <p className="font-mono text-sm text-tinta-suave">
+        <p className="text-sm text-tinta-suave">
           <span className="text-xl font-medium text-tinta">{hechas}</span>
           <span className="mx-1">/</span>
           {totalClases} clases

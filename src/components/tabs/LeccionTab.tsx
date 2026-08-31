@@ -63,7 +63,7 @@ export function LeccionTab({ subtema }: { subtema: SubtemaPublico }) {
                 }`}
               >
                 <span
-                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs ${
+                  className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs ${
                     i === actual ? 'bg-galileo text-white' : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -76,7 +76,7 @@ export function LeccionTab({ subtema }: { subtema: SubtemaPublico }) {
                   )}
                 </span>
                 {v.duracionLabel && (
-                  <span className="shrink-0 font-mono text-xs text-tinta-suave">
+                  <span className="shrink-0 text-xs text-tinta-suave">
                     {v.duracionLabel}
                   </span>
                 )}
