@@ -1,7 +1,18 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, ListChecks, Save } from 'lucide-react'
+import {
+  AlertCircle,
+  BookOpen,
+  ClipboardCheck,
+  FileText,
+  GraduationCap,
+  ListChecks,
+  PencilLine,
+  PlayCircle,
+  Save,
+  Target,
+} from 'lucide-react'
 import {
   aContenido,
   ejemploVacio,
@@ -42,23 +53,113 @@ const DIFICULTADES: Dificultad[] = ['Básico', 'Intermedio', 'Avanzado']
 const claseSelect =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500'
 
+/**
+ * Las siete partes del formulario, en un solo lugar.
+ *
+ * De acá salen el índice lateral Y los encabezados de cada sección, así no se
+ * pueden desincronizar: agregar una sección es agregar una fila.
+ */
+const SECCIONES = [
+  { id: 'ficha', titulo: 'Ficha de la clase', icono: FileText },
+  { id: 'objetivos', titulo: 'Objetivos', icono: Target },
+  { id: 'videos', titulo: 'Videos', icono: PlayCircle },
+  { id: 'explicacion', titulo: 'Explicación escrita', icono: BookOpen },
+  { id: 'ejemplos', titulo: 'Ejemplos resueltos', icono: PencilLine },
+  { id: 'practicos', titulo: 'Trabajos prácticos', icono: ClipboardCheck },
+  { id: 'evaluaciones', titulo: 'Evaluaciones', icono: GraduationCap },
+] as const
+
+type SeccionId = (typeof SECCIONES)[number]['id']
+
+/**
+ * Una parte del formulario.
+ *
+ * ANTES ERAN SIETE TARJETAS IDÉNTICAS: mismo borde, mismo fondo, mismo título.
+ * Para saber en cuál estabas había que leer. Ahora cada una tiene su ícono y su
+ * número, y el encabezado está separado del cuerpo por una línea: con eso solo
+ * se distinguen de un vistazo, sin recurrir a siete colores distintos que
+ * quedarían de circo.
+ *
+ * `scroll-mt-20` deja aire arriba al saltar desde el índice, para que el
+ * encabezado no quede tapado por la cabecera del sitio.
+ */
 function Seccion({
-  titulo,
+  id,
   ayuda,
+  cuenta,
   children,
 }: {
-  titulo: string
+  id: SeccionId
   ayuda?: string
+  /** Cuántos ítems tiene cargados. Se muestra al costado del título. */
+  cuenta?: string
   children: React.ReactNode
 }) {
+  const i = SECCIONES.findIndex(s => s.id === id)
+  const { titulo, icono: Icono } = SECCIONES[i]
+
   return (
-    <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
-      <div>
-        <h3 className="font-semibold text-slate-800">{titulo}</h3>
-        {ayuda && <p className="mt-0.5 text-sm text-slate-500">{ayuda}</p>}
-      </div>
-      {children}
+    <section
+      id={id}
+      className="scroll-mt-20 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+    >
+      <header className="flex items-start gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200">
+          <Icono size={16} />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display font-bold text-slate-800">
+            <span className="text-slate-400">{i + 1}.</span> {titulo}
+          </h3>
+          {ayuda && <p className="mt-0.5 text-sm text-slate-500">{ayuda}</p>}
+        </div>
+
+        {cuenta && (
+          <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-500 ring-1 ring-slate-200">
+            {cuenta}
+          </span>
+        )}
+      </header>
+
+      <div className="space-y-4 p-5">{children}</div>
     </section>
+  )
+}
+
+/**
+ * Índice al costado, pegado a la pantalla.
+ *
+ * El formulario mide varios miles de píxeles y se recorre a ciegas: no se sabe
+ * dónde se está ni cuánto falta, y eso es la mitad del cansancio de cargar una
+ * clase. Acá se ve todo de un vistazo, con lo que hay cargado en cada parte, y
+ * se salta directo.
+ *
+ * Solo en pantallas anchas: en un celular ocuparía más de lo que ayuda, y el
+ * panel se usa desde una computadora.
+ */
+function Indice({ cuentas }: { cuentas: Record<SeccionId, string | undefined> }) {
+  return (
+    <nav aria-label="Partes de la clase" className="hidden lg:block">
+      <ol className="sticky top-6 space-y-0.5">
+        {SECCIONES.map((s, i) => (
+          <li key={s.id}>
+            <a
+              href={`#${s.id}`}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-white hover:text-slate-900"
+            >
+              <s.icono size={15} className="shrink-0 text-slate-400" />
+              <span className="min-w-0 flex-1 truncate">
+                <span className="text-slate-400">{i + 1}.</span> {s.titulo}
+              </span>
+              {cuentas[s.id] && (
+                <span className="shrink-0 text-xs text-slate-400">{cuentas[s.id]}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
   )
 }
 
@@ -119,6 +220,21 @@ export function SubtemaForm({
   }
 
   const contenidoArmado = aContenido(c)
+
+  // Lo que muestra el índice al costado de cada parte. Se omite cuando no hay
+  // nada: un "0" al lado de cada sección de una clase recién creada es ruido,
+  // no información.
+  const cuenta = (n: number) => (n > 0 ? String(n) : undefined)
+
+  const cuentas: Record<SeccionId, string | undefined> = {
+    ficha: undefined,
+    objetivos: cuenta(c.objetivos.filter(Boolean).length),
+    videos: cuenta(c.videos.length),
+    explicacion: cuenta(c.explicacion.length),
+    ejemplos: cuenta(c.ejemplos.length),
+    practicos: cuenta(c.practicos.length),
+    evaluaciones: cuenta(c.evaluaciones.length),
+  }
 
   /**
    * Todo lo que falta para que esta clase se pueda publicar.
@@ -213,7 +329,13 @@ export function SubtemaForm({
         </div>
       )}
 
-      <Seccion titulo="Ficha de la clase">
+      {/* Índice a la izquierda, secciones a la derecha. En pantallas angostas
+          el índice no se muestra y esto colapsa a una sola columna. */}
+      <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
+        <Indice cuentas={cuentas} />
+
+        <div className="space-y-5">
+      <Seccion id="ficha">
         <div className="grid gap-4 sm:grid-cols-2">
           <Campo label="Título">
             <Texto value={meta.titulo} onChange={v => campoMeta('titulo', v)} />
@@ -255,7 +377,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Objetivos"
+        id="objetivos"
+        cuenta={cuentas.objetivos}
         ayuda="Qué se lleva el alumno al terminar. Entre 3 y 5, una línea cada uno."
       >
         <ListaDeTextos
@@ -266,7 +389,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Videos"
+        id="videos"
+        cuenta={cuentas.videos}
         ayuda="Los de la solapa Lección. Si no hay ninguno, esa solapa no aparece."
       >
         <div className="space-y-3">
@@ -320,7 +444,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Explicación escrita"
+        id="explicacion"
+        cuenta={cuentas.explicacion}
         ayuda="Título en forma de pregunta, párrafo corto, y una caja opcional."
       >
         <div className="space-y-3">
@@ -389,7 +514,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Ejemplos resueltos"
+        id="ejemplos"
+        cuenta={cuentas.ejemplos}
         ayuda="El alumno los lee antes de intentar los prácticos: no puede haber saltos entre pasos."
       >
         <div className="space-y-3">
@@ -451,7 +577,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Trabajos prácticos"
+        id="practicos"
+        cuenta={cuentas.practicos}
         ayuda="Cada TP se numera solo. La computadora corrige, así que la respuesta tiene que ser exacta."
       >
         <div className="space-y-4">
@@ -515,7 +642,8 @@ export function SubtemaForm({
       </Seccion>
 
       <Seccion
-        titulo="Evaluaciones"
+        id="evaluaciones"
+        cuenta={cuentas.evaluaciones}
         ayuda="Cuatro opciones y una sola correcta. Las incorrectas tienen que ser errores típicos, no relleno."
       >
         <div className="space-y-4">
@@ -617,9 +745,11 @@ export function SubtemaForm({
           </BotonAgregar>
         </div>
       </Seccion>
+        </div>
+      </div>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 p-3 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
           <p className="text-sm text-slate-500">
             {c.videos.length} videos · {c.explicacion.length} secciones · {c.ejemplos.length}{' '}
             ejemplos · {c.practicos.length} TP · {c.evaluaciones.length} evaluaciones

@@ -72,7 +72,7 @@ export default async function AdminClasePage({
           { label: fila.titulo },
         ]}
       />
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-6 py-8">
         <p className="text-xs uppercase tracking-widest text-galileo">{modulo.nombre}</p>
         <h1 className="mt-1 mb-6 font-display text-3xl font-bold text-tinta">{fila.titulo}</h1>
         <EditorSubtema

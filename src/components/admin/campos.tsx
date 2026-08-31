@@ -181,16 +181,22 @@ export function Bloque({
   puedeQuitar?: boolean
   children: React.ReactNode
 }) {
+  // Barra lateral en vez de recuadro completo.
+  //
+  // Antes esto era una tarjeta con borde redondeado igual a la de la sección
+  // que lo contiene, y solo cambiaba un tono el fondo: un ejercicio adentro de
+  // "Trabajos prácticos" se veía como otra sección, no como algo que está
+  // ADENTRO de ella. Con la barra al costado la jerarquía se lee sin pensar.
   return (
-    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 border-l-2 border-slate-200 py-1 pl-4 transition-colors hover:border-slate-300">
+      <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold text-slate-700">{titulo}</h4>
         <button
           type="button"
           title="Quitar"
           disabled={!puedeQuitar}
           onClick={onQuitar}
-          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
         >
           <Trash2 size={16} />
         </button>
