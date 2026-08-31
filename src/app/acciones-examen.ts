@@ -8,6 +8,7 @@ import {
   calificar,
   reglasDe,
   restantes,
+  seAcaboElTiempo,
   transcurrido,
   vencido,
   type ReglasExamen,
@@ -96,8 +97,18 @@ export async function estadoExamen(
       reglas: ReglasExamen
       usados: number
       mejor: number | null
-      /** Un intento sin entregar, si lo dejó a medias. */
-      enCurso: { intentoId: number; segundosRestantes: number | null } | null
+      /**
+       * Un intento sin entregar, si lo dejó a medias.
+       *
+       * Incluye lo que ya respondió: al recargar la página, el navegador
+       * perdió su copia pero el servidor la tiene. Sin esto, volver a entrar
+       * mostraba todas las preguntas en blanco aunque estuvieran contestadas.
+       */
+      enCurso: {
+        intentoId: number
+        segundosRestantes: number | null
+        respuestas: Record<string, number>
+      } | null
     }
   | Fallo
 > {
@@ -144,6 +155,7 @@ export async function estadoExamen(
       ? {
           intentoId: abierto.id,
           segundosRestantes: restantes(abierto.comenzado_en, ev.tiempoLimiteMinutos),
+          respuestas: abierto.respuestas ?? {},
         }
       : null,
   }
@@ -281,8 +293,6 @@ export async function entregarExamen(
   const ev = await evaluacionDe(intento)
   if (!ev) return NO_ENCONTRADO
 
-  const seVencio = vencido(intento.comenzado_en, ev.tiempoLimiteMinutos)
-
   if (!intento.entregado_en) await cerrar(db, intento, ev)
 
   const { detalle, puntaje, total } = calificar(ev, intento.respuestas)
@@ -302,7 +312,17 @@ export async function entregarExamen(
 
   return {
     ok: true,
-    resultado: { puntaje, total, segundos, porVencimiento: seVencio, detalle },
+    resultado: {
+      puntaje,
+      total,
+      segundos,
+      // Se calcula del tiempo REAL que duró el intento, no con `vencido`, que
+      // lleva el margen de gracia. Con el margen, un examen de 2 minutos
+      // entregado solo a los 121 segundos daba "no vencido" y la pantalla
+      // decía "Tardaste 2:01" como si el alumno hubiera entregado tranquilo.
+      porVencimiento: seAcaboElTiempo(segundos, ev.tiempoLimiteMinutos),
+      detalle,
+    },
   }
 }
 

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { calificar, restantes, transcurrido, vencido, GRACIA_SEGUNDOS } from './examen'
+import {
+  calificar,
+  restantes,
+  seAcaboElTiempo,
+  transcurrido,
+  vencido,
+  GRACIA_SEGUNDOS,
+} from './examen'
 import type { Evaluacion } from './schemas'
 
 /**
@@ -58,6 +65,33 @@ describe('el vencimiento y su margen de gracia', () => {
 
   it('pasado el margen ya no', () => {
     expect(vencido(INICIO, 45, t(45 * 60 + GRACIA_SEGUNDOS + 1))).toBe(true)
+  })
+})
+
+describe('distinguir "se acabó el tiempo" de "todavía te acepto la entrega"', () => {
+  // Son dos preguntas distintas y confundirlas fue un bug real: el examen de 2
+  // minutos se entregaba solo a los 121 segundos, el margen de gracia hacía
+  // que `vencido` diera falso, y la pantalla decía "Tardaste 2:01" como si el
+  // alumno hubiera entregado tranquilo.
+
+  it('entregar antes del límite no es vencimiento', () => {
+    expect(seAcaboElTiempo(90, 2)).toBe(false)
+  })
+
+  it('justo al llegar a cero SÍ es vencimiento', () => {
+    expect(seAcaboElTiempo(120, 2)).toBe(true)
+  })
+
+  it('el caso que fallaba: dentro del margen, pero el tiempo se acabó igual', () => {
+    // 121 segundos de un examen de 2 minutos. `vencido` dice que todavía se
+    // acepta -y está bien, es el margen de red-, pero al alumno hay que
+    // decirle que se le acabó el tiempo, no que tardó 2:01.
+    expect(vencido(INICIO, 2, t(121))).toBe(false)
+    expect(seAcaboElTiempo(121, 2)).toBe(true)
+  })
+
+  it('sin límite de tiempo nunca se acaba', () => {
+    expect(seAcaboElTiempo(99999, undefined)).toBe(false)
   })
 })
 

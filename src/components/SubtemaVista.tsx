@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PlayCircle, FileText, PencilLine, ClipboardCheck, MapPin } from 'lucide-react'
 import type { SubtemaPublico } from '@/lib/publico'
 import type { Materia, ModuloConClases } from '@/lib/contenido'
@@ -53,6 +53,33 @@ export function SubtemaVista({
   ]
 
   const [tabActivo, setTabActivo] = useState<TabId>(hayVideo ? 'leccion' : 'explicacion')
+
+  /**
+   * La solapa abierta queda en la dirección (#evaluaciones).
+   *
+   * Sin esto, recargar la página devolvía siempre a Explicación escrita. En una
+   * evaluación con tiempo eso no es una molestia: son los segundos que el
+   * alumno tarda en volver a encontrar dónde estaba, y el reloj no se detiene
+   * mientras tanto.
+   *
+   * Se lee en un efecto y no en el valor inicial del estado: el valor inicial
+   * también se ejecuta en el servidor, donde no existe `window`, y React
+   * protestaría porque el HTML no coincide con lo que dibuja el navegador. Es
+   * la misma trampa que nos comimos con el progreso guardado.
+   */
+  useEffect(() => {
+    const desdeLaUrl = window.location.hash.slice(1)
+    if (TABS.some(t => t.id === desdeLaUrl)) setTabActivo(desdeLaUrl as TabId)
+    // Solo al montar: después manda lo que toque el alumno.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function elegirTab(id: TabId) {
+    setTabActivo(id)
+    // replaceState y no push: el botón "atrás" tiene que salir de la clase, no
+    // ir recorriendo las solapas que abriste.
+    window.history.replaceState(null, '', `#${id}`)
+  }
 
   const { completados, alternar } = useProgreso(materia.slug, materia.id)
   const completado = completados.includes(subtema.slug)
@@ -127,7 +154,7 @@ export function SubtemaVista({
               type="button"
               role="tab"
               aria-selected={tabActivo === tab.id}
-              onClick={() => setTabActivo(tab.id)}
+              onClick={() => elegirTab(tab.id)}
               className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
                 tabActivo === tab.id
                   ? `${paleta.solido} text-white shadow-sm`

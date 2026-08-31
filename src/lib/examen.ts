@@ -87,6 +87,26 @@ export function vencido(
   return transcurrido(comenzadoEn, ahora) > minutos * 60 + GRACIA_SEGUNDOS
 }
 
+/**
+ * Si el intento se cerró porque se acabó el tiempo, y no porque el alumno
+ * apretó Entregar.
+ *
+ * OJO: NO es lo mismo que `vencido`, y confundirlas fue un bug real. Son dos
+ * preguntas distintas:
+ *
+ *   vencido()          ¿todavía le acepto una entrega?   → CON margen de gracia
+ *   seAcaboElTiempo()  ¿se le acabó el tiempo?           → SIN margen
+ *
+ * El examen se entrega solo al llegar a cero, o sea a los 120s de uno de dos
+ * minutos. Con el margen de 15s, `vencido` daba falso, y la pantalla decía
+ * "Tardaste 2:01" como si hubiera entregado tranquilo. El margen existe para
+ * perdonar el viaje por la red, no para cambiar lo que se le dice al alumno.
+ */
+export function seAcaboElTiempo(segundosUsados: number, minutos?: number): boolean {
+  if (!minutos) return false
+  return segundosUsados >= minutos * 60
+}
+
 export function reglasDe(ev: Evaluacion): ReglasExamen {
   return {
     ...(ev.titulo ? { titulo: ev.titulo } : {}),

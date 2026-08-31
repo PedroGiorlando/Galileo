@@ -105,21 +105,43 @@ export function ExamenEvaluacion({
    */
   const traerEstado = useCallback(
     async (sigueVigente: () => boolean = () => true) => {
+      let destino: Etapa = 'resumen'
       try {
         const r = await estadoExamen(materiaSlug, claseSlug, evalIndice)
         if (!sigueVigente()) return
+
         if (!r.ok) {
           if (r.necesitaCuenta) setSinCuenta(true)
           else setError(r.error)
         } else {
           setEstado({ usados: r.usados, mejor: r.mejor, intentoAbierto: r.enCurso })
+
+          // VUELVE DIRECTO AL EXAMEN si dejó uno a medias. Antes caía en la
+          // pantalla de resumen, que es estática y no muestra ningún reloj:
+          // el alumno recarga, ve una tarjeta quieta, y da por sentado que
+          // está en pausa mientras el tiempo se le sigue yendo. Cada segundo
+          // en esa pantalla es un segundo perdido de su examen.
+          if (r.enCurso) {
+            setIntentoId(r.enCurso.intentoId)
+            setSegundos(r.enCurso.segundosRestantes)
+            // Lo que ya había respondido vuelve del servidor: el navegador
+            // perdió su copia al recargar, pero acá nunca se perdió.
+            setRespuestas(
+              Object.fromEntries(
+                Object.entries(r.enCurso.respuestas).map(([id, op]) => [Number(id), op]),
+              ),
+            )
+            destino = 'rindiendo'
+          }
         }
       } catch {
         if (sigueVigente()) {
           setError('No pudimos cargar la evaluación. Probá recargar la página.')
         }
       } finally {
-        if (sigueVigente()) setEtapa('resumen')
+        // Pase lo que pase deja de estar cargando: una pantalla de carga sin
+        // salida de error no es una carga, es un cuelgue.
+        if (sigueVigente()) setEtapa(destino)
       }
     },
     [materiaSlug, claseSlug, evalIndice],
@@ -607,8 +629,8 @@ function Resultado({
         }`}
       >
         {resultado.porVencimiento && (
-          <p className="mb-3 text-sm font-medium text-amber-800">
-            Se acabó el tiempo y se entregó con lo que habías respondido.
+          <p className="mb-3 flex items-center justify-center gap-1.5 text-sm font-medium text-amber-800">
+            <Clock size={14} /> Se te acabó el tiempo. Se entregó con lo que habías respondido.
           </p>
         )}
 
@@ -626,9 +648,14 @@ function Resultado({
         <p className="mt-1 text-sm text-tinta-suave">
           Sacaste {porcentaje}%. Se aprueba con 70%.
         </p>
-        <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-tinta-suave">
-          <Clock size={12} /> Tardaste {comoMinutos(resultado.segundos)}
-        </p>
+        {/* "Tardaste 2:01" en un examen de 2 minutos suena a que entregó
+            tranquilo cuando en realidad se quedó sin tiempo. Cuando el reloj
+            lo cortó, el dato de arriba ya lo dice y este sobra. */}
+        {!resultado.porVencimiento && (
+          <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-tinta-suave">
+            <Clock size={12} /> Tardaste {comoMinutos(resultado.segundos)}
+          </p>
+        )}
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <button
