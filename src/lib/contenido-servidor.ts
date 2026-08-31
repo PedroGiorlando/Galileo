@@ -1,6 +1,6 @@
 import { supabaseSesion } from './supabase-servidor'
 import { getMateria } from './contenido'
-import { TemaContenidoSchema, type TemaContenido } from './schemas'
+import { normalizarContenido, type TemaContenido } from './schemas'
 
 /**
  * Las lecturas que ven las RESPUESTAS. Solo para acciones del servidor.
@@ -46,7 +46,7 @@ export async function getClaseConRespuestas(
   if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
   if (!data?.contenido) return null
 
-  return { id: data.id, contenido: TemaContenidoSchema.parse(data.contenido) }
+  return { id: data.id, contenido: normalizarContenido(data.contenido) }
 }
 
 export async function getContenidoParaCorregir(
@@ -73,5 +73,5 @@ export async function getContenidoPorId(claseId: number): Promise<TemaContenido 
   if (error) throw new Error(`No se pudo leer la clase: ${error.message}`)
   if (!data?.contenido) return null
 
-  return TemaContenidoSchema.parse(data.contenido)
+  return normalizarContenido(data.contenido)
 }

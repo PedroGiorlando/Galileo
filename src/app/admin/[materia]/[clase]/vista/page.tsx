@@ -5,7 +5,7 @@ import { Eye, PencilLine } from 'lucide-react'
 import { esAdmin, getUsuario } from '@/lib/progreso'
 import { getClaseParaAdmin, getMateria, getTemarioDeMateria } from '@/lib/contenido'
 import { sinRespuestas } from '@/lib/publico'
-import type { TemaContenido } from '@/lib/schemas'
+import { normalizarContenido } from '@/lib/schemas'
 import { Header } from '@/components/Header'
 import { SubtemaVista } from '@/components/SubtemaVista'
 
@@ -72,18 +72,9 @@ export default async function VistaPreviaPage({
     )
   }
 
-  // Un borrador puede estar a medias: las listas que falten se completan
-  // vacías. Con un parse estricto acá, la vista previa se rompería justo con
-  // las clases para las que existe.
-  const contenido: TemaContenido = {
-    objetivos: [],
-    videos: [],
-    explicacion: [],
-    ejemplos: [],
-    practicos: [],
-    evaluaciones: [],
-    ...(fila.contenido as object),
-  }
+  // Un borrador puede estar a medias: con un parse estricto acá, la vista
+  // previa se rompería justo con las clases para las que existe.
+  const contenido = normalizarContenido(fila.contenido)
 
   const subtema = sinRespuestas({
     id: fila.orden,

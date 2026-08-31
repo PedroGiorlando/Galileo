@@ -2,13 +2,8 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { esAdmin, getUsuario } from '@/lib/progreso'
 import { getClaseParaAdmin, getMateria } from '@/lib/contenido'
-import {
-  contenidoDesdeTema,
-  contenidoVacio,
-  type ContenidoBorrador,
-  type ContenidoGuardado,
-} from '@/lib/borrador'
-import { TemaContenidoSchema, type TemaMeta } from '@/lib/schemas'
+import { contenidoDesdeTema, contenidoVacio, type ContenidoBorrador } from '@/lib/borrador'
+import { normalizarContenido, type TemaMeta } from '@/lib/schemas'
 import { Header } from '@/components/Header'
 import { EditorSubtema } from '@/components/admin/EditorSubtema'
 import { tema as contenidoDeArranque } from '@/data/topicData'
@@ -20,23 +15,10 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Lee el contenido guardado para editarlo, sin exigir que esté completo.
- *
- * Acá NO se puede usar `.parse()`, que lanza excepción. Una clase sin publicar
- * se guarda a medias a propósito, y con un parse estricto el panel devolvería
- * error 500 al intentar abrirla: el trabajo quedaría adentro sin forma de
- * llegar a él, con la única herramienta para arreglarlo rota justamente por lo
- * que hay que arreglar.
- *
- * El contenido completo igual pasa por el schema, así se normaliza. Lo que está
- * a medias pasa tal cual, y las listas que falten las completa
- * `contenidoDesdeTema` con vacías.
- */
-function leerGuardado(bruto: unknown): ContenidoGuardado {
-  const r = TemaContenidoSchema.safeParse(bruto)
-  return r.success ? r.data : ((bruto ?? {}) as ContenidoGuardado)
-}
+// La lectura tolerante vive en schemas.ts, junto al schema estricto que es su
+// contracara: al guardar una clase publicada se exige todo, al abrirla hay que
+// poder leer cualquier cosa. Estaba escrita acá, en contenido-servidor.ts y en
+// las acciones del examen — y solo dos de las tres estaban bien.
 
 export default async function AdminClasePage({
   params,
@@ -75,7 +57,7 @@ export default async function AdminClasePage({
   const esLaDeArranque = fila.slug === contenidoDeArranque.slug
 
   const contenido: ContenidoBorrador = tieneContenido
-    ? contenidoDesdeTema(leerGuardado(fila.contenido))
+    ? contenidoDesdeTema(normalizarContenido(fila.contenido))
     : esLaDeArranque
       ? contenidoDesdeTema(contenidoDeArranque)
       : contenidoVacio()

@@ -91,23 +91,47 @@ export function ExamenEvaluacion({
 
   // --- Cargar el estado inicial ---------------------------------------------
 
+  /**
+   * Traer el estado y volver al resumen, pase lo que pase.
+   *
+   * UNA SOLA FUNCIÓN PARA LOS DOS LUGARES QUE LA NECESITAN. Estaba escrita dos
+   * veces —al montar y al volver del resultado— y solo una tenía salida de
+   * error: la otra dejaba la pantalla en "Cargando…" para siempre. La
+   * duplicación es lo que permitió que el segundo caso sobreviviera al arreglo
+   * del primero.
+   *
+   * El `finally` es lo que impide el cuelgue: una pantalla de carga sin salida
+   * de error no es una carga, es un cuelgue.
+   */
+  const traerEstado = useCallback(
+    async (sigueVigente: () => boolean = () => true) => {
+      try {
+        const r = await estadoExamen(materiaSlug, claseSlug, evalIndice)
+        if (!sigueVigente()) return
+        if (!r.ok) {
+          if (r.necesitaCuenta) setSinCuenta(true)
+          else setError(r.error)
+        } else {
+          setEstado({ usados: r.usados, mejor: r.mejor, intentoAbierto: r.enCurso })
+        }
+      } catch {
+        if (sigueVigente()) {
+          setError('No pudimos cargar la evaluación. Probá recargar la página.')
+        }
+      } finally {
+        if (sigueVigente()) setEtapa('resumen')
+      }
+    },
+    [materiaSlug, claseSlug, evalIndice],
+  )
+
   useEffect(() => {
     let vigente = true
-    estadoExamen(materiaSlug, claseSlug, evalIndice).then(r => {
-      if (!vigente) return
-      if (!r.ok) {
-        if (r.necesitaCuenta) setSinCuenta(true)
-        else setError(r.error)
-        setEtapa('resumen')
-        return
-      }
-      setEstado({ usados: r.usados, mejor: r.mejor, intentoAbierto: r.enCurso })
-      setEtapa('resumen')
-    })
+    traerEstado(() => vigente)
     return () => {
       vigente = false
     }
-  }, [materiaSlug, claseSlug, evalIndice])
+  }, [traerEstado])
 
   // --- Entregar --------------------------------------------------------------
 
@@ -166,6 +190,8 @@ export function ExamenEvaluacion({
       setIndice(0)
       setRespuestas({})
       setEtapa('rindiendo')
+    } catch {
+      setError('No pudimos empezar la evaluación. Revisá tu conexión y probá de nuevo.')
     } finally {
       setOcupado(false)
     }
@@ -177,13 +203,20 @@ export function ExamenEvaluacion({
     // la red para pintar la opción elegida haría que rendir se sienta pesado.
     setRespuestas(p => ({ ...p, [pregunta.id]: elegida }))
 
-    const r = await guardarRespuestaExamen(intentoId, pregunta.id, elegida)
-    if (r.ok) {
-      setSegundos(r.segundosRestantes)
-    } else if ('vencido' in r && r.vencido) {
-      setSegundos(0)
-    } else {
-      setError(r.error)
+    try {
+      const r = await guardarRespuestaExamen(intentoId, pregunta.id, elegida)
+      if (r.ok) {
+        setSegundos(r.segundosRestantes)
+      } else if ('vencido' in r && r.vencido) {
+        setSegundos(0)
+      } else {
+        setError(r.error)
+      }
+    } catch {
+      // Se avisa fuerte: la respuesta quedó marcada en pantalla pero NO en el
+      // servidor, y si se acaba el tiempo con la conexión caída, esa pregunta
+      // cuenta como en blanco. Callarlo sería mentirle al alumno.
+      setError('No pudimos guardar esa respuesta. Revisá tu conexión y volvé a elegirla.')
     }
   }
 
@@ -239,11 +272,9 @@ export function ExamenEvaluacion({
         onOtroIntento={() => {
           setResultado(null)
           setRevisando(false)
+          setError(null)
           setEtapa('cargando')
-          estadoExamen(materiaSlug, claseSlug, evalIndice).then(r => {
-            if (r.ok) setEstado({ usados: r.usados, mejor: r.mejor, intentoAbierto: r.enCurso })
-            setEtapa('resumen')
-          })
+          traerEstado()
         }}
       />
     )

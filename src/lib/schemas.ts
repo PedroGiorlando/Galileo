@@ -279,6 +279,40 @@ export const TemaContenidoBorradorSchema = z.object({
   evaluaciones: listaLibre,
 })
 
+/**
+ * Leer contenido guardado sin exigir que esté completo.
+ *
+ * Es la contracara de la regla de arriba, y hay que tener clarísimo cuál va en
+ * cada lado: al GUARDAR una clase publicada se exige todo, al LEER hay que
+ * poder abrir cualquier cosa. Si leer fuera estricto, un borrador a medias
+ * sería imposible de reabrir y de corregir.
+ *
+ * Con `.parse()` esto lanzaba excepción y dejaba la pantalla de evaluaciones
+ * cargando para siempre: el profesor miraba su borrador desde la vista previa,
+ * el servidor reventaba al leerlo, y desde afuera parecía que la página se
+ * colgó.
+ *
+ * Estaba escrita tres veces en tres archivos. Va una sola, acá, donde además
+ * se puede probar sin arrastrar la base ni las cookies.
+ */
+export function normalizarContenido(bruto: unknown): TemaContenido {
+  const r = TemaContenidoSchema.safeParse(bruto)
+  if (r.success) return r.data
+
+  // Lo que falte queda vacío; lo que haya pasa tal cual. Lo que se use
+  // después —una evaluación, un ejercicio— se valida donde se usa, así el
+  // mensaje habla de eso y no de toda la clase.
+  return {
+    objetivos: [],
+    videos: [],
+    explicacion: [],
+    ejemplos: [],
+    practicos: [],
+    evaluaciones: [],
+    ...(bruto && typeof bruto === 'object' ? bruto : {}),
+  }
+}
+
 export type SeccionExplicacion = z.infer<typeof SeccionExplicacionSchema>
 export type Ejemplo = z.infer<typeof EjemploSchema>
 export type Ejercicio = z.infer<typeof EjercicioSchema>

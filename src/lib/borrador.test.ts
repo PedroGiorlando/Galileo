@@ -7,6 +7,8 @@ import {
   type ContenidoBorrador,
 } from './borrador'
 import {
+  EvaluacionSchema,
+  normalizarContenido,
   TemaContenidoBorradorSchema,
   TemaContenidoSchema,
   TemaMetaBorradorSchema,
@@ -273,6 +275,76 @@ describe('clase sin publicar', () => {
     }
 
     expect(TemaMetaBorradorSchema.safeParse(ficha).success).toBe(false)
+  })
+})
+
+describe('leer contenido a medias sin romperse', () => {
+  /**
+   * El caso real que colgó la pantalla de evaluaciones.
+   *
+   * El profesor cargó SOLO la evaluación y dejó el resto en blanco. Con un
+   * `.parse()` estricto, leer esa clase lanzaba excepción, la acción del
+   * servidor reventaba, y desde afuera la página se quedaba en "Cargando…"
+   * para siempre.
+   */
+  const comoLoDejo = {
+    objetivos: [''],
+    videos: [],
+    explicacion: [{ titulo: '', parrafo: '' }],
+    ejemplos: [{ id: 1, enunciado: '', pasos: [''] }],
+    practicos: [
+      {
+        ejercicios: [
+          { id: 1, enunciado: '', explicacion: '', puntos: 1, tipo: 'libre', respuestaCorrecta: '' },
+        ],
+      },
+    ],
+    evaluaciones: [
+      {
+        titulo: 'ASD',
+        tiempoLimiteMinutos: 2,
+        intentos: 2,
+        dificultad: 'Intermedio',
+        preguntas: [
+          {
+            id: 1,
+            pregunta: '¿Cuánto es 2+2?',
+            opciones: ['3', '4'],
+            respuestaCorrectaIndex: 1,
+            explicacion: 'Cuatro.',
+          },
+        ],
+      },
+    ],
+  }
+
+  it('el contenido entero NO pasa el schema estricto', () => {
+    // Si esto empezara a pasar, el resto de las pruebas de acá no probarían
+    // nada: estarían midiendo un caso que ya no es el problemático.
+    expect(TemaContenidoSchema.safeParse(comoLoDejo).success).toBe(false)
+  })
+
+  it('normalizarContenido lo lee igual, sin lanzar', () => {
+    const c = normalizarContenido(comoLoDejo)
+
+    expect(c.evaluaciones).toHaveLength(1)
+    expect(c.evaluaciones[0].titulo).toBe('ASD')
+    expect(c.evaluaciones[0].tiempoLimiteMinutos).toBe(2)
+  })
+
+  it('la evaluación sola SÍ es válida, y por eso se puede rendir', () => {
+    // Es la clave del arreglo: no hace falta que toda la clase esté terminada
+    // para rendir una evaluación que sí lo está.
+    const ev = normalizarContenido(comoLoDejo).evaluaciones[0]
+    expect(EvaluacionSchema.safeParse(ev).success).toBe(true)
+  })
+
+  it('lee cualquier cosa sin romperse', () => {
+    for (const basura of [null, undefined, {}, 'un texto', 42, []]) {
+      const c = normalizarContenido(basura)
+      expect(Array.isArray(c.evaluaciones)).toBe(true)
+      expect(Array.isArray(c.practicos)).toBe(true)
+    }
   })
 })
 

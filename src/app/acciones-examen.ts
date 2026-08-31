@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { supabaseSesion } from '@/lib/supabase-servidor'
 import { getClaseConRespuestas, getContenidoPorId } from '@/lib/contenido-servidor'
-import type { Evaluacion } from '@/lib/schemas'
+import { EvaluacionSchema, type Evaluacion } from '@/lib/schemas'
 import {
   calificar,
   reglasDe,
@@ -55,6 +55,22 @@ const SIN_CUENTA: Fallo = {
 
 const NO_ENCONTRADO: Fallo = { ok: false, error: 'No encontramos esa evaluación.' }
 
+const INCOMPLETA: Fallo = {
+  ok: false,
+  error: 'Esta evaluación todavía está incompleta. Terminala desde el panel para poder rendirla.',
+}
+
+/**
+ * La evaluación tiene que estar completa aunque el resto de la clase no.
+ *
+ * Un borrador se guarda a medias a propósito, así que el contenido entero
+ * puede no pasar el schema. Lo que sí tiene que estar entero es ESTA
+ * evaluación: sin sus respuestas correctas no hay forma de calificar nada.
+ */
+function evaluacionValida(ev: unknown): ev is Evaluacion {
+  return EvaluacionSchema.safeParse(ev).success
+}
+
 interface FilaIntento {
   id: number
   clase_id: number
@@ -97,6 +113,7 @@ export async function estadoExamen(
   const clase = await getClaseConRespuestas(entrada.data.materiaSlug, entrada.data.claseSlug)
   const ev = clase?.contenido.evaluaciones[entrada.data.evalIndice]
   if (!clase || !ev) return NO_ENCONTRADO
+  if (!evaluacionValida(ev)) return INCOMPLETA
 
   const { data: filas } = await db
     .from('intentos')
@@ -150,6 +167,7 @@ export async function comenzarExamen(
   const clase = await getClaseConRespuestas(entrada.data.materiaSlug, entrada.data.claseSlug)
   const ev = clase?.contenido.evaluaciones[entrada.data.evalIndice]
   if (!clase || !ev) return NO_ENCONTRADO
+  if (!evaluacionValida(ev)) return INCOMPLETA
 
   const estado = await estadoExamen(materiaSlug, claseSlug, evalIndice)
   if (!estado.ok) return estado
