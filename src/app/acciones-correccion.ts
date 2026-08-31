@@ -1,7 +1,7 @@
 'use server'
 
 import { z } from 'zod'
-import { getContenidoParaCorregir } from '@/lib/contenido'
+import { getContenidoParaCorregir } from '@/lib/contenido-servidor'
 import { esCorrecta, type Respuesta } from '@/lib/correccion'
 import type { Medio } from '@/lib/schemas'
 

@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { supabaseSesion } from '@/lib/supabase-servidor'
-import { getClaseConRespuestas, getContenidoPorId } from '@/lib/contenido'
+import { getClaseConRespuestas, getContenidoPorId } from '@/lib/contenido-servidor'
 import type { Evaluacion } from '@/lib/schemas'
 import {
   calificar,

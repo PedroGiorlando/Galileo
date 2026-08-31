@@ -37,6 +37,22 @@ import {
  * fuera corrigiendo sobre la marcha, la revisión del final no revisaría nada.
  */
 
+/**
+ * Verde, amarillo y rojo, que es lo que cualquiera lee sin explicación.
+ *
+ * Las clases van escritas enteras y no armadas con plantillas: Tailwind lee el
+ * código como texto y una clase construida a pedazos no la genera nunca. Ya
+ * nos pasó con 44 clases en 5 archivos que no pintaban nada.
+ *
+ * El color acompaña a la palabra, no la reemplaza: la etiqueta dice
+ * "Dificultad: Intermedio". Quien no distingue verde de rojo lo lee igual.
+ */
+const COLOR_DIFICULTAD: Record<string, string> = {
+  Básico: 'border-green-200 bg-green-50 text-green-800',
+  Intermedio: 'border-amber-200 bg-amber-50 text-amber-800',
+  Avanzado: 'border-red-200 bg-red-50 text-red-800',
+}
+
 type Etapa = 'cargando' | 'resumen' | 'rindiendo' | 'resultado'
 
 interface Estado {
@@ -372,7 +388,9 @@ export function ExamenEvaluacion({
       </dl>
 
       {evaluacion.dificultad && (
-        <p className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-tinta-suave">
+        <p
+          className={`mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-medium ${COLOR_DIFICULTAD[evaluacion.dificultad]}`}
+        >
           Dificultad: {evaluacion.dificultad}
         </p>
       )}
