@@ -1,14 +1,23 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
-import { ImagePlus, Loader2, Trash2, Video } from 'lucide-react'
-import { imagenVacia, videoMedioVacio, type MedioBorrador } from '@/lib/borrador'
+import { Clapperboard, ImagePlus, Loader2, Trash2, Video } from 'lucide-react'
+import {
+  imagenVacia,
+  medioAGuardar,
+  poleaVacia,
+  videoMedioVacio,
+  type MedioBorrador,
+  type PoleaBorrador,
+} from '@/lib/borrador'
+import { MedioSchema } from '@/lib/schemas'
 import { idDeYouTube } from '@/lib/video'
 import { subirImagen } from '@/app/admin/acciones-medios'
-import { Campo, Texto } from './campos'
+import { AnimacionPolea } from '../AnimacionPolea'
+import { Campo, Casilla, Texto } from './campos'
 
 /**
- * Imágenes y videos que acompañan a un texto.
+ * Imágenes, videos y animaciones que acompañan a un texto.
  *
  * Se usa en cuatro lugares —teoría, enunciado del ejercicio, pregunta de la
  * evaluación y devolución— y en todos hace lo mismo, así que es un componente
@@ -44,6 +53,9 @@ export function EditorMedios({
 
   const cambiar = (i: number, cambio: Partial<MedioBorrador>) =>
     onChange(medios.map((m, k) => (k === i ? ({ ...m, ...cambio } as MedioBorrador) : m)))
+
+  const reemplazar = (i: number, nuevo: MedioBorrador) =>
+    onChange(medios.map((m, k) => (k === i ? nuevo : m)))
 
   const quitar = (i: number) => onChange(medios.filter((_, k) => k !== i))
 
@@ -84,12 +96,16 @@ export function EditorMedios({
                 />
               ) : (
                 <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white">
-                  <Video size={22} className="text-slate-400" />
+                  {m.tipo === 'video' ? (
+                    <Video size={22} className="text-slate-400" />
+                  ) : (
+                    <Clapperboard size={22} className="text-slate-400" />
+                  )}
                 </span>
               )}
 
               <div className="min-w-0 flex-1 space-y-2">
-                {m.tipo === 'imagen' ? (
+                {m.tipo === 'imagen' && (
                   <Campo
                     label="Qué se ve en la imagen"
                     ayuda="Obligatorio. Lo lee en voz alta el lector de pantalla de un alumno que no ve el dibujo."
@@ -101,7 +117,8 @@ export function EditorMedios({
                       placeholder="Bloque sobre un plano inclinado con tres fuerzas marcadas"
                     />
                   </Campo>
-                ) : (
+                )}
+                {m.tipo === 'video' && (
                   <Campo
                     label="Enlace de YouTube"
                     error={
@@ -116,6 +133,9 @@ export function EditorMedios({
                       placeholder="https://www.youtube.com/watch?v=..."
                     />
                   </Campo>
+                )}
+                {m.tipo === 'polea-mesa' && (
+                  <EditorPolea medio={m} onChange={nuevo => reemplazar(i, nuevo)} />
                 )}
               </div>
 
@@ -157,6 +177,14 @@ export function EditorMedios({
         >
           <Video size={15} /> Agregar video
         </button>
+
+        <button
+          type="button"
+          onClick={() => onChange([...medios, poleaVacia()])}
+          className="flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          <Clapperboard size={15} /> Agregar animación
+        </button>
       </div>
 
       {error && (
@@ -165,5 +193,68 @@ export function EditorMedios({
         </p>
       )}
     </fieldset>
+  )
+}
+
+type CampoNumerico = 'm1' | 'm2' | 'muEstatico' | 'muCinetico' | 'gravedad'
+
+/**
+ * Los datos de la animación y, debajo, la animación misma.
+ *
+ * Los errores salen del mismo schema que valida al guardar: no hay una segunda
+ * copia de las reglas que se pueda desincronizar. Y la vista previa es el
+ * mismo componente que ve el alumno, así que lo que se ve acá es lo que se
+ * publica.
+ */
+function EditorPolea({
+  medio,
+  onChange,
+}: {
+  medio: PoleaBorrador
+  onChange: (nuevo: PoleaBorrador) => void
+}) {
+  const r = MedioSchema.safeParse(medioAGuardar(medio))
+  const error = (campo: CampoNumerico) =>
+    r.success ? undefined : r.error.issues.find(i => i.path[0] === campo)?.message
+
+  const numero = (campo: CampoNumerico, label: string, placeholder?: string) => (
+    <Campo label={label} error={error(campo)}>
+      <Texto
+        value={medio[campo]}
+        onChange={v => onChange({ ...medio, [campo]: v })}
+        placeholder={placeholder}
+      />
+    </Campo>
+  )
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {numero('m1', 'm₁ (kg)', '50')}
+        {numero('m2', 'm₂ (kg)', '20')}
+        {numero('muEstatico', 'μe', 'opcional')}
+        {numero('muCinetico', 'μc', 'opcional')}
+        {numero('gravedad', 'g (m/s²)')}
+      </div>
+      <p className="text-xs text-slate-500">
+        Los μ son opcionales: si cargás uno solo, vale para los dos. Coma o punto, da igual.
+      </p>
+      <Casilla
+        label="Mostrar valores (a y T)"
+        checked={medio.mostrarValores}
+        onChange={v => onChange({ ...medio, mostrarValores: v })}
+      />
+      <p className="text-xs text-slate-500">
+        Prendelo solo en la explicación: en el enunciado le da la respuesta al alumno.
+      </p>
+
+      {r.success && r.data.tipo === 'polea-mesa' ? (
+        <AnimacionPolea {...r.data} />
+      ) : (
+        <p className="rounded-md bg-white px-3 py-6 text-center text-sm text-slate-500">
+          Completá los datos para ver la animación.
+        </p>
+      )}
+    </div>
   )
 }
