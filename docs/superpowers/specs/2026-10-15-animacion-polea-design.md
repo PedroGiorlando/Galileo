@@ -50,9 +50,11 @@ Función pura, sin nada de dibujo, para poder testearla sola.
 - **Un solo μ vale para los dos.** Si falta uno, toma el valor del otro; si
   faltan los dos, no hay rozamiento. Es la convención de los ejercicios de
   ingreso ("coeficiente de rozamiento 0,2").
-- **¿Arranca?** `m2 > μe · m1`. Se compara sin `g` a propósito: se cancela, y
-  así el redondeo no decide el caso límite (μ = 0,4 con 50 y 20 da 20 > 20,
-  falso → queda en reposo).
+- **¿Arranca?** `m2 > μe · m1 · (1 + 10⁻⁹)`. La `g` se cancela. La tolerancia
+  es para el caso límite exacto: con m1 = 3, m2 = 2,1 y μ = 0,7 la compu
+  calcula 0,7 · 3 = 2,0999999999999996, y sin tolerancia el sistema "arrancaba"
+  con a ≈ 10⁻¹⁶ (una animación de 118 millones de segundos). En el límite
+  exacto queda en reposo, como en la cuenta a mano.
 - **Si arranca:** `a = g · (m2 − μc · m1) / (m1 + m2)` y `T = m2 · (g − a)`.
   Como `μc ≤ μe`, si arranca `a` es siempre positiva.
 - **Si no arranca:** `a = 0` y `T = m2 · g`.
