@@ -96,14 +96,20 @@ body {
  *
  * Respeta la regla del temario de más arriba: el estado sin animar es la
  * escena completa y quieta. Si el reloj de animación no avanza, se ve el
- * dibujo original, nunca un hueco. Y con "reducir movimiento" la regla global
- * de arriba lleva la duración a casi cero: salta directo al final.
+ * dibujo original, nunca un hueco.
+ *
+ * Es la única animación exceptuada de "reducir movimiento" (la regla global de
+ * arriba). Esa preferencia apaga el movimiento decorativo; esta animación es el
+ * contenido del ejercicio, como un video: nunca arranca sola, la pide el alumno
+ * apretando Reproducir. Sin la excepción, en una compu con los efectos de
+ * animación de Windows apagados saltaba directo al final y parecía rota.
  */
 .polea-pieza {
   transform-box: fill-box;
 }
 .polea-anda .polea-pieza {
   animation: polea-mover var(--duracion) cubic-bezier(0.33333, 0, 0.66667, 0.33333) forwards;
+  animation-duration: var(--duracion) !important;
 }
 @keyframes polea-mover {
   to {

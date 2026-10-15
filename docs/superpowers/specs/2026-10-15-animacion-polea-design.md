@@ -92,8 +92,11 @@ Client Component (tiene estado: si ya se reprodujo).
 - **Accesibilidad:** el SVG lleva `role="img"` y una descripción armada con los
   datos (masas y rozamiento; nunca a ni T si `mostrarValores` está apagado). El
   resultado ("queda en reposo", valores) se anuncia en una región `aria-live`.
-  Con "reducir movimiento" activado en el sistema, el botón salta a la posición
-  final sin animar.
+  La animación se reproduce aunque el sistema tenga "reducir movimiento"
+  activado: es el contenido del ejercicio (como un video), nunca arranca sola
+  y la pide el alumno (WCAG 2.3.3 exceptúa la animación esencial). Cambiado
+  durante la implementación: la primera versión saltaba al final, y en una
+  compu con los efectos de animación de Windows apagados parecía rota.
 - `Medios.tsx` suma la tercera rama y ocupa el mismo ancho que una imagen.
 
 ## Panel — `EditorMedios.tsx`
