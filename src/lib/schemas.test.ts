@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { EjercicioSchema, PreguntaQuizSchema, TemaContenidoSchema, TemaMetaSchema } from './schemas'
+import {
+  EjercicioSchema,
+  MedioSchema,
+  PreguntaQuizSchema,
+  TemaContenidoSchema,
+  TemaMetaSchema,
+} from './schemas'
 import { tema } from '@/data/topicData'
 
 describe('el contenido real de la clase de arranque', () => {
@@ -103,5 +109,35 @@ describe('metadatos del tema', () => {
 
   it('rechaza una duración que no es mm:ss', () => {
     expect(TemaMetaSchema.safeParse({ ...base, duracionLabel: '10 minutos' }).success).toBe(false)
+  })
+})
+
+describe('animación polea sobre mesa', () => {
+  const base = { tipo: 'polea-mesa', m1: 50, m2: 20 } as const
+
+  it('alcanza con las dos masas', () => {
+    expect(MedioSchema.safeParse(base).success).toBe(true)
+  })
+
+  it('acepta los dos rozamientos si el cinético no supera al estático', () => {
+    expect(MedioSchema.safeParse({ ...base, muEstatico: 0.3, muCinetico: 0.2 }).success).toBe(true)
+  })
+
+  it('rechaza un cinético mayor que el estático, y marca ese campo', () => {
+    const r = MedioSchema.safeParse({ ...base, muEstatico: 0.2, muCinetico: 0.3 })
+    expect(r.success).toBe(false)
+    expect(r.error?.issues[0].path).toEqual(['muCinetico'])
+  })
+
+  it('rechaza una masa en cero', () => {
+    expect(MedioSchema.safeParse({ ...base, m1: 0 }).success).toBe(false)
+  })
+
+  it('un texto que no es número es un error, no un cero', () => {
+    // El panel convierte "abc" en NaN. Si pasara como 0, el ejercicio quedaría
+    // sin rozamiento sin que nadie se entere.
+    const r = MedioSchema.safeParse({ ...base, muEstatico: NaN })
+    expect(r.success).toBe(false)
+    expect(r.error?.issues[0].path).toEqual(['muEstatico'])
   })
 })

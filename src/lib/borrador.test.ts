@@ -3,11 +3,17 @@ import {
   aContenido,
   contenidoDesdeTema,
   ejercicioVacio,
+  medioABorrador,
+  medioAGuardar,
+  poleaVacia,
   seccionVacia,
   type ContenidoBorrador,
+  type MedioBorrador,
+  type PoleaBorrador,
 } from './borrador'
 import {
   EvaluacionSchema,
+  MedioSchema,
   normalizarContenido,
   TemaContenidoBorradorSchema,
   TemaContenidoSchema,
@@ -103,6 +109,7 @@ describe('medios y ajustes de la evaluación', () => {
             mediosExplicacion: [
               { tipo: 'video', youtubeId: 'dQw4w9WgXcQ', segundo: 90 },
               { tipo: 'imagen', url: 'https://x.test/resolucion.png', alt: 'Resolución' },
+              { tipo: 'polea-mesa', m1: 50, m2: 20, mostrarValores: true },
             ],
           },
           ...tema.practicos[0].ejercicios.slice(1),
@@ -392,5 +399,56 @@ describe('conversión de un ejercicio en edición', () => {
 
     expect(salida.ejemplos.map(e => e.id)).toEqual([1, 2])
     expect(salida.practicos[0].ejercicios.map(e => e.id)).toEqual([1, 2])
+  })
+})
+
+describe('animación polea sobre mesa', () => {
+  const completa = {
+    tipo: 'polea-mesa',
+    m1: 50,
+    m2: 20,
+    muEstatico: 0.3,
+    muCinetico: 0.25,
+    gravedad: 10,
+    mostrarValores: true,
+  } as const
+  const minima = { tipo: 'polea-mesa', m1: 50, m2: 20 } as const
+
+  it('abrir y guardar sin tocar nada la deja igual, sin agregar campos', () => {
+    // toStrictEqual y no toEqual: toEqual da por iguales un campo ausente y uno
+    // en undefined, y lo que se quiere ver es que no aparezca nada nuevo.
+    expect(medioAGuardar(medioABorrador(completa))).toStrictEqual(completa)
+    expect(medioAGuardar(medioABorrador(minima))).toStrictEqual(minima)
+  })
+
+  it('en el panel los decimales se ven con coma', () => {
+    const b = medioABorrador(completa)
+    if (b.tipo !== 'polea-mesa') throw new Error('debería ser una polea')
+    expect(b.muEstatico).toBe('0,3')
+    expect(b.gravedad).toBe('10')
+  })
+
+  it('coma o punto dan el mismo número, y los espacios no molestan', () => {
+    const b: MedioBorrador = {
+      tipo: 'polea-mesa',
+      m1: ' 50 ',
+      m2: '12,5',
+      muEstatico: '',
+      muCinetico: '0.2',
+      gravedad: '9,8',
+      mostrarValores: false,
+    }
+    // μe vacío no se escribe, g = 9,8 es el valor por defecto y tampoco, y
+    // mostrarValores apagado tampoco.
+    expect(medioAGuardar(b)).toStrictEqual({ tipo: 'polea-mesa', m1: 50, m2: 12.5, muCinetico: 0.2 })
+  })
+
+  it('un texto que no es número no se guarda como si nada', () => {
+    const b: MedioBorrador = { ...(poleaVacia() as PoleaBorrador), m1: '50', m2: '20', muEstatico: 'abc' }
+    expect(MedioSchema.safeParse(medioAGuardar(b)).success).toBe(false)
+  })
+
+  it('una animación recién agregada, sin masas, no se puede guardar', () => {
+    expect(MedioSchema.safeParse(medioAGuardar(poleaVacia())).success).toBe(false)
   })
 })

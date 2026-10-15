@@ -16,7 +16,7 @@ import { z } from 'zod'
 const textoNoVacio = z.string().trim().min(1, 'No puede estar vacío')
 
 /**
- * Una imagen o un video que acompaña a un texto.
+ * Una imagen, un video o una animación que acompaña a un texto.
  *
  * En Física el dibujo no es un adorno: un ejercicio de diagrama de cuerpo libre
  * sin el diagrama no es un ejercicio.
@@ -30,6 +30,17 @@ const textoNoVacio = z.string().trim().min(1, 'No puede estar vacío')
  * pueda. Cuando la imagen ES el enunciado, no describirla es no dar el
  * enunciado.
  */
+const masa = z
+  .number({ error: 'Falta la masa (un número, en kg)' })
+  .positive('Tiene que ser mayor que 0')
+  .max(1000, 'Como mucho 1000 kg')
+
+const coeficiente = z
+  .number({ error: 'Tiene que ser un número' })
+  .min(0, 'No puede ser negativo')
+  .max(2, 'Un rozamiento mayor que 2 no aparece en ejercicios')
+  .optional()
+
 export const MedioSchema = z.discriminatedUnion('tipo', [
   z.object({
     tipo: z.literal('imagen'),
@@ -41,6 +52,25 @@ export const MedioSchema = z.discriminatedUnion('tipo', [
     youtubeId: z.string().regex(/^[A-Za-z0-9_-]{11}$/, 'No parece un identificador de YouTube'),
     segundo: z.number().int().min(0).optional(),
   }),
+  /**
+   * Se guardan los datos del ejercicio, no la animación: el componente dibuja
+   * y calcula con ellos (ver src/lib/polea.ts). Si se carga un solo μ, vale
+   * para los dos.
+   */
+  z
+    .object({
+      tipo: z.literal('polea-mesa'),
+      m1: masa,
+      m2: masa,
+      muEstatico: coeficiente,
+      muCinetico: coeficiente,
+      gravedad: z.number({ error: 'Tiene que ser un número' }).min(1).max(20).optional(),
+      mostrarValores: z.boolean().optional(),
+    })
+    .refine(
+      p => p.muEstatico === undefined || p.muCinetico === undefined || p.muCinetico <= p.muEstatico,
+      { message: 'μc no puede ser mayor que μe', path: ['muCinetico'] },
+    ),
 ])
 
 /**
@@ -320,6 +350,7 @@ export type EjercicioLibre = Extract<Ejercicio, { tipo: 'libre' }>
 export type EjercicioMultiple = Extract<Ejercicio, { tipo: 'multiple' }>
 export type EjercicioSiNo = Extract<Ejercicio, { tipo: 'si-no' }>
 export type Medio = z.infer<typeof MedioSchema>
+export type MedioPolea = Extract<Medio, { tipo: 'polea-mesa' }>
 export type PreguntaQuiz = z.infer<typeof PreguntaQuizSchema>
 export type Video = z.infer<typeof VideoSchema>
 export type TrabajoPractico = z.infer<typeof TrabajoPracticoSchema>

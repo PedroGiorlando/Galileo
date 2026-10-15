@@ -1,4 +1,5 @@
 import type { Medio, TemaContenido } from './schemas'
+import { GRAVEDAD } from './polea'
 import { idDeYouTube } from './video'
 
 /**
@@ -22,7 +23,7 @@ export type TipoCaja = 'ejemplo' | 'tip' | 'nota'
 export type Dificultad = 'Básico' | 'Intermedio' | 'Avanzado'
 
 /**
- * Una imagen o un video mientras se edita.
+ * Una imagen, un video o una animación mientras se edita.
  *
  * El video guarda `enlace` y no `youtubeId` por lo mismo que los de la
  * lección: quien carga pega la dirección tal como la copió, y el
@@ -31,9 +32,39 @@ export type Dificultad = 'Básico' | 'Intermedio' | 'Avanzado'
 export type MedioBorrador =
   | { tipo: 'imagen'; url: string; alt: string }
   | { tipo: 'video'; enlace: string; segundo: number }
+  | {
+      tipo: 'polea-mesa'
+      m1: string
+      m2: string
+      muEstatico: string
+      muCinetico: string
+      gravedad: string
+      mostrarValores: boolean
+    }
+
+export type PoleaBorrador = Extract<MedioBorrador, { tipo: 'polea-mesa' }>
+
+/**
+ * Los números de la animación se editan como texto: así "0,3" y "0.3" valen lo
+ * mismo. Un <input type="number"> puede rechazar "0,3" en silencio según el
+ * idioma de la compu, y el profesor vería desaparecer su dato.
+ */
+const aTexto = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','))
+
+/** Vacío → ausente. Lo que no sea un número queda NaN, y el schema lo rechaza. */
+const aNumero = (s: string) => (s.trim() === '' ? undefined : Number(s.trim().replace(',', '.')))
 
 export const imagenVacia = (url: string): MedioBorrador => ({ tipo: 'imagen', url, alt: '' })
 export const videoMedioVacio = (): MedioBorrador => ({ tipo: 'video', enlace: '', segundo: 0 })
+export const poleaVacia = (): MedioBorrador => ({
+  tipo: 'polea-mesa',
+  m1: '',
+  m2: '',
+  muEstatico: '',
+  muCinetico: '',
+  gravedad: aTexto(GRAVEDAD),
+  mostrarValores: false,
+})
 
 export interface SeccionBorrador {
   titulo: string
@@ -194,18 +225,43 @@ export const contenidoVacio = (): ContenidoBorrador => ({
 // las opciones: descartar en silencio lo que está a medias es cómo se pierde
 // trabajo sin que nadie se entere.
 
-function medioABorrador(m: Medio): MedioBorrador {
-  return m.tipo === 'imagen'
-    ? { tipo: 'imagen', url: m.url, alt: m.alt }
-    : { tipo: 'video', enlace: m.youtubeId, segundo: m.segundo ?? 0 }
+export function medioABorrador(m: Medio): MedioBorrador {
+  if (m.tipo === 'imagen') return { tipo: 'imagen', url: m.url, alt: m.alt }
+  if (m.tipo === 'video') return { tipo: 'video', enlace: m.youtubeId, segundo: m.segundo ?? 0 }
+  return {
+    tipo: 'polea-mesa',
+    m1: aTexto(m.m1),
+    m2: aTexto(m.m2),
+    muEstatico: aTexto(m.muEstatico),
+    muCinetico: aTexto(m.muCinetico),
+    gravedad: aTexto(m.gravedad ?? GRAVEDAD),
+    mostrarValores: m.mostrarValores ?? false,
+  }
 }
 
-function medioAGuardar(m: MedioBorrador) {
+export function medioAGuardar(m: MedioBorrador) {
   if (m.tipo === 'imagen') return { tipo: 'imagen', url: m.url, alt: m.alt }
+  if (m.tipo === 'video') {
+    return {
+      tipo: 'video',
+      youtubeId: idDeYouTube(m.enlace) ?? m.enlace,
+      ...(m.segundo > 0 ? { segundo: m.segundo } : {}),
+    }
+  }
+
+  const muEstatico = aNumero(m.muEstatico)
+  const muCinetico = aNumero(m.muCinetico)
+  const gravedad = aNumero(m.gravedad)
   return {
-    tipo: 'video',
-    youtubeId: idDeYouTube(m.enlace) ?? m.enlace,
-    ...(m.segundo > 0 ? { segundo: m.segundo } : {}),
+    tipo: 'polea-mesa',
+    m1: aNumero(m.m1),
+    m2: aNumero(m.m2),
+    ...(muEstatico !== undefined ? { muEstatico } : {}),
+    ...(muCinetico !== undefined ? { muCinetico } : {}),
+    // 9,8 es el valor por defecto: no se escribe, así abrir y guardar una
+    // animación no le agrega campos que no tenía.
+    ...(gravedad !== undefined && gravedad !== GRAVEDAD ? { gravedad } : {}),
+    ...(m.mostrarValores ? { mostrarValores: true } : {}),
   }
 }
 
