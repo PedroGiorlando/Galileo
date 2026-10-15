@@ -84,3 +84,29 @@ body {
   outline-offset: 2px;
   border-radius: 4px;
 }
+
+/*
+ * Animación "polea sobre mesa" (src/components/AnimacionPolea.tsx).
+ *
+ * Una sola curva para todas las piezas: cubic-bezier(1/3, 0, 2/3, 1/3) es
+ * exactamente progreso = t², el movimiento uniformemente acelerado desde el
+ * reposo. Caja, bola, cuerdas y polea comparten curva y duración, así que van
+ * sincronizadas sin un solo cálculo por cuadro. Cada pieza dice adónde llega
+ * con --hasta; la duración llega en --duracion.
+ *
+ * Respeta la regla del temario de más arriba: el estado sin animar es la
+ * escena completa y quieta. Si el reloj de animación no avanza, se ve el
+ * dibujo original, nunca un hueco. Y con "reducir movimiento" la regla global
+ * de arriba lleva la duración a casi cero: salta directo al final.
+ */
+.polea-pieza {
+  transform-box: fill-box;
+}
+.polea-anda .polea-pieza {
+  animation: polea-mover var(--duracion) cubic-bezier(0.33333, 0, 0.66667, 0.33333) forwards;
+}
+@keyframes polea-mover {
+  to {
+    transform: var(--hasta);
+  }
+}
