@@ -83,6 +83,29 @@ imagen ES el enunciado, no describirla es directamente no darle el enunciado.
 La resolución dibujada va en la segunda. Si la ponés en la primera, el alumno ve
 la respuesta al lado de la pregunta.
 
+### Animación: caja sobre una mesa con polea
+
+Para el dibujo clásico de una caja sobre la mesa unida por una polea a una bola
+que cuelga, en vez de subir una imagen podés cargar una **animación**: el
+alumno aprieta Reproducir y ve cómo la bola cae y arrastra la caja, con la
+aceleración real del ejercicio.
+
+| Dato | Qué poner |
+|---|---|
+| m₁ | Masa de la caja, en kg (obligatoria) |
+| m₂ | Masa de la bola, en kg (obligatoria) |
+| μe y μc | Rozamiento estático y cinético entre la caja y la mesa. Opcionales; si el ejercicio da uno solo, cargá ese y vale para los dos |
+| g | 9,8 por defecto. Si resolvés con 10, poné 10: si no, los valores no coinciden con los tuyos |
+| Mostrar valores | Muestra a y T al lado del botón |
+
+Coma o punto, da igual: 0,3 y 0.3 son lo mismo.
+
+⚠️ **"Mostrar valores" va solo en la explicación.** En el enunciado le da la
+respuesta al alumno.
+
+⚠️ **Si la pregunta es "¿se mueve el sistema?", la animación va en la
+explicación**, no en el enunciado: apretar Reproducir ya responde la pregunta.
+
 ## Teoría
 
 Tres secciones. Cada una: un título en forma de pregunta, un párrafo corto
