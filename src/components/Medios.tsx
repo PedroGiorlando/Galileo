@@ -1,4 +1,4 @@
-import type { Medio } from '@/lib/schemas'
+import { MedioSchema, type Medio } from '@/lib/schemas'
 import { urlDeVideo } from '@/lib/video'
 import { AnimacionPolea } from './AnimacionPolea'
 
@@ -45,7 +45,22 @@ export function Medios({ medios, className = '' }: { medios?: Medio[]; className
             </div>
           )
         }
-        return <AnimacionPolea key={i} {...m} />
+        // Una clase sin publicar se guarda sin validar, así que una animación
+        // a medio cargar puede llegar acá sin masas. Se valida antes de
+        // dibujar: la vista previa existe justamente para esas clases, y sin
+        // esto se caía la página entera.
+        const polea = MedioSchema.safeParse(m)
+        if (polea.success && polea.data.tipo === 'polea-mesa') {
+          return <AnimacionPolea key={i} {...polea.data} />
+        }
+        return (
+          <p
+            key={i}
+            className="rounded-xl border border-dashed border-linea px-4 py-6 text-center text-sm text-tinta-suave"
+          >
+            Animación incompleta: faltan datos para dibujarla.
+          </p>
+        )
       })}
     </div>
   )
