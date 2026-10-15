@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Play, RotateCcw } from 'lucide-react'
 import type { MedioPolea } from '@/lib/schemas'
-import { describirPolea, formatear, resolverPolea, textoValores } from '@/lib/polea'
+import { describirPolea, formatearDato, resolverPolea, textoValores } from '@/lib/polea'
 
 /*
  * Geometría del dibujo, en unidades del viewBox (480 × 320). Replica la imagen
@@ -135,7 +135,7 @@ function Etiqueta({
       <tspan dy={4} fontSize={10}>
         {indice}
       </tspan>
-      <tspan dy={-4}> = {formatear(kg)} kg</tspan>
+      <tspan dy={-4}> = {formatearDato(kg)} kg</tspan>
     </text>
   )
 }

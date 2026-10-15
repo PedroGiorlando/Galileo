@@ -18,6 +18,12 @@ describe('AnimacionPolea', () => {
     expect(html).toContain('a = 2,8 m/s² · T = 140 N')
   })
 
+  it('las etiquetas muestran la masa tal como se cargó', () => {
+    const html = renderToStaticMarkup(<AnimacionPolea tipo="polea-mesa" m1={1000} m2={0.125} />)
+    expect(html).toContain('= 0,125 kg')
+    expect(html).toContain('= 1000 kg')
+  })
+
   it('no usa id: puede haber dos en la misma página', () => {
     const html = renderToStaticMarkup(<AnimacionPolea tipo="polea-mesa" m1={50} m2={20} />)
     expect(html).not.toMatch(/\sid="/)

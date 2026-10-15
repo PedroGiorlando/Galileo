@@ -73,6 +73,14 @@ describe('textos de la animación', () => {
     expect(d).not.toContain('m/s²')
   })
 
+  it('los datos del ejercicio se muestran sin redondear ni agrupar miles', () => {
+    // Si el enunciado dice 0,125 kg, el dibujo no puede decir 0,13. Y "1.000"
+    // en el panel se leería como 1, porque ahí el punto es decimal.
+    expect(describirPolea({ m1: 1000, m2: 0.125, muEstatico: 0.125 })).toBe(
+      'Caja de 1000 kg sobre una mesa, unida por una cuerda que pasa por una polea a una bola de 0,125 kg que cuelga. Coeficiente de rozamiento estático 0,125.',
+    )
+  })
+
   it('sin rozamiento lo dice', () => {
     expect(describirPolea({ m1: 50, m2: 20 })).toMatch(/Sin rozamiento\.$/)
   })

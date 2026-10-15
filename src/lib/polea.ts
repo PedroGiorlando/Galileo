@@ -77,8 +77,16 @@ export function resolverPolea({
   }
 }
 
-/** Coma decimal y hasta dos decimales: 2.857 → "2,86". */
+/** Resultados (a, T): coma decimal y hasta dos decimales. 2.857 → "2,86". */
 export const formatear = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 })
+
+/**
+ * Datos del ejercicio (masas, μ): tal como los cargó el profesor, sin
+ * redondear. Si el enunciado dice 0,125 kg, el dibujo no puede decir 0,13.
+ * Tampoco agrupa miles ("1000", no "1.000"): en el panel el punto también es
+ * decimal, y quien copiara "1.000" del dibujo cargaría 1 kg.
+ */
+export const formatearDato = (n: number) => String(n).replace('.', ',')
 
 export function textoValores(r: ResultadoPolea): string {
   return `a = ${formatear(r.aceleracion)} m/s² · T = ${formatear(r.tension)} N`
@@ -89,12 +97,12 @@ export function textoValores(r: ResultadoPolea): string {
  * animación en el enunciado, eso sería darle la respuesta.
  */
 export function describirPolea({ m1, m2, muEstatico, muCinetico }: DatosPolea): string {
-  const escena = `Caja de ${formatear(m1)} kg sobre una mesa, unida por una cuerda que pasa por una polea a una bola de ${formatear(m2)} kg que cuelga.`
+  const escena = `Caja de ${formatearDato(m1)} kg sobre una mesa, unida por una cuerda que pasa por una polea a una bola de ${formatearDato(m2)} kg que cuelga.`
   if (muEstatico === undefined && muCinetico === undefined) return `${escena} Sin rozamiento.`
 
   const coeficientes = [
-    muEstatico !== undefined ? `estático ${formatear(muEstatico)}` : null,
-    muCinetico !== undefined ? `cinético ${formatear(muCinetico)}` : null,
+    muEstatico !== undefined ? `estático ${formatearDato(muEstatico)}` : null,
+    muCinetico !== undefined ? `cinético ${formatearDato(muCinetico)}` : null,
   ].filter(Boolean)
 
   return `${escena} Coeficiente de rozamiento ${coeficientes.join(' y ')}.`

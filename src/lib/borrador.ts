@@ -1,5 +1,5 @@
 import type { Medio, TemaContenido } from './schemas'
-import { GRAVEDAD } from './polea'
+import { formatearDato, GRAVEDAD } from './polea'
 import { idDeYouTube } from './video'
 
 /**
@@ -49,7 +49,7 @@ export type PoleaBorrador = Extract<MedioBorrador, { tipo: 'polea-mesa' }>
  * mismo. Un <input type="number"> puede rechazar "0,3" en silencio según el
  * idioma de la compu, y el profesor vería desaparecer su dato.
  */
-const aTexto = (n: number | undefined) => (n === undefined ? '' : String(n).replace('.', ','))
+const aTexto = (n: number | undefined) => (n === undefined ? '' : formatearDato(n))
 
 /** Vacío → ausente. Lo que no sea un número queda NaN, y el schema lo rechaza. */
 const aNumero = (s: string) => (s.trim() === '' ? undefined : Number(s.trim().replace(',', '.')))
